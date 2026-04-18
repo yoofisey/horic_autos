@@ -1,104 +1,145 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Horic Autos | Admin Control</title>
-    <link rel="stylesheet" href="style.css">
-    <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:ital,wght@0,800;0,900;1,800;1,900&family=Barlow:wght@400;600&family=Rajdhani:wght@500;600;700&display=swap" rel="stylesheet">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Horic Autos | Admin Dashboard</title>
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-    <div id="login-overlay" class="login-screen">
-        <div class="login-card">
-            <div class="login-heading">
-                <h2>Admin <span class="g">Access</span></h2>
-                <p>Enter credentials to manage inventory</p>
-            </div>
-            <div class="login-field">
-                <label class="login-label">Passcode</label>
-                <input type="password" id="admin-pass" class="login-input" placeholder="••••">
-            </div>
-            <div id="login-err" class="login-error">Invalid Access Code</div>
-            <button onclick="handleLogin()" class="btn-login">Unlock Dashboard</button>
-            <a href="index.html" class="back-link">← Return to Showroom</a>
-        </div>
+<div class="admin-wrapper">
+  <aside class="admin-sidebar">
+    <div class="nav-logo">
+      <img src="horic.png" alt="Horic Logo" class="logo-img">
+    </div>
+    <nav class="sidebar-nav">
+      <a href="#" class="active">📊 Dashboard</a>
+      <a href="inventory.html">🚗 View Site</a>
+      <a href="#">📩 Inquiries <span class="badge">4</span></a>
+      <a href="#">⚙️ Settings</a>
+    </nav>
+  </aside>
+
+  <main class="admin-main">
+    <header class="admin-header">
+      <div class="header-text">
+        <h1>Inventory Overview</h1>
+        <p class="specs">Update and manage your active vehicle listings</p>
+      </div>
+      <button type="button" class="btn-primary" onclick="openAddCarModal()">+ Add New Vehicle</button>
+    </header>
+
+    <div class="stats-grid">
+      <div class="stat-card">
+        <span class="label">Total Stock</span>
+        <span class="value">24</span>
+      </div>
+      <div class="stat-card">
+        <span class="label">Active Inquiries</span>
+        <span class="value">12</span>
+      </div>
+      <div class="stat-card">
+        <span class="label">Inventory Value</span>
+        <span class="value">$4.2M</span>
+      </div>
     </div>
 
-    <div id="admin-panel" class="admin-layout">
-        <nav>
-            <div class="nav-logo">
-                <h1 class="modal-title">HORIC <span class="g">ADMIN</span></h1>
-            </div>
-            <div class="nav-links">
-                <button class="nav-cta" onclick="openModal()">+ Add Vehicle</button>
-                <button class="btn-view" onclick="logout()" style="margin-left:1rem">Logout</button>
-            </div>
-        </nav>
+    <section class="admin-section">
+      <table class="admin-table">
+        <thead>
+          <tr>
+            <th>Vehicle</th>
+            <th>Status</th>
+            <th>Price</th>
+            <th>Inquiries</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="adminTableBody"></tbody>
+      </table>
+</section>
 
-        <div class="admin-body">
-            <div class="section-header">
-                <div>
-                    <div class="sec-eye">Live Inventory</div>
-                    <h2 class="sec-title">Vehicle <span class="g">Manager</span></h2>
-                </div>
-                <div class="sec-count" id="inv-count">0 Units</div>
+    <!-- Add Car Modal -->
+    <div id="addCarModal" class="modal-overlay" onclick="closeAdminModal(event)">
+      <div class="modal-content admin-form-card" onclick="event.stopPropagation()">
+        <header class="form-header">
+          <h2>New Inventory Entry</h2>
+          <p>Fill in the details to list a new vehicle.</p>
+        </header>
+        <form id="addCarForm" class="admin-form">
+          <div class="form-grid">
+            <div class="input-group">
+              <label>Vehicle Make</label>
+              <input type="text" name="make" placeholder="e.g. Porsche" required>
             </div>
-
-            <div style="overflow-x: auto; background: var(--white); border: 1.5px solid var(--border);">
-                <table style="width: 100%; border-collapse: collapse; font-family: 'Barlow', sans-serif;">
-                    <thead style="background: var(--off); border-bottom: 2px solid var(--green);">
-                        <tr style="text-align: left;">
-                            <th style="padding: 1.2rem; font-family: 'Rajdhani'; text-transform: uppercase; font-size: .75rem; letter-spacing: .1em;">Preview</th>
-                            <th style="padding: 1.2rem; font-family: 'Rajdhani'; text-transform: uppercase; font-size: .75rem; letter-spacing: .1em;">Vehicle Details</th>
-                            <th style="padding: 1.2rem; font-family: 'Rajdhani'; text-transform: uppercase; font-size: .75rem; letter-spacing: .1em;">Price (GHS)</th>
-                            <th style="padding: 1.2rem; font-family: 'Rajdhani'; text-transform: uppercase; font-size: .75rem; letter-spacing: .1em;">Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody id="inventory-list">
-                        </tbody>
-                </table>
+            <div class="input-group">
+              <label>Model</label>
+              <input type="text" name="model" placeholder="e.g. 911 Turbo" required>
             </div>
-        </div>
+             <div class="input-group">
+              <label>Year</label>
+              <input type="text" name="year" placeholder="e.g. 2023" required>
+            </div>
+            <div class="input-group">
+              <label>Price (USD)</label>
+              <input type="number" name="price" placeholder="250000" required>
+            </div>
+            <div class="input-group">
+              <label for="status">Status</label>
+              <select id="status" name="status" title="Vehicle status">
+                <option value="In Stock">In Stock</option>
+                <option value="Coming Soon">Coming Soon</option>
+                <option value="Sold">Sold</option>
+              </select>
+            </div>
+          </div>
+          <div class="input-group full-width upload-section">
+            <label for="carImage">Upload Image</label>
+            <div class="file-drop-zone">
+              <input type="file" name="image" id="carImage" accept="image/*" title="Upload vehicle image">
+              <p>Click to upload or drag and drop</p>
+            </div>
+          </div>
+          <div class="form-actions">
+            <button type="button" class="btn-secondary" onclick="closeAdminModal()">Cancel</button>
+            <button type="submit" class="btn-primary">List Vehicle</button>
+          </div>
+        </form>
+      </div>
     </div>
+    
 
-    <div id="form-modal" class="modal-overlay">
-        <div class="modal">
-            <div class="modal-header">
-                <div class="modal-title" id="modal-type">Add New Vehicle</div>
-                <button class="modal-close" onclick="closeModal()">×</button>
-            </div>
-            <form id="vehicle-form" class="modal-body">
-                <div class="detail-grid">
-                    <div class="login-field">
-                        <label class="login-label">Make & Model</label>
-                        <input type="text" id="v-name" class="login-input" required placeholder="e.g. Mercedes C63S">
-                    </div>
-                    <div class="login-field">
-                        <label class="login-label">Year</label>
-                        <input type="number" id="v-year" class="login-input" required placeholder="2024">
-                    </div>
-                    <div class="login-field">
-                        <label class="login-label">Price</label>
-                        <input type="number" id="v-price" class="login-input" required placeholder="550000">
-                    </div>
-                    <div class="login-field">
-                        <label class="login-label">Condition</label>
-                        <select id="v-cond" class="login-input">
-                            <option value="NEW">Brand New</option>
-                            <option value="USED">Pre-Owned</option>
-                        </select>
-                    </div>
-                </div>
-                <div class="login-field">
-                    <label class="login-label">Image URL</label>
-                    <input type="text" id="v-img" class="login-input" placeholder="https://image-link.jpg">
-                </div>
-                <button type="submit" class="btn-primary" style="width: 100%; margin-top: 1rem;">Confirm Listing</button>
-            </form>
-        </div>
-    </div>
 
-    <script src="admin.js"></script>
+
+
+
+<td class="action-group">
+  <button class="action-btn edit" onclick="openEditModal(${car.id})">Edit</button>
+  <button class="action-btn delete" onclick="openDeleteModal(${car.id})">Delete</button>
+</td>
+;
+
+
+<!-- Edit Vehicle Modal -->
+<div id="editCarModal" class="modal-overlay" onclick="closeEditModal(event)">
+  <div class="modal-content edit-form-card" onclick="event.stopPropagation()">
+    <header class="form-header">
+      <h2>Edit Vehicle</h2>
+      <p>Update the details of this vehicle.</p>
+    </header>
+    <form id="editCarForm" class="admin-form">
+      <!-- input fields here -->
+    </form>
+  </div>
+</div>
+
+
+
+
+  </main>
+</div>
+
+<script src="script.js"></script>
 </body>
 </html>

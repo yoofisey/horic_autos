@@ -1,66 +1,64 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">    <title>Horic Autos | Drive Beyond</title>
-    <link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Horic Autos | Drive Beyond</title>
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
 <nav>
-<div class="nav-logo">
-  <img src="horic.png" alt="Horic Autos Logo">
-</div>    
-<div class="nav-links">
-        <a href="inventory.html">Inventory</a>
-        <a href="#about">About</a>
-        <a href="#contact">Contact</a>
-    </div>
+  <div class="nav-logo">
+    <img src="horic.png" alt="Horic Autos Logo">
+  </div>    
+  <div class="nav-links">
+    <a href="inventory.html">Inventory</a>
+    <a href="#about">About</a>
+    <a href="#contact">Contact</a>
+  </div>
 </nav>
 
 <section class="hero">
-    <h1>DRIVE BEYOND <span>EXPECTATIONS</span></h1>
-    <p>Curated selection of high-performance vehicles for the modern driver.</p>
-    <button class="btn-primary"><a href="inventory.html" style="color: inherit; text-decoration: none;">Explore Inventory</a></button>
+  <h1>DRIVE BEYOND <span>EXPECTATIONS</span></h1>
+  <p>Curated selection of high-performance vehicles for the modern driver.</p>
+  <a href="inventory.html" class="btn-primary">Explore Inventory</a>
 </section>
 
-<section class="section">
-    <input type="text" class="search-input" placeholder="Search models (e.g. Porsche, BMW)...">
-    
-    <div class="car-grid">
-        <div class="car-card">
-            <div class="car-img-placeholder">🏎️</div>
-            <div class="car-name">911 GT3 RS</div>
-            <div class="car-price">$223,000</div>
-        </div>
-        <div class="car-card">
-            <div class="car-img-placeholder">🏎️</div>
-            <div class="car-name">C63 S AMG</div>
-            <div class="car-price">$82,000</div>
-        </div>
-        <div class="car-card">
-            <div class="car-img-placeholder">🏎️</div>
-            <div class="car-name">M4 Competition</div>
-            <div class="car-price">$78,000</div>
-        </div>
-    </div>
+<section class="section inventory-container">
+  <!-- Unified search bar -->
+  <input type="text" class="minimal-search" placeholder="Search models (e.g. Porsche, BMW)...">
+
+  <!-- Unified grid layout (cards injected by script.js) -->
+  <div class="results-meta"></div>
+  <div class="grid-layout"></div>
 </section>
 
+<!-- Chat widget -->
 <div class="chat-bubble" onclick="document.querySelector('.chat-window').classList.toggle('open')">
-    💬
+  💬
 </div>
 
 <div class="chat-window">
-    <div style="padding: 1.5rem; background: var(--bg-input); border-bottom: 1px solid var(--border);">
-        <strong style="font-family: 'Outfit';">Horic Assistant</strong>
-    </div>
-    <div class="chat-messages">
-        <div class="msg bot"><div class="msg-bubble">Welcome to Horic Autos. How can I assist you today?</div></div>
-    </div>
-    <div style="padding: 1rem; display: flex; gap: 0.5rem;">
-        <input type="text" class="search-input" style="margin-bottom: 0;" placeholder="Ask anything...">
-    </div>
+  <div class="chat-header">
+    <strong>Horic Assistant</strong>
+  </div>
+  <div class="chat-messages">
+    <div class="msg bot"><div class="msg-bubble">Welcome to Horic Autos. How can I assist you today?</div></div>
+  </div>
+  <div class="chat-input-container">
+    <input type="text" class="minimal-search" placeholder="Ask anything...">
+  </div>
 </div>
 
+<!-- Vehicle details modal -->
+<div id="carModal" class="modal-overlay" onclick="closeModal(event)">
+  <div class="modal-content" onclick="event.stopPropagation()">
+    <button type="button" class="modal-close" onclick="closeModal()">✕</button>
+    <div id="modalBody"></div>
+  </div>
+</div>
+
+<script src="script.js"></script>
 </body>
 </html>

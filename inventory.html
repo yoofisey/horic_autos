@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">    <title>Horic Autos | Drive Beyond</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">    <title>Horic Autos | Drive Beyond</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -23,13 +23,15 @@
                 <input type="text" placeholder="Search inventory..." class="minimal-search">
             </div>
             <div class="filter-group">
-                <select class="minimal-select">
+                <label for="make-select">Filter by Make:</label>
+                <select id="make-select" class="minimal-select">
                     <option>All Makes</option>
                     <option>Porsche</option>
                     <option>BMW</option>
                     <option>Mercedes-Benz</option>
                 </select>
-                <select class="minimal-select">
+                <label for="sort-select">Sort by:</label>
+                <select id="sort-select" class="minimal-select">
                     <option>Sort: Newest</option>
                     <option>Price: Low to High</option>
                     <option>Price: High to Low</option>
@@ -78,5 +80,6 @@
             </div>
     </section>
 </main>
+<script src="script.js"></script>
 </body>
 </html>
