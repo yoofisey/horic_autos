@@ -3,62 +3,171 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Horic Autos | Drive Beyond</title>
+  <meta name="description" content="Horic Autos helps drivers in Ghana find quality vehicles with clear pricing, running-cost estimates, and AI-guided affordability advice.">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data: https:; connect-src 'self'; form-action 'self'; base-uri 'self'; frame-ancestors 'none'; upgrade-insecure-requests">
+  <title>Horic Autos | Modern Car Sales in Ghana</title>
   <link rel="stylesheet" href="style.css">
 </head>
-<body>
+<body data-page="home">
+  <header class="site-header">
+    <a class="brand" href="index.html" aria-label="Horic Autos home">
+      <img src="horic.png" alt="" class="brand-mark">
+      <span>Horic Autos</span>
+    </a>
+    <nav class="nav-links" aria-label="Primary navigation">
+      <a href="inventory.html">Inventory</a>
+      <a href="#services">Services</a>
+      <a href="#advisor">AI Advisor</a>
+      <a href="#contact">Contact</a>
+    </nav>
+    <a class="nav-cta" href="inventory.html">Find a car</a>
+  </header>
 
-<nav>
-  <div class="nav-logo">
-    <img src="horic.png" alt="Horic Autos Logo">
-  </div>    
-  <div class="nav-links">
-    <a href="inventory.html">Inventory</a>
-    <a href="#about">About</a>
-    <a href="#contact">Contact</a>
+  <main>
+    <section class="hero-shell">
+      <div class="hero-copy">
+        <p class="eyebrow">Premium verified vehicles in Ghana</p>
+        <h1>Buy the right car, not just the best-looking one.</h1>
+        <p class="hero-lede">Explore curated cars with transparent pricing, monthly ownership estimates, secure inquiry flows, and an AI advisor that checks each vehicle against your income and lifestyle.</p>
+        <div class="hero-actions">
+          <a class="btn-primary" href="inventory.html">Browse inventory</a>
+          <button class="btn-secondary" type="button" data-open-chat>Ask the advisor</button>
+        </div>
+      </div>
+      <div class="hero-vehicle" aria-label="Featured vehicle preview">
+        <div class="hero-car-card">
+          <div class="hero-car-top">
+            <span class="availability-dot"></span>
+            <span>Ready for inspection</span>
+          </div>
+          <div class="hero-car-visual">🚙</div>
+          <div class="hero-car-info">
+            <span>2024 Toyota Corolla Cross Hybrid</span>
+            <strong>GHS 195,000</strong>
+          </div>
+          <div class="hero-cost-strip">
+            <span>Estimated running cost</span>
+            <strong>GHS 690/mo</strong>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="trust-band" aria-label="Horic Autos highlights">
+      <div>
+        <strong id="stat-cars">8+</strong>
+        <span>listed vehicles</span>
+      </div>
+      <div>
+        <strong>20-25%</strong>
+        <span>income-fit rule</span>
+      </div>
+      <div>
+        <strong>Secure</strong>
+        <span>no exposed AI keys</span>
+      </div>
+      <div>
+        <strong>Ghana</strong>
+        <span>running-cost estimates</span>
+      </div>
+    </section>
+
+    <section class="section-block" id="services">
+      <div class="section-heading">
+        <p class="eyebrow">Built for confident buying</p>
+        <h2>Every listing includes the numbers that matter after purchase.</h2>
+      </div>
+      <div class="feature-grid">
+        <article class="feature-card">
+          <span class="feature-icon">₵</span>
+          <h3>Affordability matching</h3>
+          <p>Compare vehicle price and monthly running costs against income before committing to a viewing.</p>
+        </article>
+        <article class="feature-card">
+          <span class="feature-icon">✓</span>
+          <h3>Verified inventory</h3>
+          <p>Listings are structured with condition, mileage, fuel type, transmission, and maintenance context.</p>
+        </article>
+        <article class="feature-card">
+          <span class="feature-icon">↗</span>
+          <h3>Fast inquiries</h3>
+          <p>Shortlist a vehicle, open details, and start a WhatsApp inquiry with the exact car already included.</p>
+        </article>
+      </div>
+    </section>
+
+    <section class="section-block advisor-preview" id="advisor">
+      <div>
+        <p class="eyebrow">AI buying assistant</p>
+        <h2>Tell it your monthly income, commute, and car style.</h2>
+        <p>The advisor estimates ownership costs, flags risky matches, and recommends realistic cars from current stock. It runs locally in the browser, so no customer financial details are sent to an external AI provider.</p>
+      </div>
+      <div class="advisor-panel">
+        <span class="mini-label">Example</span>
+        <p>"I earn GHS 14,000 monthly and need a reliable SUV for family use."</p>
+        <button class="btn-primary" type="button" data-open-chat>Try the advisor</button>
+      </div>
+    </section>
+
+    <section class="section-block inventory-preview" aria-labelledby="featured-title">
+      <div class="section-heading inline">
+        <div>
+          <p class="eyebrow">Featured stock</p>
+          <h2 id="featured-title">Good matches across budgets</h2>
+        </div>
+        <a class="btn-secondary" href="inventory.html">View all</a>
+      </div>
+      <div class="vehicle-grid" id="featured-grid"></div>
+    </section>
+
+    <section class="contact-strip" id="contact">
+      <div>
+        <p class="eyebrow">Ready to inspect?</p>
+        <h2>Book a viewing or ask for a cost breakdown.</h2>
+      </div>
+      <div class="contact-actions">
+        <a class="btn-primary" href="https://wa.me/233XXXXXXXXX" target="_blank" rel="noopener noreferrer">WhatsApp Horic</a>
+        <button class="btn-secondary" type="button" data-open-chat>Check affordability</button>
+      </div>
+    </section>
+  </main>
+
+  <div class="modal-backdrop" id="vehicle-modal" aria-hidden="true">
+    <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+      <button class="icon-button modal-close" type="button" data-close-modal aria-label="Close vehicle details">×</button>
+      <div id="modal-content"></div>
+    </div>
   </div>
-</nav>
 
-<section class="hero">
-  <h1>DRIVE BEYOND <span>EXPECTATIONS</span></h1>
-  <p>Curated selection of high-performance vehicles for the modern driver.</p>
-  <a href="inventory.html" class="btn-primary">Explore Inventory</a>
-</section>
+  <aside class="chat-widget" aria-label="Horic AI affordability advisor">
+    <button class="chat-toggle" type="button" id="chat-toggle" aria-expanded="false" aria-controls="chat-panel">
+      <span>AI</span>
+      <small>Advisor</small>
+    </button>
+    <section class="chat-panel" id="chat-panel" aria-hidden="true">
+      <div class="chat-header">
+        <div>
+          <strong>Horic Advisor</strong>
+          <span>Income-aware car matching</span>
+        </div>
+        <button class="icon-button" type="button" data-close-chat aria-label="Close chat">×</button>
+      </div>
+      <div class="chat-messages" id="chat-messages" aria-live="polite"></div>
+      <div class="quick-replies" id="quick-replies">
+        <button type="button" data-prompt="I earn GHS 12000 per month and want an SUV for family use. What can I afford?">Family SUV</button>
+        <button type="button" data-prompt="My income is GHS 8000 monthly. I need a low running cost daily car.">Low-cost daily</button>
+        <button type="button" data-prompt="I have GHS 250000 cash and want a reliable car with manageable maintenance.">Cash budget</button>
+      </div>
+      <form class="chat-form" id="chat-form">
+        <label class="sr-only" for="chat-input">Ask the Horic advisor</label>
+        <input id="chat-input" type="text" autocomplete="off" placeholder="Income, budget, lifestyle...">
+        <button type="submit">Send</button>
+      </form>
+    </section>
+  </aside>
 
-<section class="section inventory-container">
-  <!-- Unified search bar -->
-  <input type="text" class="minimal-search" placeholder="Search models (e.g. Porsche, BMW)...">
-
-  <!-- Unified grid layout (cards injected by script.js) -->
-  <div class="results-meta"></div>
-  <div class="grid-layout"></div>
-</section>
-
-<!-- Chat widget -->
-<div class="chat-bubble" onclick="document.querySelector('.chat-window').classList.toggle('open')">
-  💬
-</div>
-
-<div class="chat-window">
-  <div class="chat-header">
-    <strong>Horic Assistant</strong>
-  </div>
-  <div class="chat-messages">
-    <div class="msg bot"><div class="msg-bubble">Welcome to Horic Autos. How can I assist you today?</div></div>
-  </div>
-  <div class="chat-input-container">
-    <input type="text" class="minimal-search" placeholder="Ask anything...">
-  </div>
-</div>
-
-<!-- Vehicle details modal -->
-<div id="carModal" class="modal-overlay" onclick="closeModal(event)">
-  <div class="modal-content" onclick="event.stopPropagation()">
-    <button type="button" class="modal-close" onclick="closeModal()">✕</button>
-    <div id="modalBody"></div>
-  </div>
-</div>
-
-<script src="script.js"></script>
+  <script src="data.js"></script>
+  <script src="chatbot.js"></script>
+  <script src="script.js"></script>
 </body>
 </html>

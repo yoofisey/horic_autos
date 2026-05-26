@@ -1,85 +1,153 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">    <title>Horic Autos | Drive Beyond</title>
-    <link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Browse Horic Autos inventory with Ghana-focused affordability and running-cost estimates.">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data: https:; connect-src 'self'; form-action 'self'; base-uri 'self'; frame-ancestors 'none'; upgrade-insecure-requests">
+  <title>Inventory | Horic Autos</title>
+  <link rel="stylesheet" href="style.css">
 </head>
-<body>
-    <nav>
-<div class="nav-logo">
-  <img src="horic.png" alt="Horic Autos Logo" a href="index.html"></a>
-</div>    
-<div class="nav-links">
-        <a href="index.html">Home</a>
-        <a href="#about">About</a>
-        <a href="#contact">Contact</a>
-    </div>
-</nav>
-<main class="inventory-container">
-    <header class="inventory-header">
-        <div class="filter-controls">
-            <div class="search-wrapper">
-                <input type="text" placeholder="Search inventory..." class="minimal-search">
-            </div>
-            <div class="filter-group">
-                <label for="make-select">Filter by Make:</label>
-                <select id="make-select" class="minimal-select">
-                    <option>All Makes</option>
-                    <option>Porsche</option>
-                    <option>BMW</option>
-                    <option>Mercedes-Benz</option>
-                </select>
-                <label for="sort-select">Sort by:</label>
-                <select id="sort-select" class="minimal-select">
-                    <option>Sort: Newest</option>
-                    <option>Price: Low to High</option>
-                    <option>Price: High to Low</option>
-                </select>
-            </div>
+<body data-page="inventory">
+  <header class="site-header">
+    <a class="brand" href="index.html" aria-label="Horic Autos home">
+      <img src="horic.png" alt="" class="brand-mark">
+      <span>Horic Autos</span>
+    </a>
+    <nav class="nav-links" aria-label="Primary navigation">
+      <a href="index.html">Home</a>
+      <a href="#inventory-tools">Inventory</a>
+      <a href="#buyer-tools">Buyer tools</a>
+      <a href="#contact">Contact</a>
+    </nav>
+    <button class="nav-cta" type="button" data-open-chat>AI match</button>
+  </header>
+
+  <main>
+    <section class="inventory-hero">
+      <div>
+        <p class="eyebrow">Smart inventory search</p>
+        <h1>Choose with price, condition, and running costs side by side.</h1>
+        <p>Use income-fit filters and the AI advisor to avoid cars that look affordable upfront but cost too much to own.</p>
+      </div>
+      <div class="income-card" id="buyer-tools">
+        <span class="mini-label">Income-fit check</span>
+        <label for="income-input">Monthly income (GHS)</label>
+        <div class="income-row">
+          <input id="income-input" type="number" min="0" step="500" placeholder="12000">
+          <button type="button" id="apply-income">Apply</button>
         </div>
-    </header>
-
-    <section class="inventory-grid">
-        <div class="results-meta">Showing 24 Vehicles</div>
-
-        <div class="grid-layout">
-            <article class="inventory-card">
-                <div class="card-image-wrap">
-                    <div class="image-placeholder">🏎️</div>
-                    <span class="status-tag">In Stock</span>
-                </div>
-                <div class="card-content">
-                    <div class="card-title">
-                        <h3>2024 Porsche 911 GT3 RS</h3>
-                        <p class="specs">4.0L H6 • 518hp • Shark Blue</p>
-                    </div>
-                    <div class="card-footer">
-                        <span class="price">$223,800</span>
-                        <button class="btn-text">Details →</button>
-                    </div>
-                </div>
-            </article>
-
-            <article class="inventory-card">
-                <div class="card-image-wrap">
-                    <div class="image-placeholder">🏎️</div>
-                </div>
-                <div class="card-content">
-                    <div class="card-title">
-                        <h3>2023 BMW M4 CSL</h3>
-                        <p class="specs">3.0L I6 • 543hp • Frozen Grey</p>
-                    </div>
-                    <div class="card-footer">
-                        <span class="price">$139,900</span>
-                        <button class="btn-text">Details →</button>
-                    </div>
-                </div>
-            </article>
-            
-            </div>
+        <p id="income-note">Add income to tag each listing as ideal, stretch, or high risk.</p>
+      </div>
     </section>
-</main>
-<script src="script.js"></script>
+
+    <section class="inventory-layout" id="inventory-tools">
+      <aside class="filter-panel" aria-label="Inventory filters">
+        <div class="filter-section">
+          <label for="search-input">Search</label>
+          <input id="search-input" type="search" placeholder="Toyota, SUV, hybrid...">
+        </div>
+        <div class="filter-section">
+          <label for="condition-filter">Condition</label>
+          <select id="condition-filter">
+            <option value="all">All vehicles</option>
+            <option value="new">New</option>
+            <option value="used">Pre-owned</option>
+          </select>
+        </div>
+        <div class="filter-section">
+          <label for="type-filter">Body type</label>
+          <select id="type-filter">
+            <option value="all">All body types</option>
+            <option value="suv">SUV</option>
+            <option value="sedan">Sedan</option>
+            <option value="truck">Truck</option>
+            <option value="hatchback">Hatchback</option>
+          </select>
+        </div>
+        <div class="filter-section">
+          <label for="fuel-filter">Fuel</label>
+          <select id="fuel-filter">
+            <option value="all">All fuel types</option>
+            <option value="petrol">Petrol</option>
+            <option value="diesel">Diesel</option>
+            <option value="hybrid">Hybrid</option>
+            <option value="electric">Electric</option>
+          </select>
+        </div>
+        <div class="filter-section">
+          <label for="sort-filter">Sort by</label>
+          <select id="sort-filter">
+            <option value="recommended">Recommended</option>
+            <option value="price-asc">Price: low to high</option>
+            <option value="price-desc">Price: high to low</option>
+            <option value="cost-asc">Lowest running cost</option>
+            <option value="year-desc">Newest first</option>
+          </select>
+        </div>
+        <button class="btn-secondary full" type="button" id="reset-filters">Reset filters</button>
+      </aside>
+
+      <section class="inventory-results" aria-live="polite">
+        <div class="results-bar">
+          <div>
+            <p class="eyebrow">Available vehicles</p>
+            <h2 id="inventory-count">Loading inventory</h2>
+          </div>
+          <button class="btn-primary" type="button" data-open-chat>Ask what fits me</button>
+        </div>
+        <div class="vehicle-grid" id="vehicle-grid"></div>
+      </section>
+    </section>
+
+    <section class="contact-strip" id="contact">
+      <div>
+        <p class="eyebrow">Need help choosing?</p>
+        <h2>Share your monthly income and driving needs with the advisor.</h2>
+      </div>
+      <div class="contact-actions">
+        <button class="btn-primary" type="button" data-open-chat>Open AI advisor</button>
+        <a class="btn-secondary" href="https://wa.me/233XXXXXXXXX" target="_blank" rel="noopener noreferrer">WhatsApp sales</a>
+      </div>
+    </section>
+  </main>
+
+  <div class="modal-backdrop" id="vehicle-modal" aria-hidden="true">
+    <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+      <button class="icon-button modal-close" type="button" data-close-modal aria-label="Close vehicle details">×</button>
+      <div id="modal-content"></div>
+    </div>
+  </div>
+
+  <aside class="chat-widget" aria-label="Horic AI affordability advisor">
+    <button class="chat-toggle" type="button" id="chat-toggle" aria-expanded="false" aria-controls="chat-panel">
+      <span>AI</span>
+      <small>Advisor</small>
+    </button>
+    <section class="chat-panel" id="chat-panel" aria-hidden="true">
+      <div class="chat-header">
+        <div>
+          <strong>Horic Advisor</strong>
+          <span>Income-aware car matching</span>
+        </div>
+        <button class="icon-button" type="button" data-close-chat aria-label="Close chat">×</button>
+      </div>
+      <div class="chat-messages" id="chat-messages" aria-live="polite"></div>
+      <div class="quick-replies" id="quick-replies">
+        <button type="button" data-prompt="I earn GHS 12000 per month and want an SUV for family use. What can I afford?">Family SUV</button>
+        <button type="button" data-prompt="My income is GHS 8000 monthly. I need a low running cost daily car.">Low-cost daily</button>
+        <button type="button" data-prompt="I have GHS 250000 cash and want a reliable car with manageable maintenance.">Cash budget</button>
+      </div>
+      <form class="chat-form" id="chat-form">
+        <label class="sr-only" for="chat-input">Ask the Horic advisor</label>
+        <input id="chat-input" type="text" autocomplete="off" placeholder="Income, budget, lifestyle...">
+        <button type="submit">Send</button>
+      </form>
+    </section>
+  </aside>
+
+  <script src="data.js"></script>
+  <script src="chatbot.js"></script>
+  <script src="script.js"></script>
 </body>
 </html>

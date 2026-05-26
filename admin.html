@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data: https:; connect-src 'self'; form-action 'self'; base-uri 'self'; frame-ancestors 'none'; upgrade-insecure-requests">
   <title>Horic Autos | Admin Dashboard</title>
   <link rel="stylesheet" href="style.css">
 </head>
@@ -10,136 +11,243 @@
 
 <div class="admin-wrapper">
   <aside class="admin-sidebar">
-    <div class="nav-logo">
-      <img src="horic.png" alt="Horic Logo" class="logo-img">
-    </div>
+    <div class="sidebar-logo">HORIC<span>.</span></div>
     <nav class="sidebar-nav">
       <a href="#" class="active">📊 Dashboard</a>
       <a href="inventory.html">🚗 View Site</a>
       <a href="#">📩 Inquiries <span class="badge">4</span></a>
       <a href="#">⚙️ Settings</a>
     </nav>
+    <div class="sidebar-footer">Horic Admin v1.0</div>
   </aside>
 
   <main class="admin-main">
-    <header class="admin-header">
-      <div class="header-text">
+    <div class="admin-header">
+      <div>
+        <div class="section-eyebrow">Dashboard</div>
         <h1>Inventory Overview</h1>
-        <p class="specs">Update and manage your active vehicle listings</p>
+        <p>Manage your active vehicle listings</p>
       </div>
-      <button type="button" class="btn-primary" onclick="openAddCarModal()">+ Add New Vehicle</button>
-    </header>
+      <button type="button" class="btn-primary" id="openAddVehicle">+ Add New Vehicle</button>
+    </div>
 
     <div class="stats-grid">
       <div class="stat-card">
         <span class="label">Total Stock</span>
-        <span class="value">24</span>
+        <span class="value" id="statTotal">—</span>
+        <div class="delta" id="statInStock">— in stock</div>
       </div>
       <div class="stat-card">
         <span class="label">Active Inquiries</span>
-        <span class="value">12</span>
+        <span class="value" id="statEnquiries">0</span>
+        <div class="delta" id="statUnreadEnquiries">0 unread</div>
       </div>
       <div class="stat-card">
         <span class="label">Inventory Value</span>
-        <span class="value">$4.2M</span>
+        <span class="value" id="statValue">—</span>
+        <div class="delta">Combined list price</div>
+      </div>
+      <div class="stat-card">
+        <span class="label">Coming Soon</span>
+        <span class="value" id="statSoon">—</span>
+        <div class="delta">Awaiting arrival</div>
       </div>
     </div>
 
-    <section class="admin-section">
+    <div class="admin-section notification-section">
+      <div class="section-toolbar">
+        <div>
+          <h2>Enquiry Notifications</h2>
+          <p class="section-note">New customer enquiries appear here and can also trigger device notifications.</p>
+        </div>
+        <button type="button" class="btn-secondary" id="enableAdminNotifications">Enable notifications</button>
+      </div>
+      <div class="notification-list" id="adminNotifications"></div>
+    </div>
+
+    <div class="admin-section">
+      <div class="section-toolbar">
+        <h2>All Vehicles</h2>
+        <input type="text" class="minimal-search search-input-wide" id="adminSearch" placeholder="Search inventory...">
+      </div>
       <table class="admin-table">
         <thead>
           <tr>
             <th>Vehicle</th>
             <th>Status</th>
             <th>Price</th>
-            <th>Inquiries</th>
+            <th>Year</th>
             <th>Actions</th>
           </tr>
         </thead>
         <tbody id="adminTableBody"></tbody>
       </table>
-</section>
-
-    <!-- Add Car Modal -->
-    <div id="addCarModal" class="modal-overlay" onclick="closeAdminModal(event)">
-      <div class="modal-content admin-form-card" onclick="event.stopPropagation()">
-        <header class="form-header">
-          <h2>New Inventory Entry</h2>
-          <p>Fill in the details to list a new vehicle.</p>
-        </header>
-        <form id="addCarForm" class="admin-form">
-          <div class="form-grid">
-            <div class="input-group">
-              <label>Vehicle Make</label>
-              <input type="text" name="make" placeholder="e.g. Porsche" required>
-            </div>
-            <div class="input-group">
-              <label>Model</label>
-              <input type="text" name="model" placeholder="e.g. 911 Turbo" required>
-            </div>
-             <div class="input-group">
-              <label>Year</label>
-              <input type="text" name="year" placeholder="e.g. 2023" required>
-            </div>
-            <div class="input-group">
-              <label>Price (USD)</label>
-              <input type="number" name="price" placeholder="250000" required>
-            </div>
-            <div class="input-group">
-              <label for="status">Status</label>
-              <select id="status" name="status" title="Vehicle status">
-                <option value="In Stock">In Stock</option>
-                <option value="Coming Soon">Coming Soon</option>
-                <option value="Sold">Sold</option>
-              </select>
-            </div>
-          </div>
-          <div class="input-group full-width upload-section">
-            <label for="carImage">Upload Image</label>
-            <div class="file-drop-zone">
-              <input type="file" name="image" id="carImage" accept="image/*" title="Upload vehicle image">
-              <p>Click to upload or drag and drop</p>
-            </div>
-          </div>
-          <div class="form-actions">
-            <button type="button" class="btn-secondary" onclick="closeAdminModal()">Cancel</button>
-            <button type="submit" class="btn-primary">List Vehicle</button>
-          </div>
-        </form>
-      </div>
     </div>
-    
-
-
-
-
-
-<td class="action-group">
-  <button class="action-btn edit" onclick="openEditModal(${car.id})">Edit</button>
-  <button class="action-btn delete" onclick="openDeleteModal(${car.id})">Delete</button>
-</td>
-;
-
-
-<!-- Edit Vehicle Modal -->
-<div id="editCarModal" class="modal-overlay" onclick="closeEditModal(event)">
-  <div class="modal-content edit-form-card" onclick="event.stopPropagation()">
-    <header class="form-header">
-      <h2>Edit Vehicle</h2>
-      <p>Update the details of this vehicle.</p>
-    </header>
-    <form id="editCarForm" class="admin-form">
-      <!-- input fields here -->
-    </form>
-  </div>
-</div>
-
-
-
-
   </main>
 </div>
 
+<!-- ADD VEHICLE MODAL — must be outside <main>, direct child of <body> -->
+<div id="addCarModal" class="modal-overlay">
+  <div class="modal-content admin-form-card">
+    <button type="button" class="modal-close" data-admin-close="addCarModal">✕</button>
+    <div class="form-header">
+      <h2>New Inventory Entry</h2>
+      <p>Fill in the details to list a new vehicle.</p>
+    </div>
+    <div class="admin-form">
+      <div class="form-grid">
+        <div class="input-group">
+          <label for="f-make">Vehicle Make</label>
+          <input type="text" id="f-make" placeholder="e.g. Porsche">
+        </div>
+        <div class="input-group">
+          <label for="f-model">Model</label>
+          <input type="text" id="f-model" placeholder="e.g. 911 Turbo">
+        </div>
+        <div class="input-group">
+          <label for="f-year">Year</label>
+          <input type="number" id="f-year" placeholder="2024" min="1990" max="2030">
+        </div>
+        <div class="input-group">
+          <label for="f-price">Price (GHS)</label>
+          <input type="number" id="f-price" placeholder="250000" min="0">
+        </div>
+        <div class="input-group">
+          <label for="f-type">Body Type</label>
+          <select id="f-type">
+            <option value="sedan">Sedan</option>
+            <option value="suv">SUV</option>
+            <option value="truck">Truck</option>
+            <option value="hatchback">Hatchback</option>
+            <option value="coupe">Coupe</option>
+            <option value="van">Van</option>
+          </select>
+        </div>
+        <div class="input-group">
+          <label for="f-fuel">Fuel Type</label>
+          <select id="f-fuel">
+            <option value="petrol">Petrol</option>
+            <option value="hybrid">Hybrid</option>
+            <option value="diesel">Diesel</option>
+            <option value="electric">Electric</option>
+          </select>
+        </div>
+        <div class="input-group">
+          <label for="f-mileage">Mileage (km)</label>
+          <input type="number" id="f-mileage" placeholder="42000" min="0">
+        </div>
+        <div class="input-group">
+          <label for="f-engine">Engine</label>
+          <input type="text" id="f-engine" placeholder="e.g. 2000cc">
+        </div>
+        <div class="input-group">
+          <label for="f-transmission">Transmission</label>
+          <select id="f-transmission">
+            <option value="automatic">Automatic</option>
+            <option value="manual">Manual</option>
+          </select>
+        </div>
+        <div class="input-group">
+          <label for="f-condition">Condition</label>
+          <select id="f-condition">
+            <option value="new">New</option>
+            <option value="used">Pre-owned</option>
+          </select>
+        </div>
+        <div class="input-group">
+          <label for="f-status">Status</label>
+          <select id="f-status">
+            <option value="In Stock">In Stock</option>
+            <option value="Coming Soon">Coming Soon</option>
+            <option value="Sold">Sold</option>
+          </select>
+        </div>
+        <div class="input-group full-width">
+          <label for="f-desc">Listing Description</label>
+          <textarea id="f-desc" placeholder="Key features, condition, service history, trim, and buyer notes."></textarea>
+        </div>
+        <div class="input-group full-width">
+          <label for="f-image">Upload Image</label>
+          <div class="file-drop-zone">
+            <input type="file" id="f-image" accept="image/*" title="Upload vehicle images" multiple>
+            <p>Upload one or more vehicle photos</p>
+          </div>
+        </div>
+      </div>
+      <div class="form-actions">
+        <button type="button" class="btn-secondary" data-admin-close="addCarModal">Cancel</button>
+        <button type="button" class="btn-primary" id="addVehicleBtn">List Vehicle</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- EDIT VEHICLE MODAL — separate modal with its own prefilled fields and save logic -->
+<div id="editCarModal" class="modal-overlay">
+  <div class="modal-content admin-form-card">
+    <button type="button" class="modal-close" data-admin-close="editCarModal">✕</button>
+    <div class="form-header">
+      <h2>Edit Vehicle</h2>
+      <p>Update the details for this listing.</p>
+    </div>
+    <div class="admin-form">
+      <input type="hidden" id="e-id">
+      <div class="form-grid">
+        <div class="input-group">
+          <label for="e-make">Vehicle Make</label>
+          <input type="text" id="e-make" placeholder="e.g. Porsche">
+        </div>
+        <div class="input-group">
+          <label for="e-model">Model</label>
+          <input type="text" id="e-model" placeholder="e.g. 911 Turbo">
+        </div>
+        <div class="input-group">
+          <label for="e-year">Year</label>
+          <input type="number" id="e-year" placeholder="2024" min="1990" max="2030">
+        </div>
+        <div class="input-group">
+          <label for="e-price">Price (GHS)</label>
+          <input type="number" id="e-price" placeholder="250000" min="0">
+        </div>
+        <div class="input-group">
+          <label for="e-accel">0–60 MPH</label>
+          <input type="text" id="e-accel" placeholder="e.g. 3.2s">
+        </div>
+        <div class="input-group">
+          <label for="e-topspeed">Top Speed</label>
+          <input type="text" id="e-topspeed" placeholder="e.g. 197 mph">
+        </div>
+        <div class="input-group full-width">
+          <label for="e-status">Status</label>
+          <select id="e-status">
+            <option value="In Stock">In Stock</option>
+            <option value="Coming Soon">Coming Soon</option>
+            <option value="Sold">Sold</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-actions">
+        <button type="button" class="btn-secondary" data-admin-close="editCarModal">Cancel</button>
+        <button type="button" class="btn-primary" id="saveVehicleBtn">Save Changes</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- DELETE CONFIRM MODAL -->
+<div id="deleteConfirmModal" class="modal-overlay">
+  <div class="modal-content delete-card">
+    <div class="delete-icon">⚠️</div>
+    <h2>Remove Vehicle?</h2>
+    <p>This action is permanent. The vehicle will be removed from the public inventory and all listing data will be lost.</p>
+    <div class="form-actions form-actions-center">
+      <button type="button" class="btn-secondary" data-admin-close="deleteConfirmModal">Keep Vehicle</button>
+      <button type="button" id="confirmDeleteBtn" class="btn-danger">Confirm Delete</button>
+    </div>
+  </div>
+</div>
+
+<script src="data.js"></script>
 <script src="script.js"></script>
 </body>
 </html>
