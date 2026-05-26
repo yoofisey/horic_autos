@@ -80,6 +80,7 @@ img {
   padding: 0 5vw;
   background: rgba(245, 247, 244, 0.9);
   border-bottom: 1px solid rgba(16, 18, 20, 0.08);
+  -webkit-backdrop-filter: blur(18px);
   backdrop-filter: blur(18px);
 }
 
@@ -1341,6 +1342,7 @@ button.modal-close {
   justify-content: center;
   padding: 1rem;
   background: rgba(16, 18, 20, 0.62);
+  -webkit-backdrop-filter: blur(12px);
   backdrop-filter: blur(12px);
 }
 
@@ -1456,4 +1458,66 @@ button.modal-close {
   .admin-section {
     overflow-x: auto;
   }
+}
+/* Chat panel */
+#chat-panel {
+  background: #0d0f12;
+  border-left: 2px solid #1f2328;
+  box-shadow: 0 0 20px rgba(0,0,0,0.4);
+}
+
+/* Messages */
+.message {
+  display: flex;
+  margin: 10px 0;
+}
+
+.message.user .message-bubble {
+  background: #1a73e8;
+  color: white;
+  margin-left: auto;
+}
+
+.message.bot .message-bubble {
+  background: #1f2328;
+  color: #d1d5db;
+  border: 1px solid #2a2f36;
+}
+
+/* Bubbles */
+.message-bubble {
+  padding: 12px 16px;
+  border-radius: 14px;
+  max-width: 80%;
+  font-size: 15px;
+  line-height: 1.4;
+}
+
+/* Typing animation */
+.typing-bubble {
+  display: flex;
+  gap: 6px;
+  padding: 12px 16px;
+}
+
+.dot {
+  width: 8px;
+  height: 8px;
+  background: #9ca3af;
+  border-radius: 50%;
+  opacity: 0.3;
+  transition: opacity 0.2s;
+}
+
+/* Car-themed accents */
+#chat-panel.open {
+  border-top: 3px solid #1a73e8;
+}
+
+#chat-toggle {
+  background: #1a73e8;
+  border-radius: 50%;
+  padding: 12px;
+  color: white;
+  box-shadow: 0 4px 12px rgba(26,115,232,0.4);
 }
