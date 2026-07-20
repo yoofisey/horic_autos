@@ -1,8 +1,4 @@
 const HoricData = (() => {
-  const INVENTORY_KEY = 'horic_inventory';
-  const ENQUIRIES_KEY = 'horic_enquiries';
-  const SALES_KEY = 'horic_sales';
-
   const COST_ASSUMPTIONS = Object.freeze({
     monthlyKm: 2000,
     fuelPrice: { petrol: 16.5, diesel: 17.1, hybrid: 16.5, electric: 1.6 },
@@ -13,58 +9,6 @@ const HoricData = (() => {
     maintenance: { base: 638, electricMul: 0.4, newCarMul: 0.6, suvMul: 1.25, cheapUsedMul: 1.15 },
     insurance: { sedan: 530, suv: 620, truck: 680, hatchback: 480, coupe: 560, van: 590 }
   });
-
-
-  const DEFAULT_INVENTORY = [
-    { id: 'v1', make: 'Toyota', model: 'Land Cruiser V8', year: 2022, price: 580000, condition: 'used', status: 'in_stock', body_type: 'suv', fuel: 'petrol', mileage: 42000, engine: '4.6L V8', transmission: 'automatic', color: 'White', description: 'The king of Ghanaian roads. Unmatched reliability and presence with full 4WD capability.', images: [], features: ['4WD', 'Leather Seats', 'Sunroof', 'Navigation', 'Bluetooth', 'Parking Sensors'], sold_price: null, sold_date: null, sold_to: null, created_at: '2025-01-15', updated_at: '2025-01-15', views: 245, enquiries: 12 },
-    { id: 'v2', make: 'Toyota', model: 'Corolla Cross Hybrid', year: 2024, price: 195000, condition: 'new', status: 'in_stock', body_type: 'suv', fuel: 'hybrid', mileage: 0, engine: '1.8L Hybrid', transmission: 'automatic', color: 'Silver', description: 'The perfect blend of efficiency and practicality. Hybrid economy meets SUV versatility.', images: [], features: ['Hybrid Engine', 'Apple CarPlay', 'ADAS', 'Backup Camera', 'Cruise Control'], sold_price: null, sold_date: null, sold_to: null, created_at: '2025-02-01', updated_at: '2025-02-01', views: 189, enquiries: 8 },
-    { id: 'v3', make: 'Hyundai', model: 'Tucson', year: 2023, price: 220000, condition: 'new', status: 'in_stock', body_type: 'suv', fuel: 'petrol', mileage: 0, engine: '2.0L MPI', transmission: 'automatic', color: 'Phantom Black', description: 'Bold design meets Korean reliability. Packed with tech and safety features.', images: [], features: ['Panoramic Sunroof', 'Wireless Charging', 'LED Headlights', 'Blind Spot Monitor', 'Smart Cruise'], sold_price: null, sold_date: null, sold_to: null, created_at: '2025-01-20', updated_at: '2025-01-20', views: 156, enquiries: 6 },
-    { id: 'v4', make: 'Toyota', model: 'Hilux Revo', year: 2021, price: 310000, condition: 'used', status: 'in_stock', body_type: 'truck', fuel: 'diesel', mileage: 68000, engine: '2.8L Turbo Diesel', transmission: 'automatic', color: 'Graphite Grey', description: 'Built for Ghanaian terrain. Indestructible workhorse with modern comforts.', images: [], features: ['4WD', 'Turbo Diesel', 'Bed Liner', 'Tow Bar', 'Bluetooth'], sold_price: null, sold_date: null, sold_to: null, created_at: '2025-01-10', updated_at: '2025-01-10', views: 198, enquiries: 15 },
-    { id: 'v5', make: 'Honda', model: 'Accord', year: 2020, price: 145000, condition: 'used', status: 'in_stock', body_type: 'sedan', fuel: 'petrol', mileage: 55000, engine: '1.5L Turbo', transmission: 'automatic', color: 'Platinum White', description: 'Executive sedan with Honda reliability. Smooth, efficient, and comfortable.', images: [], features: ['Turbo Engine', 'Leather Interior', 'Honda Sensing', 'Android Auto', 'Dual Zone AC'], sold_price: null, sold_date: null, sold_to: null, created_at: '2025-02-05', updated_at: '2025-02-05', views: 134, enquiries: 5 },
-    { id: 'v6', make: 'Tesla', model: 'Model 3', year: 2023, price: 420000, condition: 'new', status: 'in_stock', body_type: 'sedan', fuel: 'electric', mileage: 0, engine: 'Electric Motor', transmission: 'automatic', color: 'Midnight Silver', description: 'The future of driving. Zero emissions, maximum performance, cutting-edge tech.', images: [], features: ['Autopilot', 'Full Self-Driving', 'Premium Interior', 'Glass Roof', '15" Touchscreen', 'OTA Updates'], sold_price: null, sold_date: null, sold_to: null, created_at: '2025-01-25', updated_at: '2025-01-25', views: 312, enquiries: 20 },
-    { id: 'v7', make: 'Kia', model: 'Sportage', year: 2024, price: 210000, condition: 'new', status: 'in_stock', body_type: 'suv', fuel: 'petrol', mileage: 0, engine: '2.0L MPI', transmission: 'automatic', color: 'Gravity Grey', description: 'Award-winning design with a 5-year warranty. Style and substance combined.', images: [], features: ['5-Year Warranty', 'Dual Screens', 'LED DRLs', 'Wireless CarPlay', 'Heated Seats'], sold_price: null, sold_date: null, sold_to: null, created_at: '2025-02-10', updated_at: '2025-02-10', views: 167, enquiries: 9 },
-    { id: 'v8', make: 'Nissan', model: 'Navara', year: 2022, price: 275000, condition: 'used', status: 'in_stock', body_type: 'truck', fuel: 'diesel', mileage: 38000, engine: '2.3L Twin Turbo Diesel', transmission: 'manual', color: 'Fuji White', description: 'Comfortable on road, capable off road. The pickup that doubles as a family car.', images: [], features: ['Twin Turbo', '4WD', 'Leather Seats', '360 Camera', 'Hill Descent Control'], sold_price: null, sold_date: null, sold_to: null, created_at: '2025-01-08', updated_at: '2025-01-08', views: 143, enquiries: 7 },
-    { id: 'v9', make: 'Mercedes-Benz', model: 'C300', year: 2023, price: 385000, condition: 'used', status: 'in_stock', body_type: 'sedan', fuel: 'petrol', mileage: 22000, engine: '2.0L Turbo', transmission: 'automatic', color: 'Obsidian Black', description: 'German luxury at its finest. Impeccable build quality and refined performance.', images: [], features: ['AMG Line', 'MBUX System', 'Burmester Sound', 'Ambient Lighting', 'Keyless Go'], sold_price: null, sold_date: null, sold_to: null, created_at: '2025-02-15', updated_at: '2025-02-15', views: 278, enquiries: 18 },
-    { id: 'v10', make: 'Toyota', model: 'Prado', year: 2024, price: 495000, condition: 'new', status: 'in_stock', body_type: 'suv', fuel: 'diesel', mileage: 0, engine: '2.8L Turbo Diesel', transmission: 'automatic', color: 'Precious White', description: 'The ultimate luxury SUV for African roads. Commanding presence, uncompromised comfort.', images: [], features: ['KDSS', 'Multi-Terrain Select', 'Crawl Control', 'JBL Audio', 'Moonroof', '360 Camera'], sold_price: null, sold_date: null, sold_to: null, created_at: '2025-02-20', updated_at: '2025-02-20', views: 201, enquiries: 14 },
-    { id: 'v11', make: 'Honda', model: 'CR-V', year: 2023, price: 235000, condition: 'new', status: 'coming_soon', body_type: 'suv', fuel: 'petrol', mileage: 0, engine: '1.5L Turbo', transmission: 'automatic', color: 'Radiant Red', description: 'Versatile family SUV with Honda legendary reliability. Arriving soon.', images: [], features: ['Turbo Engine', 'Honda Sensing', '7 Seats', 'Panoramic Roof', 'Wireless Charging'], sold_price: null, sold_date: null, sold_to: null, created_at: '2025-02-25', updated_at: '2025-02-25', views: 89, enquiries: 4 },
-    { id: 'v12', make: 'BMW', model: 'X5', year: 2022, price: 520000, condition: 'used', status: 'sold', body_type: 'suv', fuel: 'petrol', mileage: 31000, engine: '3.0L Turbo Inline-6', transmission: 'automatic', color: 'Alpine White', description: 'Sporty luxury SUV with BMW dynamics. Sold to a happy client.', images: [], features: ['xDrive', 'Harman Kardon', 'Gesture Control', 'Head-Up Display', 'Adaptive Suspension'], sold_price: 505000, sold_date: '2025-02-18', sold_to: 'Kwame M.', created_at: '2025-01-05', updated_at: '2025-02-18', views: 356, enquiries: 22 }
-  ];
-
-  const DEFAULT_ENQUIRIES = [
-    { id: 'e1', vehicle_id: 'v6', customer_name: 'Ama Asante', customer_phone: '+233241234567', customer_email: 'ama@example.com', message: 'Is the Tesla Model 3 suitable for long-distance travel in Ghana? What is the charging infrastructure like?', status: 'unread', created_at: '2025-02-20' },
-    { id: 'e2', vehicle_id: 'v1', customer_name: 'Kofi Mensah', customer_phone: '+233209876543', customer_email: 'kofi@example.com', message: 'Can you negotiate on the Land Cruiser? I am ready to pay cash.', status: 'read', created_at: '2025-02-18' },
-    { id: 'e3', vehicle_id: 'v4', customer_name: 'Yaw Boateng', customer_phone: '+233551122334', customer_email: 'yaw@example.com', message: 'Do you accept trade-ins? I have a 2019 Corolla and want to upgrade to the Hilux.', status: 'unread', created_at: '2025-02-22' }
-  ];
-
-  function loadInventory() {
-    try {
-      const raw = localStorage.getItem(INVENTORY_KEY);
-      if (raw) return JSON.parse(raw);
-    } catch (e) { /* ignore */ }
-    saveInventory(DEFAULT_INVENTORY);
-    return [...DEFAULT_INVENTORY];
-  }
-
-  function saveInventory(inventory) {
-    localStorage.setItem(INVENTORY_KEY, JSON.stringify(inventory));
-  }
-
-  function loadEnquiries() {
-    try {
-      const raw = localStorage.getItem(ENQUIRIES_KEY);
-      if (raw) return JSON.parse(raw);
-    } catch (e) { /* ignore */ }
-    saveEnquiries(DEFAULT_ENQUIRIES);
-    return [...DEFAULT_ENQUIRIES];
-  }
-
-  function saveEnquiries(enquiries) {
-    localStorage.setItem(ENQUIRIES_KEY, JSON.stringify(enquiries));
-  }
-
-  function generateId(prefix = 'v') {
-    return prefix + Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
-  }
 
   function formatPrice(amount) {
     if (amount == null) return '—';
@@ -77,8 +21,7 @@ const HoricData = (() => {
     const isSuv = body === 'suv' || body === 'truck';
     const catKey = isSuv ? (fuel === 'diesel' ? 'suv_diesel' : 'suv_petrol') : (fuel === 'diesel' ? 'saloon_diesel' : 'saloon_petrol');
     if (fuel === 'electric') {
-      const kwh = COST_ASSUMPTIONS.consumption.electric_kwh;
-      var fuelCost = (COST_ASSUMPTIONS.monthlyKm / 100) * kwh * COST_ASSUMPTIONS.fuelPrice.electric;
+      var fuelCost = (COST_ASSUMPTIONS.monthlyKm / 100) * COST_ASSUMPTIONS.consumption.electric_kwh * COST_ASSUMPTIONS.fuelPrice.electric;
     } else if (fuel === 'hybrid') {
       var fuelCost = (COST_ASSUMPTIONS.monthlyKm / 100) * COST_ASSUMPTIONS.consumption.hybrid * COST_ASSUMPTIONS.fuelPrice.hybrid;
     } else {
@@ -105,137 +48,16 @@ const HoricData = (() => {
     };
   }
 
-  function addVehicle(car) {
-    const inventory = loadInventory();
-    const newCar = {
-      id: generateId('v'),
-      make: car.make || '',
-      model: car.model || '',
-      year: Number(car.year) || new Date().getFullYear(),
-      price: Number(car.price) || 0,
-      condition: car.condition || 'new',
-      status: car.status || 'in_stock',
-      body_type: car.body_type || 'sedan',
-      fuel: car.fuel || 'petrol',
-      mileage: Number(car.mileage) || 0,
-      engine: car.engine || '',
-      transmission: car.transmission || 'automatic',
-      color: car.color || '',
-      description: car.description || '',
-      images: car.images || [],
-      features: car.features || [],
-      sold_price: null,
-      sold_date: null,
-      sold_to: null,
-      created_at: new Date().toISOString().slice(0, 10),
-      updated_at: new Date().toISOString().slice(0, 10),
-      views: 0,
-      enquiries: 0
-    };
-    inventory.unshift(newCar);
-    saveInventory(inventory);
-    return newCar;
-  }
-
-  function updateVehicle(id, updates) {
-    const inventory = loadInventory();
-    const idx = inventory.findIndex(c => c.id === id);
-    if (idx === -1) return null;
-    inventory[idx] = { ...inventory[idx], ...updates, updated_at: new Date().toISOString().slice(0, 10) };
-    saveInventory(inventory);
-    return inventory[idx];
-  }
-
-  function deleteVehicle(id) {
-    const inventory = loadInventory().filter(c => c.id !== id);
-    saveInventory(inventory);
-  }
-
-  function markAsSold(id, soldPrice, soldTo) {
-    return updateVehicle(id, {
-      status: 'sold',
-      sold_price: Number(soldPrice),
-      sold_date: new Date().toISOString().slice(0, 10),
-      sold_to: soldTo || 'Client'
-    });
-  }
-
-  function getVehicle(id) {
-    return loadInventory().find(c => c.id === id) || null;
-  }
-
-  function incrementViews(id) {
-    const inventory = loadInventory();
-    const car = inventory.find(c => c.id === id);
-    if (car) {
-      car.views = (car.views || 0) + 1;
-      saveInventory(inventory);
-    }
-  }
-
-  function addEnquiry(enquiry) {
-    const enquiries = loadEnquiries();
-    const newEnq = {
-      id: generateId('e'),
-      vehicle_id: enquiry.vehicle_id || null,
-      customer_name: enquiry.customer_name || 'Anonymous',
-      customer_phone: enquiry.customer_phone || '',
-      customer_email: enquiry.customer_email || '',
-      message: enquiry.message || '',
-      status: 'unread',
-      created_at: new Date().toISOString().slice(0, 10)
-    };
-    enquiries.unshift(newEnq);
-    saveEnquiries(enquiries);
-    return newEnq;
-  }
-
-  function updateEnquiry(id, updates) {
-    const enquiries = loadEnquiries();
-    const idx = enquiries.findIndex(e => e.id === id);
-    if (idx === -1) return null;
-    enquiries[idx] = { ...enquiries[idx], ...updates };
-    saveEnquiries(enquiries);
-    return enquiries[idx];
-  }
-
-  function deleteEnquiry(id) {
-    const enquiries = loadEnquiries().filter(e => e.id !== id);
-    saveEnquiries(enquiries);
-  }
-
-  function getStats() {
-    const inv = loadInventory();
-    const enq = loadEnquiries();
-    const inStock = inv.filter(c => c.status === 'in_stock');
-    const sold = inv.filter(c => c.status === 'sold');
-    const comingSoon = inv.filter(c => c.status === 'coming_soon');
-    const totalValue = inStock.reduce((s, c) => s + c.price, 0);
-    const totalSoldValue = sold.reduce((s, c) => s + (c.sold_price || c.price), 0);
-    const unreadEnquiries = enq.filter(e => e.status === 'unread').length;
-    return {
-      totalCars: inv.length,
-      inStock: inStock.length,
-      sold: sold.length,
-      comingSoon: comingSoon.length,
-      totalValue,
-      totalSoldValue,
-      totalEnquiries: enq.length,
-      unreadEnquiries,
-      avgPrice: inStock.length ? Math.round(totalValue / inStock.length) : 0
-    };
-  }
-
-  function filterInventory({ search = '', make = '', model = '', body_type = '', fuel = '', condition = '', status = '', minPrice = 0, maxPrice = Infinity, minYear = 0, maxYear = Infinity, maxMileage = Infinity, sort = 'newest' } = {}) {
-    let results = loadInventory();
+  function filterInventory(vehicles, { search = '', make = '', model = '', body_type = '', fuel = '', condition = '', status = '', minPrice = 0, maxPrice = Infinity, minYear = 0, maxYear = Infinity, maxMileage = Infinity, sort = 'newest' } = {}) {
+    let results = [...vehicles];
 
     if (search) {
       const q = search.toLowerCase();
       results = results.filter(c =>
         c.make.toLowerCase().includes(q) ||
         c.model.toLowerCase().includes(q) ||
-        c.description.toLowerCase().includes(q) ||
-        c.engine.toLowerCase().includes(q) ||
+        (c.description && c.description.toLowerCase().includes(q)) ||
+        (c.engine && c.engine.toLowerCase().includes(q)) ||
         (c.color && c.color.toLowerCase().includes(q))
       );
     }
@@ -247,15 +69,15 @@ const HoricData = (() => {
     if (status) results = results.filter(c => c.status === status);
     results = results.filter(c => c.price >= minPrice && c.price <= maxPrice);
     results = results.filter(c => c.year >= minYear && c.year <= maxYear);
-    results = results.filter(c => c.mileage <= maxMileage);
+    results = results.filter(c => (c.mileage || 0) <= maxMileage);
 
     switch (sort) {
       case 'price_asc': results.sort((a, b) => a.price - b.price); break;
       case 'price_desc': results.sort((a, b) => b.price - a.price); break;
       case 'year_desc': results.sort((a, b) => b.year - a.year); break;
       case 'year_asc': results.sort((a, b) => a.year - b.year); break;
-      case 'mileage_asc': results.sort((a, b) => a.mileage - b.mileage); break;
-      case 'newest': results.sort((a, b) => new Date(b.created_at) - new Date(a.created_at)); break;
+      case 'mileage_asc': results.sort((a, b) => (a.mileage || 0) - (b.mileage || 0)); break;
+      case 'newest': results.sort((a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0)); break;
       default: break;
     }
 
@@ -290,7 +112,7 @@ const HoricData = (() => {
     'Hummer': ['H1','H2','H3','H3T'],
     'Hyundai': ['Accent','Atos','Azera','Bayon','Casper','Elantra','Entourage','Excel','Genesis','Getz','Grand Santa Fe','Ioniq','Ioniq 5','Ioniq 5 N','Ioniq 6','Ioniq 9','i10','i20','i30','i40','Kona','Kona Electric','Kona N','LaVerna','Matrix','Palisade','Santa Cruz','Santa Fe','Sonata','Starex','Tiburon','Tucson','Tucson Hybrid','Tuscani','Veloster','Venue','Veracruz','XG'],
     'Infiniti': ['EX','FX','G','I','J','M','Q30','Q40','Q45','Q50','Q60','Q70','QX30','QX4','QX50','QX55','QX56','QX60','QX70','QX80'],
-    'Isuzu': ['Ascender','Axiom','D-Max','F-Series','Fuego','Impulse','i-Series','Oasis','Oasis','Pick Up','Rodeo','Sport XC','Trooper','VehiCROSS'],
+    'Isuzu': ['Ascender','Axiom','D-Max','F-Series','Fuego','Impulse','i-Series','Oasis','Pick Up','Rodeo','Sport XC','Trooper','VehiCROSS'],
     'Jaguar': ['D-Type','E-PACE','E-Type','F-PACE','F-Type','I-PACE','Mark 1','Mark 2','S-Type','X-Type','XE','XF','XFR','XJ','XK','XKR'],
     'Jeep': ['Avenger','Cherokee','CJ','Comanche','Commander','Compass','Gladiator','Grand Cherokee','Grand Cherokee L','Grand Wagoneer','Liberty','Patriot','Renegade','Wagoneer','Wrangler'],
     'Kia': ['Amanti','Bongo','Borrego','Carens','Carnival','Ceed','Cerato','Cadenza','EV3','EV5','EV6','EV6 GT','EV9','Forte','K3','K5','K900','Magentis','Mohave','Niro','Niro Hybrid','Niro EV','Opirus','Optima','Picanto','Pride','Ray','Rio','Roadster','Rondo','Sedona','Seltos','Shuma','Sorento','Soul','Sportage','Stinger','Stonic','Venga'],
@@ -302,7 +124,7 @@ const HoricData = (() => {
     'Mahindra': ['Bolero','KUV100','Marazzo','NuvoSport','Quanto','Scorpio','Scorpio N','Thar','Thar Roxx','Verito','XUV300','XUV400','XUV500','XUV700','Xylo'],
     'Maserati': ['3500 GT','Bora','Ghibli','GranSport','GranTurismo','GranCabrio','Grecale','Indy','Levante','Merak','Quattroporte','Shamal','Spyder','Trofeo'],
     'Maybach': ['57','62','Landaulet','S500','S580','S600','S650','GLS 600'],
-    'Mazda': ['2','3','323','5','6','626','929','B-Series','CX-3','CX-30','CX-5','CX-50','CX-60','CX-7','CX-8','CX-80','CX-9','CX-90','MPV','MX-30','MX-5 Miata','MX-6','MX-3','Millenia','Millenia','Protege','RX-7','RX-8','Tribute','Villager'],
+    'Mazda': ['2','3','323','5','6','626','929','B-Series','CX-3','CX-30','CX-5','CX-50','CX-60','CX-7','CX-8','CX-80','CX-9','CX-90','MPV','MX-30','MX-5 Miata','MX-6','MX-3','Millenia','Protege','RX-7','RX-8','Tribute','Villager'],
     'McLaren': ['570S','600LT','620R','650S','675LT','720S','750S','765LT','Artura','Elva','GT','MP4-12C','P1','Senna','Speedtail','W1'],
     'Mercedes-Benz': ['190','A-Class','AMG GT','B-Class','C-Class','Citan','CLE','CLA','CLS','E-Class','EQA','EQB','EQC','EQE','EQE SUV','EQS','EQS SUV','EQT','GLA','GLB','GLC','GLE','GLK','GLS','GT 4-Door','M-Class','Maybach S-Class','Maybach GLS','R-Class','S-Class','SL','SLC','SLK','SLR McLaren','Sprinter','V-Class','Vaneo','Viano','Vito','W123','W124','W201'],
     'MG': ['3','5','6','750','HS','MG4','TF','ZS','Cyberster','Comet EV','MGA','MGB','MGF','Montego','Windsor'],
@@ -338,11 +160,7 @@ const HoricData = (() => {
   };
 
   return {
-    COST_ASSUMPTIONS, DEFAULT_INVENTORY, CAR_MAKES_MODELS,
-    loadInventory, saveInventory, loadEnquiries, saveEnquiries,
-    generateId, formatPrice, estimateRunningCosts,
-    addVehicle, updateVehicle, deleteVehicle, markAsSold, getVehicle, incrementViews,
-    addEnquiry, updateEnquiry, deleteEnquiry,
-    getStats, filterInventory
+    COST_ASSUMPTIONS, CAR_MAKES_MODELS,
+    formatPrice, estimateRunningCosts, filterInventory
   };
 })();

@@ -1,6 +1,21 @@
 const HoricApp = (() => {
   let modalCar = null;
   let modalImageIndex = 0;
+  let cachedVehicles = [];
+
+  async function fetchVehicles() {
+    try {
+      const res = await fetch('/api/vehicles');
+      if (res.ok) {
+        cachedVehicles = await res.json();
+      } else {
+        cachedVehicles = [];
+      }
+    } catch (e) {
+      cachedVehicles = [];
+    }
+    return cachedVehicles;
+  }
 
   function statusBadge(status) {
     const map = {
@@ -44,36 +59,41 @@ const HoricApp = (() => {
       '</div></div></div>';
   }
 
-  function renderFeatured() {
+  async function renderFeatured() {
     const grid = document.getElementById('featuredGrid');
     if (!grid) return;
-    const cars = HoricData.loadInventory().filter(c => c.status === 'in_stock').slice(0, 6);
-    grid.innerHTML = cars.map(buildCarCard).join('');
+    const cars = await fetchVehicles();
+    const inStock = cars.filter(c => c.status === 'in_stock').slice(0, 6);
+    grid.innerHTML = inStock.map(buildCarCard).join('');
     observeReveal();
   }
 
   function renderHero() {
-    const cars = HoricData.loadInventory().filter(c => c.status === 'in_stock');
-    const stats = HoricData.getStats();
+    const cars = cachedVehicles.length ? cachedVehicles : [];
+    const stats = { inStock: cars.filter(c => c.status === 'in_stock').length };
     const el = (id) => document.getElementById(id);
 
     if (el('statCars')) el('statCars').textContent = stats.inStock + '+';
     if (el('trustCount')) el('trustCount').textContent = stats.inStock + '+';
 
     if (cars.length > 0) {
-      const featured = cars[Math.floor(Math.random() * Math.min(cars.length, 3))];
-      if (el('heroCarName')) el('heroCarName').textContent = featured.year + ' ' + featured.make + ' ' + featured.model;
-      if (el('heroCarPrice')) el('heroCarPrice').textContent = HoricData.formatPrice(featured.price);
-      const costs = HoricData.estimateRunningCosts(featured);
-      if (el('heroCarCost')) el('heroCarCost').textContent = 'Est. ' + HoricData.formatPrice(costs.total) + '/month running cost';
+      const featured = cars.filter(c => c.status === 'in_stock')[Math.floor(Math.random() * Math.min(stats.inStock, 3))];
+      if (featured) {
+        if (el('heroCarName')) el('heroCarName').textContent = featured.year + ' ' + featured.make + ' ' + featured.model;
+        if (el('heroCarPrice')) el('heroCarPrice').textContent = HoricData.formatPrice(featured.price);
+        const costs = HoricData.estimateRunningCosts(featured);
+        if (el('heroCarCost')) el('heroCarCost').textContent = 'Est. ' + HoricData.formatPrice(costs.total) + '/month running cost';
+      }
     }
   }
 
-  function renderInventoryGrid() {
+  async function renderInventoryGrid() {
     const grid = document.getElementById('inventoryGrid');
     const noResults = document.getElementById('noResults');
     const countEl = document.getElementById('resultCount');
     if (!grid) return;
+
+    if (!cachedVehicles.length) await fetchVehicles();
 
     const search = document.getElementById('filterSearch')?.value || '';
     const make = document.getElementById('filterMake')?.value || '';
@@ -88,7 +108,7 @@ const HoricApp = (() => {
     const maxMileage = Number(document.getElementById('filterMaxMileage')?.value) || Infinity;
     const sort = document.getElementById('sortSelect')?.value || 'newest';
 
-    const results = HoricData.filterInventory({ search, make, model, body_type, fuel, condition, status, minPrice, maxPrice, minYear, maxMileage: maxMileage === 0 ? Infinity : maxMileage, sort });
+    const results = HoricData.filterInventory(cachedVehicles, { search, make, model, body_type, fuel, condition, status, minPrice, maxPrice, minYear, maxMileage: maxMileage === 0 ? Infinity : maxMileage, sort });
 
     if (countEl) countEl.textContent = results.length;
     if (results.length === 0) {
@@ -169,11 +189,10 @@ const HoricApp = (() => {
   }
 
   function openModal(id) {
-    const car = HoricData.getVehicle(id);
+    const car = cachedVehicles.find(c => c.id === id);
     if (!car) return;
     modalCar = car;
     modalImageIndex = 0;
-    HoricData.incrementViews(id);
 
     const el = (eid) => document.getElementById(eid);
     el('modalTitle').textContent = car.make + ' ' + car.model;
@@ -271,12 +290,13 @@ const HoricApp = (() => {
     setTimeout(function() { toast.style.opacity = '0'; setTimeout(function() { toast.remove(); }, 300); }, 3000);
   }
 
-  function init() {
+  async function init() {
+    await fetchVehicles();
     renderHero();
     renderFeatured();
     if (document.getElementById('inventoryGrid')) {
       populateFilters();
-      renderInventoryGrid();
+      await renderInventoryGrid();
       var searchInput = document.getElementById('filterSearch');
       if (searchInput) {
         var debounce;

@@ -9,7 +9,31 @@
 </head>
 <body>
 
-<div class="admin-layout">
+<!-- LOGIN OVERLAY -->
+<div class="login-overlay" id="loginOverlay">
+  <div class="login-card">
+    <div class="login-logo">
+      <img src="horic.png" alt="Horic Autos">
+      <h1>Admin Dashboard</h1>
+      <p>Sign in to manage your inventory</p>
+    </div>
+    <form class="login-form" id="loginForm" onsubmit="return HoricAdmin.login(event)">
+      <div class="form-group">
+        <label for="loginEmail">Email</label>
+        <input type="email" id="loginEmail" placeholder="admin@horicautos.com" required>
+      </div>
+      <div class="form-group">
+        <label for="loginPassword">Password</label>
+        <input type="password" id="loginPassword" placeholder="Enter your password" required>
+      </div>
+      <button type="submit" class="btn-login">Sign In</button>
+      <div class="login-error" id="loginError">Invalid email or password</div>
+    </form>
+  </div>
+</div>
+
+<!-- ADMIN DASHBOARD (hidden until logged in) -->
+<div class="admin-layout" id="adminLayout" style="display:none;">
   <aside class="admin-sidebar" id="adminSidebar">
     <div class="sidebar-brand">
       <h2>HORIC<span class="green">.</span></h2>
