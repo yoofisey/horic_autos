@@ -1,277 +1,300 @@
-/* ============================================================
-   app.js — Horic Autos Public Site
-   Handles: page navigation, inventory grid, car modal,
-            AI chat advisor
-   ============================================================ */
+const HoricApp = (() => {
+  let modalCar = null;
+  let modalImageIndex = 0;
 
-/* ── STATE ── */
-let inventory    = loadInventory();
-let activeFilter = 'all';
-let chatHistory  = [];
-let isBotTyping  = false;
-
-// Modal inline carousel state
-let modalCarousel = { idx: 0, imgs: [] };
-
-/* ── HELPERS (Previously Missing) ── */
-
-/** Pulls data from localStorage shared with admin.js */
-function loadInventory() {
-    const data = localStorage.getItem('horic_inventory');
-    return data ? JSON.parse(data) : [];
-}
-
-/** Formats numbers into GHS Currency */
-function formatPrice(price) {
-    return 'GHS ' + Number(price).toLocaleString();
-}
-
-/** Returns an emoji based on car type if no image is found */
-function getCarEmoji(car) {
-    const name = (car.model || "").toLowerCase();
-    if (name.includes('truck') || name.includes('hilux')) return '🛻';
-    if (name.includes('suv') || name.includes('gle')) return '🚙';
-    return '🚗';
-}
-
-/** Estimates monthly running costs for the Ghanaian market */
-function estimateRunningCosts(car) {
-    const price = Number(car.price) || 0;
-    // Basic logic: SUVs/Luxury cost more to run
-    const fuel = 950; 
-    const maintenance = car.condition === 'new' ? 150 : 450;
-    const insurance = Math.round((price * 0.025) / 12); // 2.5% annual rate
-    
-    return {
-        fuel,
-        maintenance,
-        insurance,
-        total: fuel + maintenance + insurance
+  function statusBadge(status) {
+    const map = {
+      in_stock: '<span class="badge badge-new">In Stock</span>',
+      sold: '<span class="badge badge-sold">Sold</span>',
+      coming_soon: '<span class="badge badge-coming">Coming Soon</span>'
     };
-}
-
-/* ══════════════════════════════════════════
-   PAGE NAVIGATION
-══════════════════════════════════════════ */
-
-function showPage(page) {
-  document.querySelectorAll('.page').forEach(el => el.classList.remove('active'));
-  document.querySelectorAll('.nav-links a').forEach(a => a.classList.remove('active'));
-
-  const targetPage = document.getElementById('page-' + page);
-  if (targetPage) targetPage.classList.add('active');
-
-  const navLink = document.getElementById('nav-' + page);
-  if (navLink) navLink.classList.add('active');
-
-  // Always sync latest inventory
-  inventory = loadInventory();
-
-  if (page === 'inventory') renderInventory();
-  if (page === 'home')      updateHeroStats();
-
-  window.scrollTo({ top: 0, behavior: 'smooth' });
-}
-
-function updateHeroStats() {
-  const el = document.getElementById('stat-cars');
-  if (el) el.innerHTML = inventory.length + '<span class="g">+</span>';
-}
-
-/* ══════════════════════════════════════════
-   INVENTORY GRID
-══════════════════════════════════════════ */
-
-function setFilter(filter, el) {
-  activeFilter = filter;
-  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
-  if (el) el.classList.add('active');
-  renderInventory();
-}
-
-function renderInventory() {
-  inventory = loadInventory();
-  const searchInput = document.getElementById('search-input');
-  const query = (searchInput ? searchInput.value : '').toLowerCase();
-
-  const filtered = inventory.filter(car => {
-    const matchesFilter =
-      activeFilter === 'all' ||
-      (car.condition && car.condition.toLowerCase() === activeFilter.toLowerCase());
-
-    const matchesSearch =
-      !query ||
-      `${car.make} ${car.model} ${car.year}`
-        .toLowerCase().includes(query);
-
-    return matchesFilter && matchesSearch;
-  });
-
-  const countEl = document.getElementById('inv-count');
-  if (countEl) {
-    countEl.textContent = filtered.length + ' vehicle' + (filtered.length !== 1 ? 's' : '') + ' found';
+    return map[status] || '';
   }
 
-  const grid = document.getElementById('car-grid');
-  if (!grid) return;
-
-  if (!filtered.length) {
-    grid.innerHTML = `
-      <div class="no-results">
-        <div class="icon">🔍</div>
-        <p>No vehicles match your search.</p>
-      </div>`;
-    return;
+  function conditionBadge(cond) {
+    return cond === 'new' ? '<span class="badge badge-new">New</span>' : '<span class="badge badge-used">Pre-Owned</span>';
   }
 
-  grid.innerHTML = filtered.map(car => buildCarCard(car)).join('');
-}
+  const CAR_SVG = '<svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="1.2"><path d="M5 17h14M5 17a2 2 0 01-2-2V9a2 2 0 012-2h1l2-3h8l2 3h1a2 2 0 012 2v6a2 2 0 01-2 2M5 17l-1 2h1m14-2l1 2h-1"/><circle cx="7.5" cy="17" r="1" /><circle cx="16.5" cy="17" r="1" /></svg>';
 
-function buildCarCard(car) {
-  const imgs  = car.images || (car.img ? [car.img] : []);
-  const costs = estimateRunningCosts(car);
-  const isNew = car.condition?.toLowerCase() === 'new';
+  function buildCarCard(car) {
+    const costs = HoricData.estimateRunningCosts(car);
+    let imgHtml;
+    if (car.images && car.images.length > 0) {
+      imgHtml = '<img src="' + car.images[0] + '" alt="' + car.make + ' ' + car.model + '">';
+    } else {
+      imgHtml = '<div class="car-card-img-placeholder"><div class="car-card-img-icon">' + CAR_SVG + '</div><div class="car-card-img-label">' + car.make + '</div></div>';
+    }
 
-  const imgAreaInner = imgs.length > 0
-    ? `<img class="car-img-photo" src="${imgs[0]}" alt="${car.model}"/>
-       ${imgs.length > 1 ? `<div class="car-photo-count">📷 ${imgs.length}</div>` : ''}`
-    : `<span class="car-emoji">${getCarEmoji(car)}</span>`;
-
-  return `
-    <div class="car-card" onclick="openCarModal(${car.id})">
-      <div class="card-speed"></div>
-      <div class="car-badge ${isNew ? 'badge-new' : 'badge-used'}">
-        ${isNew ? 'New' : 'Pre-Owned'}
-      </div>
-      <div class="car-img-area">
-        ${imgAreaInner}
-        <div class="car-img-lines"></div>
-      </div>
-      <div class="car-body">
-        <div class="car-make">${car.make || 'HORIC SELECTION'}</div>
-        <div class="car-name">${car.model}</div>
-        <div class="car-specs">
-          <span class="spec-pill">${car.year}</span>
-          <span class="spec-pill">${car.fuel || 'Petrol'}</span>
-          <span class="spec-pill">${car.transmission || 'Auto'}</span>
-        </div>
-        <div class="car-footer">
-          <div>
-            <div class="car-price">${formatPrice(car.price)}</div>
-            <div class="car-price-sub">~GHS ${costs.total.toLocaleString()}/mo running</div>
-          </div>
-          <button class="btn-view">Details →</button>
-        </div>
-      </div>
-    </div>`;
-}
-
-/* ══════════════════════════════════════════
-   CAR DETAIL MODAL
-══════════════════════════════════════════ */
-
-function openCarModal(id) {
-  const car = inventory.find(c => c.id === id);
-  if (!car) return;
-
-  const costs = estimateRunningCosts(car);
-  const imgs  = car.images || (car.img ? [car.img] : []);
-  modalCarousel = { idx: 0, imgs };
-
-  document.getElementById('modal-title').textContent = `${car.make || ''} ${car.model}`;
-  document.getElementById('modal-body').innerHTML = buildModalBody(car, costs, imgs);
-  document.getElementById('car-modal').classList.add('open');
-}
-
-function buildModalBody(car, costs, imgs) {
-  return `
-    ${buildModalImageArea(imgs, car)}
-    <div class="detail-grid">
-      <div class="detail-item"><div class="detail-label">Model</div><div class="detail-value">${car.model}</div></div>
-      <div class="detail-item"><div class="detail-label">Year</div><div class="detail-value">${car.year}</div></div>
-      <div class="detail-item"><div class="detail-label">Condition</div><div class="detail-value">${car.condition}</div></div>
-      <div class="detail-item"><div class="detail-label">Fuel</div><div class="detail-value">${car.fuel || 'Petrol'}</div></div>
-    </div>
-    <div class="cost-box">
-      <h4>Estimated Monthly Running Costs</h4>
-      <div class="cost-row"><span>Fuel & Maintenance</span><span>GHS ${(costs.fuel + costs.maintenance).toLocaleString()}</span></div>
-      <div class="cost-row"><span>Insurance (est.)</span><span>GHS ${costs.insurance.toLocaleString()}</span></div>
-      <div class="cost-row"><span>Total Monthly Cost</span><span class="cost-total">GHS ${costs.total.toLocaleString()}</span></div>
-    </div>
-    <div class="modal-actions">
-      <button class="btn-inquire" onclick="startInquiry(${car.id})">Inquire Now</button>
-      <button class="btn-ask-ai" onclick="askAIAboutCar(${car.id})">Ask AI Advisor</button>
-    </div>`;
-}
-
-function buildModalImageArea(imgs, car) {
-  if (imgs.length > 1) {
-    return `
-      <div class="modal-carousel" id="mc">
-        <div class="modal-carousel-track" id="mc-track">
-          ${imgs.map((src, i) => `
-            <div class="modal-carousel-slide">
-              <img src="${src}" alt="Photo ${i + 1}"/>
-            </div>`).join('')}
-        </div>
-        <button class="mc-arrow prev" onclick="mcStep(-1)">❮</button>
-        <button class="mc-arrow next" onclick="mcStep(1)">❯</button>
-      </div>`;
+    return '<div class="car-card reveal" onclick="HoricApp.openModal(\'' + car.id + '\')">' +
+      '<div class="car-card-image">' + imgHtml +
+      '<div class="car-card-badges">' + conditionBadge(car.condition) + statusBadge(car.status) + '</div></div>' +
+      '<div class="car-card-body">' +
+      '<div class="car-card-year">' + car.year + '</div>' +
+      '<div class="car-card-name">' + car.make + ' ' + car.model + '</div>' +
+      '<div class="car-card-specs">' +
+      '<span class="spec-pill">' + car.body_type + '</span>' +
+      '<span class="spec-pill">' + car.fuel + '</span>' +
+      '<span class="spec-pill">' + car.transmission + '</span>' +
+      (car.mileage > 0 ? '<span class="spec-pill">' + car.mileage.toLocaleString() + ' km</span>' : '') +
+      '</div>' +
+      '<div class="car-card-footer">' +
+      '<div><div class="car-card-price">' + HoricData.formatPrice(car.price) + '</div>' +
+      '<div class="car-card-cost">~<span>' + HoricData.formatPrice(costs.total) + '/mo</span> running</div></div>' +
+      '</div></div></div>';
   }
-  return `
-    <div class="modal-carousel" style="display:flex;align-items:center;justify-content:center">
-      ${imgs.length === 1 ? `<img src="${imgs[0]}" style="max-width:100%;max-height:240px;object-fit:contain"/>` : `<span style="font-size:7rem">${getCarEmoji(car)}</span>`}
-    </div>`;
-}
 
-/* Modal carousel controls */
-function mcStep(dir) {
-  modalCarousel.idx = (modalCarousel.idx + dir + modalCarousel.imgs.length) % modalCarousel.imgs.length;
-  const track = document.getElementById('mc-track');
-  if (track) track.style.transform = `translateX(-${modalCarousel.idx * 100}%)`;
-}
+  function renderFeatured() {
+    const grid = document.getElementById('featuredGrid');
+    if (!grid) return;
+    const cars = HoricData.loadInventory().filter(c => c.status === 'in_stock').slice(0, 6);
+    grid.innerHTML = cars.map(buildCarCard).join('');
+    observeReveal();
+  }
 
-function closeModalDirect() {
-  document.getElementById('car-modal').classList.remove('open');
-}
+  function renderHero() {
+    const cars = HoricData.loadInventory().filter(c => c.status === 'in_stock');
+    const stats = HoricData.getStats();
+    const el = (id) => document.getElementById(id);
 
-/* ══════════════════════════════════════════
-   CHAT & INQUIRIES
-══════════════════════════════════════════ */
+    if (el('statCars')) el('statCars').textContent = stats.inStock + '+';
+    if (el('trustCount')) el('trustCount').textContent = stats.inStock + '+';
 
-/** * Opens WhatsApp with a pre-filled message about the specific car.
- * @param {number} id - The ID of the car 
- */
-function startInquiry(id) {
-  const car = inventory.find(c => c.id === id);
-  if (!car) return;
+    if (cars.length > 0) {
+      const featured = cars[Math.floor(Math.random() * Math.min(cars.length, 3))];
+      if (el('heroCarName')) el('heroCarName').textContent = featured.year + ' ' + featured.make + ' ' + featured.model;
+      if (el('heroCarPrice')) el('heroCarPrice').textContent = HoricData.formatPrice(featured.price);
+      const costs = HoricData.estimateRunningCosts(featured);
+      if (el('heroCarCost')) el('heroCarCost').textContent = 'Est. ' + HoricData.formatPrice(costs.total) + '/month running cost';
+    }
+  }
 
-  // 1. Your WhatsApp Number (Use international format without the +)
-  const myNumber = "233XXXXXXXXX"; // e.g., 233244123456
+  function renderInventoryGrid() {
+    const grid = document.getElementById('inventoryGrid');
+    const noResults = document.getElementById('noResults');
+    const countEl = document.getElementById('resultCount');
+    if (!grid) return;
 
-  // 2. Craft the message
-  const message = `Hello Horic Autos! 🏎️ %0A%0AI am interested in the following vehicle:%0A` +
-                  `*Model:* ${car.model}%0A` +
-                  `*Year:* ${car.year}%0A` +
-                  `*Price:* ${formatPrice(car.price)}%0A%0A` +
-                  `Is it still available for a viewing?`;
+    const search = document.getElementById('filterSearch')?.value || '';
+    const make = document.getElementById('filterMake')?.value || '';
+    const model = document.getElementById('filterModel')?.value || '';
+    const body_type = document.getElementById('filterBody')?.value || '';
+    const fuel = document.getElementById('filterFuel')?.value || '';
+    const condition = document.getElementById('filterCondition')?.value || '';
+    const status = document.getElementById('filterStatus')?.value || '';
+    const minPrice = Number(document.getElementById('filterMinPrice')?.value) || 0;
+    const maxPrice = Number(document.getElementById('filterMaxPrice')?.value) || Infinity;
+    const minYear = Number(document.getElementById('filterMinYear')?.value) || 0;
+    const maxMileage = Number(document.getElementById('filterMaxMileage')?.value) || Infinity;
+    const sort = document.getElementById('sortSelect')?.value || 'newest';
 
-  // 3. Generate the WhatsApp Link
-  const whatsappUrl = `https://wa.me/${myNumber}?text=${message}`;
+    const results = HoricData.filterInventory({ search, make, model, body_type, fuel, condition, status, minPrice, maxPrice, minYear, maxMileage: maxMileage === 0 ? Infinity : maxMileage, sort });
 
-  // 4. Open in a new tab
-  window.open(whatsappUrl, '_blank');
-  
-  // Optional: Close the modal after they click
-  closeModalDirect();
-}
+    if (countEl) countEl.textContent = results.length;
+    if (results.length === 0) {
+      grid.innerHTML = '';
+      if (noResults) {
+        noResults.style.display = 'block';
+        var titleEl = document.getElementById('noResultsTitle');
+        var textEl = document.getElementById('noResultsText');
+        if (make && model && titleEl) {
+          titleEl.textContent = 'No ' + make + ' ' + model + ' found';
+          textEl.textContent = 'We don\'t currently have any ' + make + ' ' + model + ' in our inventory. Try browsing other models or let our AI advisor help.';
+        } else if (make && titleEl) {
+          titleEl.textContent = 'No ' + make + ' vehicles found';
+          textEl.textContent = 'We don\'t currently have any ' + make + ' vehicles in stock. Browse other makes or chat with our AI advisor for alternatives.';
+        } else if (search && titleEl) {
+          titleEl.textContent = 'No results for "' + search + '"';
+          textEl.textContent = 'We couldn\'t find any vehicles matching your search. Try different keywords or reset your filters.';
+        } else if (titleEl) {
+          titleEl.textContent = 'No vehicles found';
+          textEl.textContent = 'We couldn\'t find any vehicles matching your current filters. Try broadening your search criteria.';
+        }
+      }
+    } else {
+      if (noResults) noResults.style.display = 'none';
+      grid.innerHTML = results.map(buildCarCard).join('');
+    }
+    observeReveal();
+  }
 
-/* ══════════════════════════════════════════
-   INITIALISATION
-══════════════════════════════════════════ */
-(function init() {
-  inventory = loadInventory();
-  updateHeroStats();
-  // Render home grid if it exists
-  renderInventory();
+  function applyFilters() { renderInventoryGrid(); }
+
+  function resetFilters() {
+    ['filterSearch', 'filterMake', 'filterModel', 'filterBody', 'filterFuel', 'filterCondition', 'filterStatus', 'filterMinPrice', 'filterMaxPrice', 'filterMinYear', 'filterMaxMileage'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.value = '';
+    });
+    const sortEl = document.getElementById('sortSelect');
+    if (sortEl) sortEl.value = 'newest';
+    populateModels();
+    renderInventoryGrid();
+  }
+
+  function populateFilters() {
+    const makeSelect = document.getElementById('filterMake');
+    const modelSelect = document.getElementById('filterModel');
+    if (!makeSelect) return;
+
+    var makes = Object.keys(HoricData.CAR_MAKES_MODELS).sort();
+    const currentMake = makeSelect.value;
+
+    makeSelect.innerHTML = '<option value="">All Makes</option>' +
+      makes.map(m => '<option value="' + m + '"' + (m === currentMake ? ' selected' : '') + '>' + m + '</option>').join('');
+
+    populateModels();
+
+    makeSelect.addEventListener('change', function() {
+      populateModels();
+      renderInventoryGrid();
+    });
+    modelSelect.addEventListener('change', function() {
+      renderInventoryGrid();
+    });
+  }
+
+  function populateModels() {
+    const makeSelect = document.getElementById('filterMake');
+    const modelSelect = document.getElementById('filterModel');
+    if (!makeSelect || !modelSelect) return;
+
+    const selectedMake = makeSelect.value;
+    const models = selectedMake && HoricData.CAR_MAKES_MODELS[selectedMake]
+      ? HoricData.CAR_MAKES_MODELS[selectedMake].slice().sort()
+      : [];
+    const currentModel = modelSelect.value;
+
+    modelSelect.innerHTML = '<option value="">All Models</option>' +
+      models.map(m => '<option value="' + m + '"' + (m === currentModel ? ' selected' : '') + '>' + m + '</option>').join('');
+  }
+
+  function openModal(id) {
+    const car = HoricData.getVehicle(id);
+    if (!car) return;
+    modalCar = car;
+    modalImageIndex = 0;
+    HoricData.incrementViews(id);
+
+    const el = (eid) => document.getElementById(eid);
+    el('modalTitle').textContent = car.make + ' ' + car.model;
+    el('modalYear').textContent = car.year + '  ·  ' + (car.condition === 'new' ? 'New' : 'Pre-Owned') + '  ·  ' + (car.status === 'in_stock' ? 'In Stock' : car.status === 'sold' ? 'Sold' : 'Coming Soon');
+    el('modalPrice').textContent = HoricData.formatPrice(car.price);
+    el('modalDesc').textContent = car.description || '';
+
+    el('modalSpecs').innerHTML = [
+      { label: 'Body', value: car.body_type },
+      { label: 'Fuel', value: car.fuel },
+      { label: 'Engine', value: car.engine || '—' },
+      { label: 'Transmission', value: car.transmission },
+      { label: 'Mileage', value: car.mileage > 0 ? car.mileage.toLocaleString() + ' km' : 'New' },
+      { label: 'Color', value: car.color || '—' }
+    ].map(function(s) { return '<div class="spec-card"><div class="spec-card-label">' + s.label + '</div><div class="spec-card-value">' + s.value + '</div></div>'; }).join('');
+
+    el('modalFeatures').innerHTML = (car.features || []).map(function(f) { return '<span class="modal-feature-tag">' + f + '</span>'; }).join('');
+
+    const costs = HoricData.estimateRunningCosts(car);
+    el('modalCosts').innerHTML =
+      '<h4>Monthly Running Cost Estimate</h4>' +
+      '<div class="cost-row"><span class="cost-label">Fuel</span><span class="cost-value">' + HoricData.formatPrice(costs.fuel) + '</span></div>' +
+      '<div class="cost-row"><span class="cost-label">Maintenance</span><span class="cost-value">' + HoricData.formatPrice(costs.maintenance) + '</span></div>' +
+      '<div class="cost-row"><span class="cost-label">Insurance</span><span class="cost-value">' + HoricData.formatPrice(costs.insurance) + '</span></div>' +
+      '<div class="cost-row cost-total"><span class="cost-label">Total Monthly</span><span class="cost-value">' + HoricData.formatPrice(costs.total) + '</span></div>';
+
+    const waMsg = encodeURIComponent('Hi, I am interested in the ' + car.year + ' ' + car.make + ' ' + car.model + ' priced at ' + HoricData.formatPrice(car.price) + '. Can I get more details?');
+    el('modalWhatsApp').href = 'https://wa.me/233XXXXXXXXX?text=' + waMsg;
+
+    updateGallery();
+    el('carModal').classList.add('active');
+    document.body.style.overflow = 'hidden';
+  }
+
+  function closeModal() {
+    document.getElementById('carModal')?.classList.remove('active');
+    document.body.style.overflow = '';
+    modalCar = null;
+  }
+
+  function updateGallery() {
+    if (!modalCar) return;
+    const counter = document.getElementById('modalCounter');
+    const icon = document.getElementById('modalGalleryIcon');
+    const gallery = document.getElementById('modalGallery');
+    const hasImages = modalCar.images && modalCar.images.length > 0;
+
+    if (hasImages) {
+      if (icon) icon.style.display = 'none';
+      let img = gallery.querySelector('.modal-gallery-img');
+      if (!img) {
+        img = document.createElement('img');
+        img.className = 'modal-gallery-img';
+        img.style.cssText = 'position:relative;z-index:2;max-height:100%;max-width:100%;object-fit:contain;';
+        gallery.appendChild(img);
+      }
+      img.src = modalCar.images[modalImageIndex];
+      img.style.display = '';
+      counter.textContent = (modalImageIndex + 1) + ' / ' + modalCar.images.length;
+    } else {
+      if (icon) icon.style.display = '';
+      const img = gallery.querySelector('.modal-gallery-img');
+      if (img) img.style.display = 'none';
+      counter.textContent = 'No images uploaded';
+    }
+  }
+
+  function prevImage() {
+    if (!modalCar || !modalCar.images || modalCar.images.length <= 1) return;
+    modalImageIndex = (modalImageIndex - 1 + modalCar.images.length) % modalCar.images.length;
+    updateGallery();
+  }
+
+  function nextImage() {
+    if (!modalCar || !modalCar.images || modalCar.images.length <= 1) return;
+    modalImageIndex = (modalImageIndex + 1) % modalCar.images.length;
+    updateGallery();
+  }
+
+  function observeReveal() {
+    const observer = new IntersectionObserver(function(entries) {
+      entries.forEach(function(e) { if (e.isIntersecting) { e.target.classList.add('visible'); observer.unobserve(e.target); } });
+    }, { threshold: 0.1 });
+    document.querySelectorAll('.reveal:not(.visible)').forEach(function(el) { observer.observe(el); });
+  }
+
+  function showToast(message, type) {
+    type = type || 'info';
+    const container = document.getElementById('toastContainer');
+    if (!container) return;
+    const toast = document.createElement('div');
+    toast.className = 'toast ' + type;
+    toast.textContent = message;
+    container.appendChild(toast);
+    setTimeout(function() { toast.style.opacity = '0'; setTimeout(function() { toast.remove(); }, 300); }, 3000);
+  }
+
+  function init() {
+    renderHero();
+    renderFeatured();
+    if (document.getElementById('inventoryGrid')) {
+      populateFilters();
+      renderInventoryGrid();
+      var searchInput = document.getElementById('filterSearch');
+      if (searchInput) {
+        var debounce;
+        searchInput.addEventListener('input', function() {
+          clearTimeout(debounce);
+          debounce = setTimeout(function() { renderInventoryGrid(); }, 250);
+        });
+      }
+    }
+    observeReveal();
+
+    document.getElementById('carModal')?.addEventListener('click', function(e) {
+      if (e.target.classList.contains('modal-backdrop')) closeModal();
+    });
+    document.addEventListener('keydown', function(e) { if (e.key === 'Escape') closeModal(); });
+  }
+
+  document.addEventListener('DOMContentLoaded', init);
+
+  return { openModal: openModal, closeModal: closeModal, prevImage: prevImage, nextImage: nextImage, applyFilters: applyFilters, resetFilters: resetFilters, showToast: showToast, renderInventoryGrid: renderInventoryGrid, populateFilters: populateFilters, populateModels: populateModels };
 })();

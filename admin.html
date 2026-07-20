@@ -3,251 +3,340 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data: https:; connect-src 'self'; form-action 'self'; base-uri 'self'; frame-ancestors 'none'; upgrade-insecure-requests">
-  <title>Horic Autos | Admin Dashboard</title>
+  <title>Admin Dashboard | Horic Autos</title>
+  <link rel="icon" type="image/png" href="horic.png">
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-<div class="admin-wrapper">
-  <aside class="admin-sidebar">
-    <div class="sidebar-logo">HORIC<span>.</span></div>
+<div class="admin-layout">
+  <aside class="admin-sidebar" id="adminSidebar">
+    <div class="sidebar-brand">
+      <h2>HORIC<span class="green">.</span></h2>
+      <p>Admin Dashboard</p>
+    </div>
     <nav class="sidebar-nav">
-      <a href="#" class="active">📊 Dashboard</a>
-      <a href="inventory.html">🚗 View Site</a>
-      <a href="#">📩 Inquiries <span class="badge">4</span></a>
-      <a href="#">⚙️ Settings</a>
+      <button class="sidebar-nav-item active" data-tab="dashboard" onclick="HoricAdmin.switchTab('dashboard')">
+        <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+        Dashboard
+      </button>
+      <button class="sidebar-nav-item" data-tab="inventory" onclick="HoricAdmin.switchTab('inventory')">
+        <svg viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a4 4 0 00-8 0v2"/></svg>
+        Inventory
+      </button>
+      <button class="sidebar-nav-item" data-tab="sales" onclick="HoricAdmin.switchTab('sales')">
+        <svg viewBox="0 0 24 24"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>
+        Sales History
+      </button>
+      <button class="sidebar-nav-item" data-tab="enquiries" onclick="HoricAdmin.switchTab('enquiries')">
+        <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+        Enquiries
+        <span class="badge-count" id="enquiryBadge">0</span>
+      </button>
+      <button class="sidebar-nav-item" onclick="window.open('index.html','_blank')">
+        <svg viewBox="0 0 24 24"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+        View Site
+      </button>
     </nav>
-    <div class="sidebar-footer">Horic Admin v1.0</div>
+    <div class="sidebar-footer">Horic Admin v2.0</div>
   </aside>
 
   <main class="admin-main">
     <div class="admin-header">
-      <div>
-        <div class="section-eyebrow">Dashboard</div>
-        <h1>Inventory Overview</h1>
-        <p>Manage your active vehicle listings</p>
+      <div style="display:flex; align-items:center; gap:12px;">
+        <button class="btn btn-ghost" style="display:none;" id="sidebarToggle" onclick="document.getElementById('adminSidebar').classList.toggle('open')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+        </button>
+        <h1 id="adminPageTitle">Dashboard</h1>
       </div>
-      <button type="button" class="btn-primary" id="openAddVehicle">+ Add New Vehicle</button>
-    </div>
-
-    <div class="stats-grid">
-      <div class="stat-card">
-        <span class="label">Total Stock</span>
-        <span class="value" id="statTotal">—</span>
-        <div class="delta" id="statInStock">— in stock</div>
-      </div>
-      <div class="stat-card">
-        <span class="label">Active Inquiries</span>
-        <span class="value" id="statEnquiries">0</span>
-        <div class="delta" id="statUnreadEnquiries">0 unread</div>
-      </div>
-      <div class="stat-card">
-        <span class="label">Inventory Value</span>
-        <span class="value" id="statValue">—</span>
-        <div class="delta">Combined list price</div>
-      </div>
-      <div class="stat-card">
-        <span class="label">Coming Soon</span>
-        <span class="value" id="statSoon">—</span>
-        <div class="delta">Awaiting arrival</div>
+      <div class="admin-search">
+        <input type="text" id="adminSearch" placeholder="Search vehicles..." oninput="HoricAdmin.searchInventory(this.value)">
+        <button class="btn btn-primary" onclick="HoricAdmin.openVehicleModal()">+ Add Vehicle</button>
       </div>
     </div>
 
-    <div class="admin-section notification-section">
-      <div class="section-toolbar">
-        <div>
-          <h2>Enquiry Notifications</h2>
-          <p class="section-note">New customer enquiries appear here and can also trigger device notifications.</p>
+    <!-- DASHBOARD TAB -->
+    <div class="admin-panel active" id="panel-dashboard">
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-card-header">
+            <div>
+              <div class="stat-card-label">Total Vehicles</div>
+              <div class="stat-card-value" id="statTotal">0</div>
+            </div>
+            <div class="stat-card-icon green">
+              <svg viewBox="0 0 24 24" stroke="#039855"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a4 4 0 00-8 0v2"/></svg>
+            </div>
+          </div>
         </div>
-        <button type="button" class="btn-secondary" id="enableAdminNotifications">Enable notifications</button>
+        <div class="stat-card">
+          <div class="stat-card-header">
+            <div>
+              <div class="stat-card-label">In Stock</div>
+              <div class="stat-card-value" id="statInStock">0</div>
+            </div>
+            <div class="stat-card-icon green">
+              <svg viewBox="0 0 24 24" stroke="#039855"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+            </div>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-card-header">
+            <div>
+              <div class="stat-card-label">Total Value</div>
+              <div class="stat-card-value" id="statValue">GHS 0</div>
+            </div>
+            <div class="stat-card-icon blue">
+              <svg viewBox="0 0 24 24" stroke="#2970ff"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>
+            </div>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-card-header">
+            <div>
+              <div class="stat-card-label">Unread Enquiries</div>
+              <div class="stat-card-value" id="statUnread">0</div>
+            </div>
+            <div class="stat-card-icon red">
+              <svg viewBox="0 0 24 24" stroke="#f04438"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+            </div>
+          </div>
+        </div>
       </div>
-      <div class="notification-list" id="adminNotifications"></div>
+
+      <div class="admin-tabs">
+        <button class="admin-tab active" onclick="HoricAdmin.switchDashTab('recent', this)">Recent Vehicles</button>
+        <button class="admin-tab" onclick="HoricAdmin.switchDashTab('popular', this)">Most Viewed</button>
+      </div>
+
+      <div class="data-table-wrapper">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Vehicle</th>
+              <th>Status</th>
+              <th>Price</th>
+              <th>Views</th>
+              <th>Enquiries</th>
+            </tr>
+          </thead>
+          <tbody id="dashTableBody"></tbody>
+        </table>
+      </div>
     </div>
 
-    <div class="admin-section">
-      <div class="section-toolbar">
-        <h2>All Vehicles</h2>
-        <input type="text" class="minimal-search search-input-wide" id="adminSearch" placeholder="Search inventory...">
+    <!-- INVENTORY TAB -->
+    <div class="admin-panel" id="panel-inventory">
+      <div class="data-table-wrapper">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Vehicle</th>
+              <th>Status</th>
+              <th>Price</th>
+              <th>Year</th>
+              <th>Mileage</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="inventoryTableBody"></tbody>
+        </table>
       </div>
-      <table class="admin-table">
-        <thead>
-          <tr>
-            <th>Vehicle</th>
-            <th>Status</th>
-            <th>Price</th>
-            <th>Year</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-        <tbody id="adminTableBody"></tbody>
-      </table>
+    </div>
+
+    <!-- SALES TAB -->
+    <div class="admin-panel" id="panel-sales">
+      <div class="sales-summary">
+        <div class="sales-summary-card">
+          <div class="sales-summary-label">Total Sold</div>
+          <div class="sales-summary-value" id="salesTotalSold">0</div>
+        </div>
+        <div class="sales-summary-card">
+          <div class="sales-summary-label">Total Revenue</div>
+          <div class="sales-summary-value" id="salesRevenue">GHS 0</div>
+        </div>
+        <div class="sales-summary-card">
+          <div class="sales-summary-label">Average Sale Price</div>
+          <div class="sales-summary-value" id="salesAvgPrice">GHS 0</div>
+        </div>
+      </div>
+      <div class="data-table-wrapper">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Vehicle</th>
+              <th>Sold Price</th>
+              <th>Sold To</th>
+              <th>Sold Date</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="salesTableBody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ENQUIRIES TAB -->
+    <div class="admin-panel" id="panel-enquiries">
+      <div id="enquiriesList"></div>
     </div>
   </main>
 </div>
 
-<!-- ADD VEHICLE MODAL — must be outside <main>, direct child of <body> -->
-<div id="addCarModal" class="modal-overlay">
-  <div class="modal-content admin-form-card">
-    <button type="button" class="modal-close" data-admin-close="addCarModal">✕</button>
-    <div class="form-header">
-      <h2>New Inventory Entry</h2>
-      <p>Fill in the details to list a new vehicle.</p>
-    </div>
-    <div class="admin-form">
-      <div class="form-grid">
-        <div class="input-group">
-          <label for="f-make">Vehicle Make</label>
-          <input type="text" id="f-make" placeholder="e.g. Porsche">
-        </div>
-        <div class="input-group">
-          <label for="f-model">Model</label>
-          <input type="text" id="f-model" placeholder="e.g. 911 Turbo">
-        </div>
-        <div class="input-group">
-          <label for="f-year">Year</label>
-          <input type="number" id="f-year" placeholder="2024" min="1990" max="2030">
-        </div>
-        <div class="input-group">
-          <label for="f-price">Price (GHS)</label>
-          <input type="number" id="f-price" placeholder="250000" min="0">
-        </div>
-        <div class="input-group">
-          <label for="f-type">Body Type</label>
-          <select id="f-type">
-            <option value="sedan">Sedan</option>
-            <option value="suv">SUV</option>
-            <option value="truck">Truck</option>
-            <option value="hatchback">Hatchback</option>
-            <option value="coupe">Coupe</option>
-            <option value="van">Van</option>
-          </select>
-        </div>
-        <div class="input-group">
-          <label for="f-fuel">Fuel Type</label>
-          <select id="f-fuel">
-            <option value="petrol">Petrol</option>
-            <option value="hybrid">Hybrid</option>
-            <option value="diesel">Diesel</option>
-            <option value="electric">Electric</option>
-          </select>
-        </div>
-        <div class="input-group">
-          <label for="f-mileage">Mileage (km)</label>
-          <input type="number" id="f-mileage" placeholder="42000" min="0">
-        </div>
-        <div class="input-group">
-          <label for="f-engine">Engine</label>
-          <input type="text" id="f-engine" placeholder="e.g. 2000cc">
-        </div>
-        <div class="input-group">
-          <label for="f-transmission">Transmission</label>
-          <select id="f-transmission">
-            <option value="automatic">Automatic</option>
-            <option value="manual">Manual</option>
-          </select>
-        </div>
-        <div class="input-group">
-          <label for="f-condition">Condition</label>
-          <select id="f-condition">
-            <option value="new">New</option>
-            <option value="used">Pre-owned</option>
-          </select>
-        </div>
-        <div class="input-group">
-          <label for="f-status">Status</label>
-          <select id="f-status">
-            <option value="In Stock">In Stock</option>
-            <option value="Coming Soon">Coming Soon</option>
-            <option value="Sold">Sold</option>
-          </select>
-        </div>
-        <div class="input-group full-width">
-          <label for="f-desc">Listing Description</label>
-          <textarea id="f-desc" placeholder="Key features, condition, service history, trim, and buyer notes."></textarea>
-        </div>
-        <div class="input-group full-width">
-          <label for="f-image">Upload Image</label>
-          <div class="file-drop-zone">
-            <input type="file" id="f-image" accept="image/*" title="Upload vehicle images" multiple>
-            <p>Upload one or more vehicle photos</p>
+<!-- VEHICLE MODAL (Add/Edit) -->
+<div class="modal-backdrop" id="vehicleModal">
+  <div class="modal-card" style="max-width: 700px;">
+    <button class="modal-close" onclick="HoricAdmin.closeVehicleModal()">&times;</button>
+    <div class="modal-body">
+      <h2 style="font-family:'DM Serif Display',serif; margin-bottom:20px; color:var(--gray-900);" id="vehicleModalTitle">Add New Vehicle</h2>
+      <form id="vehicleForm" onsubmit="HoricAdmin.saveVehicle(event)">
+        <input type="hidden" id="vf-id">
+        <div class="admin-form-grid">
+          <div class="form-group">
+            <label>Make *</label>
+            <input type="text" class="form-control" id="vf-make" required placeholder="e.g. Toyota">
+          </div>
+          <div class="form-group">
+            <label>Model *</label>
+            <input type="text" class="form-control" id="vf-model" required placeholder="e.g. Corolla Cross">
+          </div>
+          <div class="form-group">
+            <label>Year *</label>
+            <input type="number" class="form-control" id="vf-year" required placeholder="e.g. 2024">
+          </div>
+          <div class="form-group">
+            <label>Price (GHS) *</label>
+            <input type="number" class="form-control" id="vf-price" required placeholder="e.g. 195000">
+          </div>
+          <div class="form-group">
+            <label>Body Type</label>
+            <select class="form-control" id="vf-body">
+              <option value="suv">SUV</option>
+              <option value="sedan">Sedan</option>
+              <option value="truck">Pickup / Truck</option>
+              <option value="hatchback">Hatchback</option>
+              <option value="coupe">Coupe</option>
+              <option value="van">Van</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Fuel Type</label>
+            <select class="form-control" id="vf-fuel">
+              <option value="petrol">Petrol</option>
+              <option value="diesel">Diesel</option>
+              <option value="hybrid">Hybrid</option>
+              <option value="electric">Electric</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Mileage (km)</label>
+            <input type="number" class="form-control" id="vf-mileage" placeholder="0 for new cars">
+          </div>
+          <div class="form-group">
+            <label>Engine</label>
+            <input type="text" class="form-control" id="vf-engine" placeholder="e.g. 2.0L Turbo">
+          </div>
+          <div class="form-group">
+            <label>Transmission</label>
+            <select class="form-control" id="vf-transmission">
+              <option value="automatic">Automatic</option>
+              <option value="manual">Manual</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Color</label>
+            <input type="text" class="form-control" id="vf-color" placeholder="e.g. Pearl White">
+          </div>
+          <div class="form-group">
+            <label>Condition</label>
+            <select class="form-control" id="vf-condition">
+              <option value="new">New</option>
+              <option value="used">Pre-Owned</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Status</label>
+            <select class="form-control" id="vf-status">
+              <option value="in_stock">In Stock</option>
+              <option value="coming_soon">Coming Soon</option>
+              <option value="sold">Sold</option>
+            </select>
+          </div>
+          <div class="form-group full-width">
+            <label>Description</label>
+            <textarea class="form-control" id="vf-desc" rows="3" placeholder="Tell buyers about this vehicle..."></textarea>
+          </div>
+          <div class="form-group full-width">
+            <label>Features (comma separated)</label>
+            <input type="text" class="form-control" id="vf-features" placeholder="e.g. Sunroof, Leather Seats, 4WD">
+          </div>
+          <div class="form-group full-width">
+            <label>Images</label>
+            <div class="image-upload-zone" id="uploadZone">
+              <div class="image-upload-zone-icon">
+                <svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+              </div>
+              <div class="image-upload-zone-text">Click or drag images here</div>
+              <div class="image-upload-zone-hint">Supports JPG, PNG. Stored locally in browser.</div>
+            </div>
+            <input type="file" id="vf-images" multiple accept="image/*" style="display:none;">
+            <div class="image-preview-grid" id="imagePreviewGrid"></div>
           </div>
         </div>
-      </div>
-      <div class="form-actions">
-        <button type="button" class="btn-secondary" data-admin-close="addCarModal">Cancel</button>
-        <button type="button" class="btn-primary" id="addVehicleBtn">List Vehicle</button>
-      </div>
+        <div class="form-actions">
+          <button type="button" class="btn btn-outline" onclick="HoricAdmin.closeVehicleModal()">Cancel</button>
+          <button type="submit" class="btn btn-primary">Save Vehicle</button>
+        </div>
+      </form>
     </div>
   </div>
 </div>
 
-<!-- EDIT VEHICLE MODAL — separate modal with its own prefilled fields and save logic -->
-<div id="editCarModal" class="modal-overlay">
-  <div class="modal-content admin-form-card">
-    <button type="button" class="modal-close" data-admin-close="editCarModal">✕</button>
-    <div class="form-header">
-      <h2>Edit Vehicle</h2>
-      <p>Update the details for this listing.</p>
-    </div>
-    <div class="admin-form">
-      <input type="hidden" id="e-id">
-      <div class="form-grid">
-        <div class="input-group">
-          <label for="e-make">Vehicle Make</label>
-          <input type="text" id="e-make" placeholder="e.g. Porsche">
-        </div>
-        <div class="input-group">
-          <label for="e-model">Model</label>
-          <input type="text" id="e-model" placeholder="e.g. 911 Turbo">
-        </div>
-        <div class="input-group">
-          <label for="e-year">Year</label>
-          <input type="number" id="e-year" placeholder="2024" min="1990" max="2030">
-        </div>
-        <div class="input-group">
-          <label for="e-price">Price (GHS)</label>
-          <input type="number" id="e-price" placeholder="250000" min="0">
-        </div>
-        <div class="input-group">
-          <label for="e-accel">0–60 MPH</label>
-          <input type="text" id="e-accel" placeholder="e.g. 3.2s">
-        </div>
-        <div class="input-group">
-          <label for="e-topspeed">Top Speed</label>
-          <input type="text" id="e-topspeed" placeholder="e.g. 197 mph">
-        </div>
-        <div class="input-group full-width">
-          <label for="e-status">Status</label>
-          <select id="e-status">
-            <option value="In Stock">In Stock</option>
-            <option value="Coming Soon">Coming Soon</option>
-            <option value="Sold">Sold</option>
-          </select>
-        </div>
+<!-- SOLD MODAL -->
+<div class="modal-backdrop" id="soldModal">
+  <div class="modal-card" style="max-width: 440px;">
+    <button class="modal-close" onclick="document.getElementById('soldModal').classList.remove('active')">&times;</button>
+    <div class="modal-body">
+      <h2 style="font-family:'DM Serif Display',serif; margin-bottom:20px; color:var(--gray-900);">Mark as Sold</h2>
+      <input type="hidden" id="soldVehicleId">
+      <div class="form-group" style="margin-bottom:14px;">
+        <label>Sale Price (GHS)</label>
+        <input type="number" class="form-control" id="soldPrice" placeholder="Final sale price">
+      </div>
+      <div class="form-group" style="margin-bottom:20px;">
+        <label>Sold To</label>
+        <input type="text" class="form-control" id="soldTo" placeholder="Buyer name">
       </div>
       <div class="form-actions">
-        <button type="button" class="btn-secondary" data-admin-close="editCarModal">Cancel</button>
-        <button type="button" class="btn-primary" id="saveVehicleBtn">Save Changes</button>
+        <button class="btn btn-outline" onclick="document.getElementById('soldModal').classList.remove('active')">Cancel</button>
+        <button class="btn btn-primary" onclick="HoricAdmin.confirmSold()">Confirm Sale</button>
       </div>
     </div>
   </div>
 </div>
 
 <!-- DELETE CONFIRM MODAL -->
-<div id="deleteConfirmModal" class="modal-overlay">
-  <div class="modal-content delete-card">
-    <div class="delete-icon">⚠️</div>
-    <h2>Remove Vehicle?</h2>
-    <p>This action is permanent. The vehicle will be removed from the public inventory and all listing data will be lost.</p>
-    <div class="form-actions form-actions-center">
-      <button type="button" class="btn-secondary" data-admin-close="deleteConfirmModal">Keep Vehicle</button>
-      <button type="button" id="confirmDeleteBtn" class="btn-danger">Confirm Delete</button>
+<div class="modal-backdrop" id="deleteModal">
+  <div class="modal-card" style="max-width: 400px;">
+    <button class="modal-close" onclick="document.getElementById('deleteModal').classList.remove('active')">&times;</button>
+    <div class="modal-body" style="text-align:center;">
+      <div style="width:56px;height:56px;border-radius:50%;background:var(--red-50);margin:0 auto 16px;display:flex;align-items:center;justify-content:center;">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#d92d20" stroke-width="2" width="24" height="24"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+      </div>
+      <h2 style="font-family:'DM Serif Display',serif; margin-bottom:8px; color:var(--gray-900);">Remove Vehicle?</h2>
+      <p style="color:var(--gray-500); margin-bottom:24px; font-size:0.9rem;">This action cannot be undone. The vehicle will be permanently removed from your inventory.</p>
+      <input type="hidden" id="deleteVehicleId">
+      <div class="form-actions" style="justify-content:center;">
+        <button class="btn btn-outline" onclick="document.getElementById('deleteModal').classList.remove('active')">Keep Vehicle</button>
+        <button class="btn btn-danger" onclick="HoricAdmin.confirmDelete()">Delete Permanently</button>
+      </div>
     </div>
   </div>
 </div>
 
+<div class="toast-container" id="toastContainer"></div>
+
 <script src="data.js"></script>
-<script src="script.js"></script>
+<script src="admin.js"></script>
 </body>
 </html>

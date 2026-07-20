@@ -3,151 +3,236 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="Browse Horic Autos inventory with Ghana-focused affordability and running-cost estimates.">
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data: https:; connect-src 'self'; form-action 'self'; base-uri 'self'; frame-ancestors 'none'; upgrade-insecure-requests">
   <title>Inventory | Horic Autos</title>
+  <meta name="description" content="Browse our complete vehicle inventory. Filter by price, body type, fuel, condition and more.">
+  <link rel="icon" type="image/png" href="horic.png">
   <link rel="stylesheet" href="style.css">
 </head>
-<body data-page="inventory">
-  <header class="site-header">
-    <a class="brand" href="index.html" aria-label="Horic Autos home">
-      <img src="horic.png" alt="" class="brand-mark">
-      <span>Horic Autos</span>
+<body>
+
+<header class="site-header">
+  <div class="header-inner">
+    <a href="index.html" class="brand">
+      <img src="horic.png" alt="Horic Autos">
+      <span>HORIC<span class="dot">.</span></span>
     </a>
-    <nav class="nav-links" aria-label="Primary navigation">
-      <a href="index.html">Home</a>
-      <a href="#inventory-tools">Inventory</a>
-      <a href="#buyer-tools">Buyer tools</a>
-      <a href="#contact">Contact</a>
+    <nav>
+      <ul class="nav-links" id="navLinks">
+        <li><a href="index.html">Home</a></li>
+        <li><a href="inventory.html" class="active">Inventory</a></li>
+        <li><a href="index.html#advisor">AI Advisor</a></li>
+        <li><a href="index.html#contact">Contact</a></li>
+      </ul>
     </nav>
-    <button class="nav-cta" type="button" data-open-chat>AI match</button>
-  </header>
-
-  <main>
-    <section class="inventory-hero">
-      <div>
-        <p class="eyebrow">Smart inventory search</p>
-        <h1>Choose with price, condition, and running costs side by side.</h1>
-        <p>Use income-fit filters and the AI advisor to avoid cars that look affordable upfront but cost too much to own.</p>
-      </div>
-      <div class="income-card" id="buyer-tools">
-        <span class="mini-label">Income-fit check</span>
-        <label for="income-input">Monthly income (GHS)</label>
-        <div class="income-row">
-          <input id="income-input" type="number" min="0" step="500" placeholder="12000">
-          <button type="button" id="apply-income">Apply</button>
-        </div>
-        <p id="income-note">Add income to tag each listing as ideal, stretch, or high risk.</p>
-      </div>
-    </section>
-
-    <section class="inventory-layout" id="inventory-tools">
-      <aside class="filter-panel" aria-label="Inventory filters">
-        <div class="filter-section">
-          <label for="search-input">Search</label>
-          <input id="search-input" type="search" placeholder="Toyota, SUV, hybrid...">
-        </div>
-        <div class="filter-section">
-          <label for="condition-filter">Condition</label>
-          <select id="condition-filter">
-            <option value="all">All vehicles</option>
-            <option value="new">New</option>
-            <option value="used">Pre-owned</option>
-          </select>
-        </div>
-        <div class="filter-section">
-          <label for="type-filter">Body type</label>
-          <select id="type-filter">
-            <option value="all">All body types</option>
-            <option value="suv">SUV</option>
-            <option value="sedan">Sedan</option>
-            <option value="truck">Truck</option>
-            <option value="hatchback">Hatchback</option>
-          </select>
-        </div>
-        <div class="filter-section">
-          <label for="fuel-filter">Fuel</label>
-          <select id="fuel-filter">
-            <option value="all">All fuel types</option>
-            <option value="petrol">Petrol</option>
-            <option value="diesel">Diesel</option>
-            <option value="hybrid">Hybrid</option>
-            <option value="electric">Electric</option>
-          </select>
-        </div>
-        <div class="filter-section">
-          <label for="sort-filter">Sort by</label>
-          <select id="sort-filter">
-            <option value="recommended">Recommended</option>
-            <option value="price-asc">Price: low to high</option>
-            <option value="price-desc">Price: high to low</option>
-            <option value="cost-asc">Lowest running cost</option>
-            <option value="year-desc">Newest first</option>
-          </select>
-        </div>
-        <button class="btn-secondary full" type="button" id="reset-filters">Reset filters</button>
-      </aside>
-
-      <section class="inventory-results" aria-live="polite">
-        <div class="results-bar">
-          <div>
-            <p class="eyebrow">Available vehicles</p>
-            <h2 id="inventory-count">Loading inventory</h2>
-          </div>
-          <button class="btn-primary" type="button" data-open-chat>Ask what fits me</button>
-        </div>
-        <div class="vehicle-grid" id="vehicle-grid"></div>
-      </section>
-    </section>
-
-    <section class="contact-strip" id="contact">
-      <div>
-        <p class="eyebrow">Need help choosing?</p>
-        <h2>Share your monthly income and driving needs with the advisor.</h2>
-      </div>
-      <div class="contact-actions">
-        <button class="btn-primary" type="button" data-open-chat>Open AI advisor</button>
-        <a class="btn-secondary" href="https://wa.me/233XXXXXXXXX" target="_blank" rel="noopener noreferrer">WhatsApp sales</a>
-      </div>
-    </section>
-  </main>
-
-  <div class="modal-backdrop" id="vehicle-modal" aria-hidden="true">
-    <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="modal-title">
-      <button class="icon-button modal-close" type="button" data-close-modal aria-label="Close vehicle details">×</button>
-      <div id="modal-content"></div>
+    <div class="header-actions">
+      <button class="btn btn-primary" onclick="document.querySelector('.chat-toggle').click()">AI Match</button>
+      <button class="mobile-toggle" onclick="document.getElementById('navLinks').classList.toggle('open')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+      </button>
     </div>
   </div>
+</header>
 
-  <aside class="chat-widget" aria-label="Horic AI affordability advisor">
-    <button class="chat-toggle" type="button" id="chat-toggle" aria-expanded="false" aria-controls="chat-panel">
-      <span>AI</span>
-      <small>Advisor</small>
-    </button>
-    <section class="chat-panel" id="chat-panel" aria-hidden="true">
-      <div class="chat-header">
-        <div>
-          <strong>Horic Advisor</strong>
-          <span>Income-aware car matching</span>
+<main class="inventory-page">
+  <div class="inventory-layout">
+    <aside class="filter-panel">
+      <h3>Filters</h3>
+      <div class="filter-group">
+        <label>Make</label>
+        <select class="filter-select" id="filterMake">
+          <option value="">All Makes</option>
+        </select>
+      </div>
+      <div class="filter-group">
+        <label>Model</label>
+        <select class="filter-select" id="filterModel">
+          <option value="">All Models</option>
+        </select>
+      </div>
+      <div class="filter-group">
+        <label>Condition</label>
+        <select class="filter-select" id="filterCondition">
+          <option value="">All Conditions</option>
+          <option value="new">New</option>
+          <option value="used">Pre-Owned</option>
+        </select>
+      </div>
+      <div class="filter-group">
+        <label>Body Type</label>
+        <select class="filter-select" id="filterBody">
+          <option value="">All Body Types</option>
+          <option value="suv">SUV</option>
+          <option value="sedan">Sedan</option>
+          <option value="truck">Pickup / Truck</option>
+          <option value="hatchback">Hatchback</option>
+          <option value="coupe">Coupe</option>
+          <option value="van">Van</option>
+        </select>
+      </div>
+      <div class="filter-group">
+        <label>Fuel Type</label>
+        <select class="filter-select" id="filterFuel">
+          <option value="">All Fuel Types</option>
+          <option value="petrol">Petrol</option>
+          <option value="diesel">Diesel</option>
+          <option value="hybrid">Hybrid</option>
+          <option value="electric">Electric</option>
+        </select>
+      </div>
+      <div class="filter-group">
+        <label>Status</label>
+        <select class="filter-select" id="filterStatus">
+          <option value="">All Status</option>
+          <option value="in_stock">In Stock</option>
+          <option value="coming_soon">Coming Soon</option>
+        </select>
+      </div>
+      <div class="filter-group">
+        <label>Price Range (GHS)</label>
+        <div class="price-range">
+          <input type="number" class="filter-input" id="filterMinPrice" placeholder="Min">
+          <input type="number" class="filter-input" id="filterMaxPrice" placeholder="Max">
         </div>
-        <button class="icon-button" type="button" data-close-chat aria-label="Close chat">×</button>
       </div>
-      <div class="chat-messages" id="chat-messages" aria-live="polite"></div>
-      <div class="quick-replies" id="quick-replies">
-        <button type="button" data-prompt="I earn GHS 12000 per month and want an SUV for family use. What can I afford?">Family SUV</button>
-        <button type="button" data-prompt="My income is GHS 8000 monthly. I need a low running cost daily car.">Low-cost daily</button>
-        <button type="button" data-prompt="I have GHS 250000 cash and want a reliable car with manageable maintenance.">Cash budget</button>
+      <div class="filter-group">
+        <label>Min Year</label>
+        <input type="number" class="filter-input" id="filterMinYear" placeholder="e.g. 2020">
       </div>
-      <form class="chat-form" id="chat-form">
-        <label class="sr-only" for="chat-input">Ask the Horic advisor</label>
-        <input id="chat-input" type="text" autocomplete="off" placeholder="Income, budget, lifestyle...">
-        <button type="submit">Send</button>
-      </form>
-    </section>
-  </aside>
+      <div class="filter-group">
+        <label>Max Mileage (km)</label>
+        <input type="number" class="filter-input" id="filterMaxMileage" placeholder="e.g. 50000">
+      </div>
+      <div class="filter-actions">
+        <button class="btn btn-primary btn-sm" onclick="HoricApp.applyFilters()">Apply</button>
+        <button class="btn btn-outline btn-sm" onclick="HoricApp.resetFilters()">Reset</button>
+      </div>
+    </aside>
 
-  <script src="data.js"></script>
-  <script src="chatbot.js"></script>
-  <script src="script.js"></script>
+    <section>
+      <div class="inventory-top-search">
+        <div class="top-search-bar">
+          <svg class="top-search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <input type="text" class="top-search-input" id="filterSearch" placeholder="Search by make, model, engine, color..." autocomplete="off">
+        </div>
+      </div>
+      <div class="results-header">
+        <div class="results-count"><strong id="resultCount">0</strong> vehicles found</div>
+        <select class="sort-select" id="sortSelect" onchange="HoricApp.applyFilters()">
+          <option value="newest">Newest First</option>
+          <option value="price_asc">Price: Low to High</option>
+          <option value="price_desc">Price: High to Low</option>
+          <option value="year_desc">Year: Newest</option>
+          <option value="year_asc">Year: Oldest</option>
+          <option value="mileage_asc">Mileage: Lowest</option>
+        </select>
+      </div>
+      <div class="cars-grid" id="inventoryGrid"></div>
+      <div class="no-results" id="noResults" style="display:none;">
+        <div class="no-results-icon">
+          <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        </div>
+        <h3 id="noResultsTitle">No vehicles found</h3>
+        <p id="noResultsText">We couldn't find any vehicles matching your current filters.</p>
+        <div class="no-results-actions">
+          <button class="btn btn-primary btn-sm" onclick="HoricApp.resetFilters()">Reset All Filters</button>
+          <button class="btn btn-outline btn-sm" onclick="document.querySelector('.chat-toggle').click()">Ask AI Advisor</button>
+        </div>
+      </div>
+    </section>
+  </div>
+</main>
+
+<section class="contact-strip">
+  <div class="container">
+    <h2>Can't find what you're looking for?</h2>
+    <p>Tell our AI advisor exactly what you need. It will search our inventory and recommend the best match.</p>
+    <div class="contact-actions">
+      <button class="btn btn-lg" style="background:var(--white);color:var(--gray-900);" onclick="document.querySelector('.chat-toggle').click()">Chat with AI Advisor</button>
+    </div>
+  </div>
+</section>
+
+<footer class="site-footer">
+  <div class="container">
+    <div class="footer-bottom">
+      <span>&copy; 2025 Horic Autos. All rights reserved.</span>
+      <span>Designed in Ghana</span>
+    </div>
+  </div>
+</footer>
+
+<div class="modal-backdrop" id="carModal">
+  <div class="modal-card">
+    <button class="modal-close" onclick="HoricApp.closeModal()">&times;</button>
+    <div class="modal-gallery" id="modalGallery">
+      <div class="modal-gallery-icon" id="modalGalleryIcon">
+        <svg viewBox="0 0 24 24"><path d="M5 17h14M5 17a2 2 0 01-2-2V9a2 2 0 012-2h1l2-3h8l2 3h1a2 2 0 012 2v6a2 2 0 01-2 2M5 17l-1 2h1m14-2l1 2h-1"/><circle cx="7.5" cy="17" r="0.5" fill="currentColor"/><circle cx="16.5" cy="17" r="0.5" fill="currentColor"/></svg>
+      </div>
+      <button class="gallery-nav gallery-prev" onclick="HoricApp.prevImage()">&#8249;</button>
+      <button class="gallery-nav gallery-next" onclick="HoricApp.nextImage()">&#8250;</button>
+      <div class="gallery-counter" id="modalCounter"></div>
+    </div>
+    <div class="modal-body">
+      <div class="modal-top">
+        <div>
+          <div class="modal-title" id="modalTitle"></div>
+          <div class="modal-year" id="modalYear"></div>
+        </div>
+        <div class="modal-price" id="modalPrice"></div>
+      </div>
+      <div class="modal-specs-grid" id="modalSpecs"></div>
+      <p class="modal-desc" id="modalDesc"></p>
+      <div class="modal-features" id="modalFeatures"></div>
+      <div class="cost-breakdown" id="modalCosts"></div>
+      <div class="modal-actions">
+        <a id="modalWhatsApp" href="#" target="_blank" class="btn btn-primary btn-lg">Enquire via WhatsApp</a>
+        <button class="btn btn-outline" onclick="document.querySelector('.chat-toggle').click(); HoricApp.closeModal();">Ask AI Advisor</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<button class="chat-toggle" aria-label="Open AI Advisor">
+  <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+</button>
+
+<div class="chat-panel" id="chatPanel">
+  <div class="chat-header">
+    <div class="chat-header-avatar"><div class="chat-header-avatar-dot"></div></div>
+    <div class="chat-header-info">
+      <h4>AI Car Advisor</h4>
+      <p>Online</p>
+    </div>
+  </div>
+  <div class="chat-messages" id="chatMessages"></div>
+  <div class="chat-quick-replies" id="quickReplies">
+    <button class="quick-reply" data-prompt="I need a family SUV under GHS 250,000">Family SUV</button>
+    <button class="quick-reply" data-prompt="Show me the cheapest cars in stock">Low-cost daily</button>
+    <button class="quick-reply" data-prompt="I have a budget of GHS 300,000">Cash budget</button>
+  </div>
+  <form class="chat-input-area" id="chatForm">
+    <input type="text" class="chat-input" id="chatInput" placeholder="Ask about any car, budget, or costs..." autocomplete="off">
+    <button type="submit" class="chat-send">
+      <svg viewBox="0 0 24 24"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/></svg>
+    </button>
+  </form>
+</div>
+
+<div class="toast-container" id="toastContainer"></div>
+
+<script src="data.js"></script>
+<script src="chatbot.js"></script>
+<script src="app.js"></script>
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    HoricApp.populateFilters();
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('body')) document.getElementById('filterBody').value = params.get('body');
+    if (params.get('fuel')) document.getElementById('filterFuel').value = params.get('fuel');
+    if (params.get('make')) document.getElementById('filterMake').value = params.get('make');
+    HoricApp.populateModels();
+    HoricApp.applyFilters();
+  });
+</script>
 </body>
 </html>

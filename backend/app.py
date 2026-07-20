@@ -13,6 +13,16 @@ SCHEMA_PATH = BASE_DIR / "schema.sql"
 ADMIN_TOKEN = os.environ.get("HORIC_ADMIN_TOKEN", "change-this-admin-token")
 ALLOWED_ORIGIN = os.environ.get(
     "HORIC_ALLOWED_ORIGIN", "http://127.0.0.1:4173")
+DEV_ORIGINS = {
+    ALLOWED_ORIGIN,
+    "http://127.0.0.1:5500",
+    "http://localhost:5500",
+    "http://127.0.0.1:8000",
+    "http://localhost:8000",
+    "http://127.0.0.1:4173",
+    "http://localhost:4173",
+    "null",
+}
 RATE_LIMIT_WINDOW = 60
 RATE_LIMIT_MAX = 30
 RATE_LIMITS = {}
@@ -110,6 +120,129 @@ GHANA_KB = {
     },
 }
 
+DEFAULT_VEHICLES = [
+    {
+        "id": 1,
+        "make": "Toyota",
+        "model": "Land Cruiser V8",
+        "year": 2022,
+        "price": 580000,
+        "condition": "used",
+        "status": "In Stock",
+        "body_type": "suv",
+        "fuel": "petrol",
+        "mileage": 42000,
+        "engine": "4500cc",
+        "transmission": "automatic",
+        "description": "Full spec, dual sunroof, 7-seater, low mileage. Excellent condition.",
+    },
+    {
+        "id": 2,
+        "make": "Toyota",
+        "model": "Corolla Cross",
+        "year": 2024,
+        "price": 195000,
+        "condition": "new",
+        "status": "In Stock",
+        "body_type": "suv",
+        "fuel": "hybrid",
+        "mileage": 0,
+        "engine": "1800cc",
+        "transmission": "automatic",
+        "description": "Brand new hybrid SUV. Outstanding fuel economy. Ideal daily driver.",
+    },
+    {
+        "id": 3,
+        "make": "Hyundai",
+        "model": "Tucson",
+        "year": 2023,
+        "price": 220000,
+        "condition": "new",
+        "status": "In Stock",
+        "body_type": "suv",
+        "fuel": "petrol",
+        "mileage": 0,
+        "engine": "2000cc",
+        "transmission": "automatic",
+        "description": "Panoramic roof, heated seats, ADAS safety suite, wireless CarPlay.",
+    },
+    {
+        "id": 4,
+        "make": "Toyota",
+        "model": "Hilux Revo",
+        "year": 2021,
+        "price": 310000,
+        "condition": "used",
+        "status": "In Stock",
+        "body_type": "truck",
+        "fuel": "diesel",
+        "mileage": 68000,
+        "engine": "2800cc",
+        "transmission": "automatic",
+        "description": "Double cab, 4x4. Hardcover. Very clean. Well maintained.",
+    },
+    {
+        "id": 5,
+        "make": "Honda",
+        "model": "Accord",
+        "year": 2020,
+        "price": 145000,
+        "condition": "used",
+        "status": "In Stock",
+        "body_type": "sedan",
+        "fuel": "petrol",
+        "mileage": 55000,
+        "engine": "1500cc",
+        "transmission": "automatic",
+        "description": "Turbocharged. Leather seats, Honda Sensing, reverse camera.",
+    },
+    {
+        "id": 6,
+        "make": "Tesla",
+        "model": "Model 3",
+        "year": 2023,
+        "price": 420000,
+        "condition": "new",
+        "status": "In Stock",
+        "body_type": "sedan",
+        "fuel": "electric",
+        "mileage": 0,
+        "engine": "283kW",
+        "transmission": "automatic",
+        "description": "Long Range RWD. 560km range. Autopilot included.",
+    },
+    {
+        "id": 7,
+        "make": "Kia",
+        "model": "Sportage",
+        "year": 2024,
+        "price": 210000,
+        "condition": "new",
+        "status": "In Stock",
+        "body_type": "suv",
+        "fuel": "petrol",
+        "mileage": 0,
+        "engine": "1600cc",
+        "transmission": "automatic",
+        "description": "Panoramic display, 360 camera, heated seats.",
+    },
+    {
+        "id": 8,
+        "make": "Nissan",
+        "model": "Navara",
+        "year": 2022,
+        "price": 275000,
+        "condition": "used",
+        "status": "In Stock",
+        "body_type": "truck",
+        "fuel": "diesel",
+        "mileage": 38000,
+        "engine": "2300cc",
+        "transmission": "manual",
+        "description": "Single cab. Bull bar, tow hitch. Solid workhorse.",
+    },
+]
+
 
 def db():
     conn = sqlite3.connect(DB_PATH)
@@ -121,6 +254,56 @@ def db():
 def init_db():
     with db() as conn:
         conn.executescript(SCHEMA_PATH.read_text(encoding="utf-8"))
+        seed_inventory(conn)
+        refresh_running_costs(conn)
+
+
+def seed_inventory(conn):
+    count = conn.execute("SELECT COUNT(*) FROM vehicles").fetchone()[0]
+    if count:
+        return
+    conn.executemany(
+        """
+        INSERT INTO vehicles(
+          id, make, model, year, price, condition, status, body_type,
+          fuel, mileage, engine, transmission, description
+        )
+        VALUES (
+          :id, :make, :model, :year, :price, :condition, :status, :body_type,
+          :fuel, :mileage, :engine, :transmission, :description
+        )
+        """,
+        DEFAULT_VEHICLES,
+    )
+
+
+def refresh_running_costs(conn):
+    rows = conn.execute("SELECT * FROM vehicles").fetchall()
+    for row in rows:
+        vehicle = dict(row)
+        costs = running_cost_for(vehicle)
+        conn.execute(
+            """
+            INSERT INTO running_costs(
+              vehicle_id, fuel_monthly, maintenance_monthly,
+              insurance_monthly, total_monthly, updated_at
+            )
+            VALUES (?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
+            ON CONFLICT(vehicle_id) DO UPDATE SET
+              fuel_monthly = excluded.fuel_monthly,
+              maintenance_monthly = excluded.maintenance_monthly,
+              insurance_monthly = excluded.insurance_monthly,
+              total_monthly = excluded.total_monthly,
+              updated_at = CURRENT_TIMESTAMP
+            """,
+            (
+                vehicle["id"],
+                costs["fuel_monthly"],
+                costs["maintenance_monthly"],
+                costs["insurance_monthly"],
+                costs["total_monthly"],
+            ),
+        )
 
 
 def clean_text(value, limit=500):
@@ -140,7 +323,8 @@ def json_response(handler, status, payload):
 
 
 def security_headers(handler):
-    handler.send_header("Access-Control-Allow-Origin", ALLOWED_ORIGIN)
+    handler.send_header("Access-Control-Allow-Origin", cors_origin(handler))
+    handler.send_header("Vary", "Origin")
     handler.send_header("Access-Control-Allow-Headers",
                         "Content-Type, X-Admin-Token")
     handler.send_header("Access-Control-Allow-Methods",
@@ -150,6 +334,13 @@ def security_headers(handler):
     handler.send_header("Referrer-Policy", "no-referrer")
     handler.send_header("Content-Security-Policy", "default-src 'self'")
     handler.send_header("Cache-Control", "no-store")
+
+
+def cors_origin(handler):
+    origin = handler.headers.get("Origin") or ALLOWED_ORIGIN
+    if origin in DEV_ORIGINS or origin.startswith("http://127.0.0.1:") or origin.startswith("http://localhost:"):
+        return origin
+    return ALLOWED_ORIGIN
 
 
 def read_json(handler):
@@ -289,6 +480,7 @@ def detect_intent(text):
     """Return a list of matched intents from the user message."""
     intents = []
     patterns = {
+        "cost_table":       r"\b(all cars|all vehicles|every car|every vehicle|full inventory|cost table|running costs for all)\b",
         "fuel_price":       r"\b(fuel|petrol|diesel|pump price|litre|liter|lpg)\b",
         "insurance":        r"\b(insur|premium|third.?party|policy|cover|nif)\b",
         "maintenance":      r"\b(service|maintain|maintain|oil.?change|repair|workshop|mechanic|"
@@ -416,6 +608,33 @@ def handle_running_cost(text, vehicles):
         f"  • Total:       GHS {fuel_cost + maint + ins:,}/month",
         "",
         "Tell me the specific vehicle you have in mind for a more precise estimate.",
+    ]
+    return "\n".join(lines)
+
+
+def handle_cost_table(vehicles):
+    if not vehicles:
+        return "I do not have inventory data loaded yet. Please check that the backend database has vehicles."
+
+    lines = [
+        "Current Horic Autos running-cost estimates:",
+        "",
+        f"{'Vehicle':<34} {'Fuel':>10} {'Maint.':>10} {'Ins.':>9} {'Total/mo':>10}",
+        "-" * 78,
+    ]
+    for v in sorted(vehicles, key=lambda item: running_cost_for(item)["total_monthly"]):
+        costs = running_cost_for(v)
+        name = f"{v['year']} {v['make']} {v['model']}"[:34]
+        lines.append(
+            f"{name:<34} "
+            f"GHS {costs['fuel_monthly']:>5,} "
+            f"GHS {costs['maintenance_monthly']:>5,} "
+            f"GHS {costs['insurance_monthly']:>4,} "
+            f"GHS {costs['total_monthly']:>5,}"
+        )
+    lines += [
+        "",
+        f"Assumption: about {GHANA_KB['avg_monthly_km']:,} km/month in Ghana driving conditions.",
     ]
     return "\n".join(lines)
 
@@ -661,6 +880,8 @@ def ai_reply(prompt):
     # Priority routing — most specific first
     if "greeting" in intents and len(intents) == 1:
         return handle_greeting()
+    if "cost_table" in intents:
+        return handle_cost_table(vehicles)
     if "fuel_price" in intents and "running_cost" not in intents and "inventory_search" not in intents:
         return handle_fuel_price(text)
     if "insurance" in intents and "running_cost" not in intents:
@@ -709,6 +930,10 @@ class Handler(BaseHTTPRequestHandler):
         if rate_limited(self):
             return json_response(self, 429, {"error": "Too many requests."})
         path = urlparse(self.path).path
+        if path == "/api/health":
+            return json_response(self, 200, {"ok": True})
+        if path == "/api/inventory":
+            return json_response(self, 200, {"vehicles": inventory_knowledge()})
         if path == "/api/admin/enquiries":
             if not authorized(self):
                 return json_response(self, 401, {"error": "Unauthorized."})
