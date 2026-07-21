@@ -96,7 +96,8 @@ function vehicleToKnowledge(vehicle) {
   const condition = vehicle.condition === 'new' ? 'New' : 'Pre-Owned';
   const status = vehicle.status === 'in_stock' ? 'Available' : vehicle.status === 'sold' ? 'Sold' : 'Coming Soon';
   const features = (vehicle.features || []).join(', ');
-  return `Vehicle: ${vehicle.year} ${vehicle.make} ${vehicle.model}
+  const trimStr = vehicle.trim ? ' ' + vehicle.trim : '';
+  return `Vehicle: ${vehicle.year} ${vehicle.make} ${vehicle.model}${trimStr}
 Price: GHS ${Number(vehicle.price).toLocaleString()}
 Condition: ${condition} | Status: ${status}
 Body Type: ${vehicle.body_type} | Fuel: ${vehicle.fuel} | Transmission: ${vehicle.transmission}
@@ -188,8 +189,8 @@ app.post('/api/vehicles', requireAuth, async (req, res) => {
     const featuresJson = JSON.stringify(v.features || []);
     const imagesJson = JSON.stringify(v.images || []);
 
-    const [vehicle] = await sql`INSERT INTO vehicles (id, make, model, year, price, condition, status, body_type, fuel, mileage, engine, transmission, color, description, features, images, created_at, updated_at, views, enquiries)
-      VALUES (${id}, ${v.make || ''}, ${v.model || ''}, ${Number(v.year) || 2024}, ${Number(v.price) || 0}, ${v.condition || 'new'}, ${v.status || 'in_stock'}, ${v.body_type || 'sedan'}, ${v.fuel || 'petrol'}, ${Number(v.mileage) || 0}, ${v.engine || ''}, ${v.transmission || 'automatic'}, ${v.color || ''}, ${v.description || ''}, ${featuresJson}::jsonb, ${imagesJson}::jsonb, ${now}::timestamptz, ${now}::timestamptz, 0, 0)
+    const [vehicle] = await sql`INSERT INTO vehicles (id, make, model, trim, year, price, condition, status, body_type, fuel, mileage, engine, transmission, color, description, features, images, created_at, updated_at, views, enquiries)
+      VALUES (${id}, ${v.make || ''}, ${v.model || ''}, ${v.trim || ''}, ${Number(v.year) || 2024}, ${Number(v.price) || 0}, ${v.condition || 'new'}, ${v.status || 'in_stock'}, ${v.body_type || 'sedan'}, ${v.fuel || 'petrol'}, ${Number(v.mileage) || 0}, ${v.engine || ''}, ${v.transmission || 'automatic'}, ${v.color || ''}, ${v.description || ''}, ${featuresJson}::jsonb, ${imagesJson}::jsonb, ${now}::timestamptz, ${now}::timestamptz, 0, 0)
       RETURNING *`;
 
     // Auto-embed into knowledge base
@@ -210,7 +211,7 @@ app.put('/api/vehicles/:id', requireAuth, async (req, res) => {
     const imagesJson = JSON.stringify(v.images || []);
 
     const [vehicle] = await sql`UPDATE vehicles SET
-      make = ${v.make}, model = ${v.model}, year = ${Number(v.year)}, price = ${Number(v.price)},
+      make = ${v.make}, model = ${v.model}, trim = ${v.trim || ''}, year = ${Number(v.year)}, price = ${Number(v.price)},
       condition = ${v.condition}, status = ${v.status}, body_type = ${v.body_type},
       fuel = ${v.fuel}, mileage = ${Number(v.mileage)}, engine = ${v.engine},
       transmission = ${v.transmission}, color = ${v.color}, description = ${v.description},

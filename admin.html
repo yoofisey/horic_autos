@@ -259,11 +259,19 @@
         <div class="admin-form-grid">
           <div class="form-group">
             <label>Make *</label>
-            <input type="text" class="form-control" id="vf-make" required placeholder="e.g. Toyota">
+            <select class="form-control" id="vf-make" required onchange="HoricAdmin.populateAdminModels()">
+              <option value="">Select Make</option>
+            </select>
           </div>
           <div class="form-group">
             <label>Model *</label>
-            <input type="text" class="form-control" id="vf-model" required placeholder="e.g. Corolla Cross">
+            <select class="form-control" id="vf-model" required>
+              <option value="">Select Make First</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Trim / Variant</label>
+            <input type="text" class="form-control" id="vf-trim" placeholder="e.g. Sport, Touring, GT, Hybrid">
           </div>
           <div class="form-group">
             <label>Year *</label>

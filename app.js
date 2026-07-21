@@ -46,7 +46,7 @@ const HoricApp = (() => {
       '<div class="car-card-badges">' + conditionBadge(car.condition) + statusBadge(car.status) + '</div></div>' +
       '<div class="car-card-body">' +
       '<div class="car-card-year">' + car.year + '</div>' +
-      '<div class="car-card-name">' + car.make + ' ' + car.model + '</div>' +
+      '<div class="car-card-name">' + car.make + ' ' + car.model + (car.trim ? ' ' + car.trim : '') + '</div>' +
       '<div class="car-card-specs">' +
       '<span class="spec-pill">' + car.body_type + '</span>' +
       '<span class="spec-pill">' + car.fuel + '</span>' +
@@ -195,7 +195,7 @@ const HoricApp = (() => {
     modalImageIndex = 0;
 
     const el = (eid) => document.getElementById(eid);
-    el('modalTitle').textContent = car.make + ' ' + car.model;
+    el('modalTitle').textContent = car.make + ' ' + car.model + (car.trim ? ' ' + car.trim : '');
     el('modalYear').textContent = car.year + '  ·  ' + (car.condition === 'new' ? 'New' : 'Pre-Owned') + '  ·  ' + (car.status === 'in_stock' ? 'In Stock' : car.status === 'sold' ? 'Sold' : 'Coming Soon');
     el('modalPrice').textContent = HoricData.formatPrice(car.price);
     el('modalDesc').textContent = car.description || '';
@@ -219,7 +219,7 @@ const HoricApp = (() => {
       '<div class="cost-row"><span class="cost-label">Insurance</span><span class="cost-value">' + HoricData.formatPrice(costs.insurance) + '</span></div>' +
       '<div class="cost-row cost-total"><span class="cost-label">Total Monthly</span><span class="cost-value">' + HoricData.formatPrice(costs.total) + '</span></div>';
 
-    const waMsg = encodeURIComponent('Hi, I am interested in the ' + car.year + ' ' + car.make + ' ' + car.model + ' priced at ' + HoricData.formatPrice(car.price) + '. Can I get more details?');
+    const waMsg = encodeURIComponent('Hi, I am interested in the ' + car.year + ' ' + car.make + ' ' + car.model + (car.trim ? ' ' + car.trim : '') + ' priced at ' + HoricData.formatPrice(car.price) + '. Can I get more details?');
     el('modalWhatsApp').href = 'https://wa.me/233XXXXXXXXX?text=' + waMsg;
 
     updateGallery();

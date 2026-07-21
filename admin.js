@@ -113,7 +113,7 @@ const HoricAdmin = (() => {
       tbody.innerHTML = cars.map(function(car) {
         return '<tr>' +
           '<td><div class="table-car-info"><div class="table-car-thumb">' + CAR_SVG + '</div>' +
-          '<div><div class="table-car-name">' + car.make + ' ' + car.model + '</div><div class="table-car-sub">' + car.year + '</div></div></div></td>' +
+          '<div><div class="table-car-name">' + car.make + ' ' + car.model + (car.trim ? ' ' + car.trim : '') + '</div><div class="table-car-sub">' + car.year + '</div></div></div></td>' +
           '<td><span class="table-status status-' + car.status + '">' + car.status.replace('_', ' ') + '</span></td>' +
           '<td>' + formatPrice(car.price) + '</td>' +
           '<td>' + (car.views || 0) + '</td>' +
@@ -136,7 +136,7 @@ const HoricAdmin = (() => {
       tbody.innerHTML = cars.map(function(car) {
         return '<tr>' +
           '<td><div class="table-car-info"><div class="table-car-thumb">' + CAR_SVG + '</div>' +
-          '<div><div class="table-car-name">' + car.make + ' ' + car.model + '</div><div class="table-car-sub">' + car.year + ' | ' + car.fuel + '</div></div></div></td>' +
+          '<div><div class="table-car-name">' + car.make + ' ' + car.model + (car.trim ? ' ' + car.trim : '') + '</div><div class="table-car-sub">' + car.year + ' | ' + car.fuel + '</div></div></div></td>' +
           '<td><span class="table-status status-' + car.status + '">' + car.status.replace('_', ' ') + '</span></td>' +
           '<td>' + formatPrice(car.price) + '</td>' +
           '<td>' + car.year + '</td>' +
@@ -228,11 +228,32 @@ const HoricAdmin = (() => {
   }
 
   // ── VEHICLE MODAL ──
+  function populateAdminMakeDropdown(selectMake) {
+    var makeSelect = document.getElementById('vf-make');
+    var modelSelect = document.getElementById('vf-model');
+    if (!makeSelect) return;
+    var makes = Object.keys(HoricData.CAR_MAKES_MODELS).sort();
+    var currentMake = selectMake || '';
+    makeSelect.innerHTML = '<option value="">Select Make</option>' +
+      makes.map(function(m) { return '<option value="' + m + '"' + (m === currentMake ? ' selected' : '') + '>' + m + '</option>'; }).join('');
+    populateAdminModels(currentMake);
+  }
+
+  function populateAdminModels(selectedMake) {
+    var modelSelect = document.getElementById('vf-model');
+    if (!modelSelect) return;
+    selectedMake = selectedMake || document.getElementById('vf-make').value;
+    var models = selectedMake && HoricData.CAR_MAKES_MODELS[selectedMake]
+      ? HoricData.CAR_MAKES_MODELS[selectedMake].slice().sort()
+      : [];
+    modelSelect.innerHTML = '<option value="">' + (models.length ? 'Select Model' : 'Select Make First') + '</option>' +
+      models.map(function(m) { return '<option value="' + m + '">' + m + '</option>'; }).join('');
+  }
+
   function openVehicleModal(id) {
     uploadedImages = [];
     document.getElementById('vf-id').value = '';
-    document.getElementById('vf-make').value = '';
-    document.getElementById('vf-model').value = '';
+    document.getElementById('vf-trim').value = '';
     document.getElementById('vf-year').value = new Date().getFullYear();
     document.getElementById('vf-price').value = '';
     document.getElementById('vf-body').value = 'suv';
@@ -247,6 +268,7 @@ const HoricAdmin = (() => {
     document.getElementById('vf-features').value = '';
     document.getElementById('imagePreviewGrid').innerHTML = '';
     document.getElementById('vehicleModalTitle').textContent = 'Add New Vehicle';
+    populateAdminMakeDropdown('');
     document.getElementById('vehicleModal').classList.add('active');
   }
 
@@ -259,8 +281,9 @@ const HoricAdmin = (() => {
     try {
       var car = await api('/api/vehicles/' + id);
       document.getElementById('vf-id').value = car.id;
-      document.getElementById('vf-make').value = car.make;
-      document.getElementById('vf-model').value = car.model;
+      populateAdminMakeDropdown(car.make);
+      setTimeout(function() { document.getElementById('vf-model').value = car.model; }, 10);
+      document.getElementById('vf-trim').value = car.trim || '';
       document.getElementById('vf-year').value = car.year;
       document.getElementById('vf-price').value = car.price;
       document.getElementById('vf-body').value = car.body_type;
@@ -287,6 +310,7 @@ const HoricAdmin = (() => {
     var data = {
       make: document.getElementById('vf-make').value,
       model: document.getElementById('vf-model').value,
+      trim: document.getElementById('vf-trim').value,
       year: Number(document.getElementById('vf-year').value),
       price: Number(document.getElementById('vf-price').value),
       body_type: document.getElementById('vf-body').value,
@@ -561,6 +585,7 @@ const HoricAdmin = (() => {
   return {
     switchTab: switchTab, switchDashTab: switchDashTab, searchInventory: searchInventory,
     openVehicleModal: openVehicleModal, closeVehicleModal: closeVehicleModal, editVehicle: editVehicle, saveVehicle: saveVehicle,
+    populateAdminMakeDropdown: populateAdminMakeDropdown, populateAdminModels: populateAdminModels,
     openDeleteModal: openDeleteModal, confirmDelete: confirmDelete, openSoldModal: openSoldModal, confirmSold: confirmSold, relistVehicle: relistVehicle,
     removeImage: removeImage, markEnquiryRead: markEnquiryRead, deleteEnquiry: deleteEnquiry,
     filterKnowledge: filterKnowledge, openKnowledgeModal: openKnowledgeModal, closeKnowledgeModal: closeKnowledgeModal,

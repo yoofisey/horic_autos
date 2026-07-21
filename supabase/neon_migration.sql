@@ -32,6 +32,7 @@ create table if not exists vehicles (
   id text primary key,
   make text not null default '',
   model text not null default '',
+  trim text default '',
   year integer not null default 2024,
   price numeric not null default 0,
   condition text not null default 'new',
