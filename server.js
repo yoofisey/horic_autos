@@ -299,7 +299,7 @@ app.get('/api/stats', requireAuth, async (req, res) => {
     const [kbRow] = await sql`SELECT count(*)::int as count FROM knowledge_base`;
     const inStock = cars.filter(c => c.status === 'in_stock');
     const sold = cars.filter(c => c.status === 'sold');
-    const totalValue = inStock.reduce((s, c) => s + (c.price || 0), 0);
+    const totalValue = inStock.reduce((s, c) => s + (Number(c.price) || 0), 0);
     res.json({
       totalCars: cars.length,
       inStock: inStock.length,
