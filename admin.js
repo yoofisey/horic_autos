@@ -11,7 +11,12 @@ const HoricAdmin = (() => {
     const headers = { 'Content-Type': 'application/json' };
     if (session?.token) headers['Authorization'] = 'Bearer ' + session.token;
     const res = await fetch(path, { ...opts, headers: { ...headers, ...opts.headers } });
-    if (res.status === 401) { session = null; localStorage.removeItem('horic_admin_session'); showLogin(); throw new Error('Session expired'); }
+    if (res.status === 401) {
+      session = null;
+      localStorage.removeItem('horic_admin_session');
+      showLogin();
+      throw new Error('__AUTH_EXPIRED__');
+    }
     const data = await res.json();
     if (!res.ok) throw new Error(data.error || 'Request failed');
     return data;
@@ -30,8 +35,10 @@ const HoricAdmin = (() => {
 
   // ── AUTH ──
   function showLogin() {
-    document.getElementById('adminLayout').style.display = 'none';
-    document.getElementById('loginOverlay').style.display = 'flex';
+    var overlay = document.getElementById('loginOverlay');
+    var layout = document.getElementById('adminLayout');
+    if (overlay) { overlay.style.display = 'flex'; overlay.style.zIndex = '9999'; }
+    if (layout) layout.style.display = 'none';
   }
 
   async function handleLogin(e) {
@@ -525,14 +532,18 @@ const HoricAdmin = (() => {
       loginForm._attached = true;
     }
 
+    // Check saved session
     var saved = localStorage.getItem('horic_admin_session');
     if (saved) {
       try {
         session = JSON.parse(saved);
-        if (!session?.token) { session = null; }
-      } catch (e) { session = null; }
+        if (!session?.token) { session = null; localStorage.removeItem('horic_admin_session'); }
+      } catch (e) { session = null; localStorage.removeItem('horic_admin_session'); }
     }
     if (!session) { showLogin(); return; }
+
+    // Show admin, hide login
+    document.getElementById('loginOverlay').style.display = 'none';
     document.getElementById('adminLayout').style.display = '';
     renderDashboard();
     initImageUpload();
