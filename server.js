@@ -1,7 +1,7 @@
 require('dotenv').config();
 const express = require('express');
 const { neon } = require('@neondatabase/serverless');
-const { GoogleGenAI } = require('@google/genai');
+const OpenAI = require('openai');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
@@ -17,7 +17,7 @@ app.use(express.static(path.join(__dirname)));
 // ── DATABASE ──
 const sql = neon(process.env.DATABASE_URL);
 
-const genAI = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
 function genId() {
   return 'v' + Date.now().toString(36) + crypto.randomBytes(3).toString('hex');
@@ -80,11 +80,11 @@ app.post('/api/auth/signup', requireAuth, async (req, res) => {
 // ── EMBEDDING GENERATION ──
 async function generateEmbedding(text) {
   try {
-    const result = await genAI.models.embedContent({
-      model: 'text-embedding-004',
-      content: { role: 'user', parts: [{ text }] }
+    const response = await openai.embeddings.create({
+      model: 'text-embedding-3-small',
+      input: text
     });
-    return result.embedding.values;
+    return response.data[0].embedding;
   } catch (err) {
     console.error('Embedding error:', err.message);
     return null;
@@ -471,21 +471,22 @@ app.post('/api/chat', async (req, res) => {
 
     const systemPrompt = SYSTEM_PROMPT + contextStr;
 
-    const contents = messages.map(m => ({
-      role: m.role === 'assistant' ? 'model' : 'user',
-      parts: [{ text: m.content }]
-    }));
+    const chatMessages = [
+      { role: 'system', content: systemPrompt },
+      ...messages.map(m => ({
+        role: m.role === 'assistant' ? 'assistant' : 'user',
+        content: m.content
+      }))
+    ];
 
-    const response = await genAI.models.generateContent({
-      model: 'gemini-2.0-flash',
-      contents: contents,
-      config: {
-        systemInstruction: systemPrompt,
-        maxOutputTokens: 1024
-      }
+    const response = await openai.chat.completions.create({
+      model: 'gpt-4o-mini',
+      messages: chatMessages,
+      max_tokens: 1024,
+      temperature: 0.7
     });
 
-    res.json({ reply: response.text || 'No response generated.' });
+    res.json({ reply: response.choices[0]?.message?.content || 'No response generated.' });
   } catch (err) {
     console.error('Chat error:', err.message);
     res.status(500).json({ error: 'Failed to get AI response: ' + err.message });

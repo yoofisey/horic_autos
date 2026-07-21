@@ -22,7 +22,7 @@ create table if not exists admins (
 --   const bcrypt = require('bcryptjs');
 --   console.log(bcrypt.hashSync('your_password', 10));
 insert into admins (email, password_hash)
-values ('admin@horicautos.com', '$2a$10$8K1p/a0dL1LXMc.0zL5q4OzQhNzGxVZbQxK5Y5Y5Y5Y5Y5Y5Y5Y5')
+values ('admin@horicautos.com', '$2a$10$MOySt.ME2i.1gPLlwOurxuv8vaQV.FDh/AbaB9W9rDfOBMWfIKdlS')
 on conflict (email) do nothing;
 
 -- ─────────────────────────────────
@@ -76,7 +76,7 @@ create table if not exists knowledge_base (
   content text not null,
   content_type text not null default 'faq',
   metadata jsonb default '{}'::jsonb,
-  embedding vector(768),
+  embedding vector(1536),
   created_at timestamptz default now(),
   updated_at timestamptz default now()
 );
@@ -91,7 +91,7 @@ create index if not exists idx_knowledge_embedding on knowledge_base using ivffl
 -- RAG SEARCH FUNCTION
 -- ─────────────────────────────────
 create or replace function match_knowledge_base(
-  query_embedding vector(768),
+  query_embedding vector(1536),
   match_count int default 5,
   match_threshold float default 0.3,
   filter_type text default null
