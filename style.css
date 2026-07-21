@@ -978,6 +978,7 @@ select.form-control option { background: var(--white); }
   .site-header { height: 60px; }
   .chat-toggle { width: 50px; height: 50px; bottom: 16px; right: 16px; }
   .chat-panel { bottom: 76px; height: calc(100vh - 120px); max-height: 500px; }
+  .chat-input { font-size: 16px; }
   .filter-panel { padding: 16px; }
   .login-card { padding: 32px 24px; margin: 16px; }
 }
