@@ -1,6 +1,6 @@
 {
   "name": "horic-autos",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "description": "Premium Car Sales in Ghana",
   "main": "server.js",
   "scripts": {
@@ -9,8 +9,10 @@
   },
   "dependencies": {
     "@google/genai": "^1.0.0",
-    "@supabase/supabase-js": "^2.110.7",
+    "@neondatabase/serverless": "^0.10.0",
+    "bcryptjs": "^2.4.3",
     "dotenv": "^16.4.0",
-    "express": "^4.21.0"
+    "express": "^4.21.0",
+    "jsonwebtoken": "^9.0.0"
   }
 }

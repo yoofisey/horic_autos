@@ -57,6 +57,10 @@
         Enquiries
         <span class="badge-count" id="enquiryBadge">0</span>
       </button>
+      <button class="sidebar-nav-item" data-tab="knowledge" onclick="HoricAdmin.switchTab('knowledge')">
+        <svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+        Knowledge Base
+      </button>
       <button class="sidebar-nav-item" onclick="window.open('index.html','_blank')">
         <svg viewBox="0 0 24 24"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
         View Site
@@ -203,6 +207,43 @@
     <!-- ENQUIRIES TAB -->
     <div class="admin-panel" id="panel-enquiries">
       <div id="enquiriesList"></div>
+    </div>
+
+    <!-- KNOWLEDGE BASE TAB -->
+    <div class="admin-panel" id="panel-knowledge">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:24px; flex-wrap:wrap; gap:12px;">
+        <div style="display:flex; gap:8px; flex-wrap:wrap;">
+          <button class="btn btn-sm kb-filter-btn active" data-kb-filter="all" onclick="HoricAdmin.filterKnowledge('all', this)">All</button>
+          <button class="btn btn-sm kb-filter-btn" data-kb-filter="vehicle" onclick="HoricAdmin.filterKnowledge('vehicle', this)">Vehicles</button>
+          <button class="btn btn-sm kb-filter-btn" data-kb-filter="faq" onclick="HoricAdmin.filterKnowledge('faq', this)">FAQs</button>
+          <button class="btn btn-sm kb-filter-btn" data-kb-filter="policy" onclick="HoricAdmin.filterKnowledge('policy', this)">Policies</button>
+          <button class="btn btn-sm kb-filter-btn" data-kb-filter="market_info" onclick="HoricAdmin.filterKnowledge('market_info', this)">Market Info</button>
+        </div>
+        <div style="display:flex; gap:8px;">
+          <button class="btn btn-outline" onclick="HoricAdmin.syncVehicleKnowledge()">Sync Vehicles</button>
+          <button class="btn btn-primary" onclick="HoricAdmin.openKnowledgeModal()">+ Add Entry</button>
+        </div>
+      </div>
+      <div id="knowledgeStats" style="margin-bottom:20px; padding:16px; background:var(--gray-50); border-radius:12px; display:flex; gap:24px; flex-wrap:wrap;">
+        <div><span style="font-size:0.75rem; color:var(--gray-500); text-transform:uppercase; letter-spacing:0.05em;">Total Entries</span><br><strong id="kbTotalCount">0</strong></div>
+        <div><span style="font-size:0.75rem; color:var(--gray-500); text-transform:uppercase; letter-spacing:0.05em;">Vehicles</span><br><strong id="kbVehicleCount">0</strong></div>
+        <div><span style="font-size:0.75rem; color:var(--gray-500); text-transform:uppercase; letter-spacing:0.05em;">FAQs</span><br><strong id="kbFaqCount">0</strong></div>
+        <div><span style="font-size:0.75rem; color:var(--gray-500); text-transform:uppercase; letter-spacing:0.05em;">Policies</span><br><strong id="kbPolicyCount">0</strong></div>
+      </div>
+      <div class="data-table-wrapper">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Content</th>
+              <th>Type</th>
+              <th>Metadata</th>
+              <th>Updated</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="knowledgeTableBody"></tbody>
+        </table>
+      </div>
     </div>
   </main>
 </div>
@@ -354,6 +395,43 @@
         <button class="btn btn-outline" onclick="document.getElementById('deleteModal').classList.remove('active')">Keep Vehicle</button>
         <button class="btn btn-danger" onclick="HoricAdmin.confirmDelete()">Delete Permanently</button>
       </div>
+    </div>
+  </div>
+</div>
+
+<!-- KNOWLEDGE BASE MODAL -->
+<div class="modal-backdrop" id="knowledgeModal">
+  <div class="modal-card" style="max-width: 600px;">
+    <button class="modal-close" onclick="HoricAdmin.closeKnowledgeModal()">&times;</button>
+    <div class="modal-body">
+      <h2 style="font-family:'DM Serif Display',serif; margin-bottom:20px; color:var(--gray-900);" id="knowledgeModalTitle">Add Knowledge Entry</h2>
+      <form id="knowledgeForm" onsubmit="HoricAdmin.saveKnowledgeEntry(event)">
+        <input type="hidden" id="kb-id">
+        <div class="form-group" style="margin-bottom:14px;">
+          <label>Type *</label>
+          <select class="form-control" id="kb-type" required>
+            <option value="faq">FAQ</option>
+            <option value="policy">Policy</option>
+            <option value="market_info">Market Info</option>
+          </select>
+        </div>
+        <div class="form-group" style="margin-bottom:14px;">
+          <label>Category (optional)</label>
+          <input type="text" class="form-control" id="kb-category" placeholder="e.g. Financing, Warranty, Delivery">
+        </div>
+        <div class="form-group" style="margin-bottom:14px;" id="kbQuestionGroup">
+          <label>Question / Title *</label>
+          <input type="text" class="form-control" id="kb-question" placeholder="What customers commonly ask...">
+        </div>
+        <div class="form-group" style="margin-bottom:20px;">
+          <label>Answer / Content *</label>
+          <textarea class="form-control" id="kb-answer" rows="6" required placeholder="Detailed answer or policy content..."></textarea>
+        </div>
+        <div class="form-actions">
+          <button type="button" class="btn btn-outline" onclick="HoricAdmin.closeKnowledgeModal()">Cancel</button>
+          <button type="submit" class="btn btn-primary">Save & Embed</button>
+        </div>
+      </form>
     </div>
   </div>
 </div>

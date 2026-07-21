@@ -1046,3 +1046,27 @@ select.form-control option { background: var(--white); }
 .login-error.show {
   display: block;
 }
+
+/* Knowledge Base */
+.kb-filter-btn {
+  font-size: 0.8rem;
+  padding: 6px 14px;
+  border-radius: 20px;
+}
+
+.kb-filter-btn.active {
+  background: var(--primary);
+  color: var(--white);
+  border-color: var(--primary);
+}
+
+.kb-filter-btn:not(.active) {
+  background: var(--white);
+  color: var(--gray-600);
+  border-color: var(--gray-200);
+}
+
+.kb-filter-btn:not(.active):hover {
+  border-color: var(--primary);
+  color: var(--primary);
+}

@@ -9,7 +9,7 @@ const HoricAdmin = (() => {
   async function api(path, opts) {
     opts = opts || {};
     const headers = { 'Content-Type': 'application/json' };
-    if (session?.access_token) headers['Authorization'] = 'Bearer ' + session.access_token;
+    if (session?.token) headers['Authorization'] = 'Bearer ' + session.token;
     const res = await fetch(path, { ...opts, headers: { ...headers, ...opts.headers } });
     if (res.status === 401) { session = null; localStorage.removeItem('horic_admin_session'); showLogin(); throw new Error('Session expired'); }
     const data = await res.json();
@@ -42,7 +42,7 @@ const HoricAdmin = (() => {
     try {
       errEl.classList.remove('show');
       const data = await api('/api/auth/login', { method: 'POST', body: JSON.stringify({ email, password: pass }) });
-      session = data.session;
+      session = { token: data.token, user: data.user };
       localStorage.setItem('horic_admin_session', JSON.stringify(session));
       document.getElementById('loginOverlay').style.display = 'none';
       document.getElementById('adminLayout').style.display = '';
@@ -59,12 +59,13 @@ const HoricAdmin = (() => {
     document.querySelectorAll('.sidebar-nav-item').forEach(function(n) { n.classList.remove('active'); });
     document.getElementById('panel-' + tab)?.classList.add('active');
     document.querySelector('[data-tab="' + tab + '"]')?.classList.add('active');
-    var titles = { dashboard: 'Dashboard', inventory: 'Inventory Management', sales: 'Sales History', enquiries: 'Enquiries' };
+    var titles = { dashboard: 'Dashboard', inventory: 'Inventory Management', sales: 'Sales History', enquiries: 'Enquiries', knowledge: 'Knowledge Base (RAG)' };
     document.getElementById('adminPageTitle').textContent = titles[tab] || 'Dashboard';
     if (tab === 'dashboard') renderDashboard();
     if (tab === 'inventory') renderInventoryTable();
     if (tab === 'sales') renderSales();
     if (tab === 'enquiries') renderEnquiries();
+    if (tab === 'knowledge') renderKnowledgeBase();
   }
 
   function switchDashTab(tab, el) {
@@ -182,40 +183,56 @@ const HoricAdmin = (() => {
         return;
       }
       list.innerHTML = enquiries.map(function(enq) {
-        var car = enq.vehicle_id ? vMap[enq.vehicle_id] : null;
-        return '<div class="enquiry-card ' + (enq.status === 'unread' ? 'unread' : '') + '">' +
-          '<div class="enquiry-header"><div class="enquiry-customer">' + enq.customer_name + '</div>' +
-          '<div class="enquiry-date">' + enq.created_at + '</div></div>' +
-          (car ? '<div class="enquiry-vehicle">Re: ' + car.year + ' ' + car.make + ' ' + car.model + ' — ' + formatPrice(car.price) + '</div>' : '') +
-          '<div class="enquiry-message">' + enq.message + '</div>' +
-          '<div class="enquiry-contact">' + (enq.customer_phone || 'N/A') + ' | ' + (enq.customer_email || 'N/A') + '</div>' +
+        var car = vMap[enq.vehicle_id];
+        return '<div class="enquiry-card ' + (enq.status === 'unread' ? 'unread' : '') + '" onclick="HoricAdmin.markEnquiryRead(\'' + enq.id + '\')">' +
+          '<div class="enquiry-header">' +
+          '<div><strong>' + enq.customer_name + '</strong> <span class="enquiry-date">' + enq.created_at + '</span></div>' +
+          (car ? '<span class="enquiry-car">' + car.year + ' ' + car.make + ' ' + car.model + '</span>' : '') +
+          '</div>' +
+          '<p class="enquiry-msg">' + enq.message + '</p>' +
           '<div class="enquiry-actions">' +
-          (enq.status === 'unread' ? '<button class="btn btn-sm btn-outline" onclick="HoricAdmin.markEnquiryRead(\'' + enq.id + '\')">Mark Read</button>' : '') +
-          '<button class="btn btn-sm btn-ghost" onclick="HoricAdmin.deleteEnquiry(\'' + enq.id + '\')" style="color:var(--red-500);">Delete</button>' +
+          '<button class="btn btn-sm btn-outline" onclick="event.stopPropagation(); HoricAdmin.deleteEnquiry(\'' + enq.id + '\')">Delete</button>' +
           '</div></div>';
       }).join('');
     } catch (e) { console.error(e); }
   }
 
   async function markEnquiryRead(id) {
-    await api('/api/enquiries/' + id, { method: 'PUT', body: JSON.stringify({ status: 'read' }) });
-    renderEnquiries();
-    toast('Enquiry marked as read', 'success');
+    try {
+      await api('/api/enquiries/' + id, { method: 'PUT', body: JSON.stringify({ status: 'read' }) });
+      renderEnquiries();
+    } catch (e) { toast(e.message, 'error'); }
   }
 
   async function deleteEnquiry(id) {
-    await api('/api/enquiries/' + id, { method: 'DELETE' });
-    renderEnquiries();
-    toast('Enquiry deleted', 'success');
+    if (!confirm('Delete this enquiry?')) return;
+    try {
+      await api('/api/enquiries/' + id, { method: 'DELETE' });
+      toast('Enquiry deleted', 'success');
+      renderEnquiries();
+    } catch (e) { toast(e.message, 'error'); }
   }
 
   // ── VEHICLE MODAL ──
-  function openVehicleModal() {
+  function openVehicleModal(id) {
     uploadedImages = [];
-    document.getElementById('vehicleForm').reset();
     document.getElementById('vf-id').value = '';
-    document.getElementById('vehicleModalTitle').textContent = 'Add New Vehicle';
+    document.getElementById('vf-make').value = '';
+    document.getElementById('vf-model').value = '';
+    document.getElementById('vf-year').value = new Date().getFullYear();
+    document.getElementById('vf-price').value = '';
+    document.getElementById('vf-body').value = 'suv';
+    document.getElementById('vf-fuel').value = 'petrol';
+    document.getElementById('vf-mileage').value = '0';
+    document.getElementById('vf-engine').value = '';
+    document.getElementById('vf-transmission').value = 'automatic';
+    document.getElementById('vf-color').value = '';
+    document.getElementById('vf-condition').value = 'new';
+    document.getElementById('vf-status').value = 'in_stock';
+    document.getElementById('vf-desc').value = '';
+    document.getElementById('vf-features').value = '';
     document.getElementById('imagePreviewGrid').innerHTML = '';
+    document.getElementById('vehicleModalTitle').textContent = 'Add New Vehicle';
     document.getElementById('vehicleModal').classList.add('active');
   }
 
@@ -227,7 +244,6 @@ const HoricAdmin = (() => {
   async function editVehicle(id) {
     try {
       var car = await api('/api/vehicles/' + id);
-      uploadedImages = car.images ? car.images.slice() : [];
       document.getElementById('vf-id').value = car.id;
       document.getElementById('vf-make').value = car.make;
       document.getElementById('vf-model').value = car.model;
@@ -243,6 +259,7 @@ const HoricAdmin = (() => {
       document.getElementById('vf-status').value = car.status;
       document.getElementById('vf-desc').value = car.description || '';
       document.getElementById('vf-features').value = (car.features || []).join(', ');
+      uploadedImages = car.images || [];
       renderImagePreviews();
       document.getElementById('vehicleModalTitle').textContent = 'Edit Vehicle';
       document.getElementById('vehicleModal').classList.add('active');
@@ -260,7 +277,7 @@ const HoricAdmin = (() => {
       price: Number(document.getElementById('vf-price').value),
       body_type: document.getElementById('vf-body').value,
       fuel: document.getElementById('vf-fuel').value,
-      mileage: Number(document.getElementById('vf-mileage').value) || 0,
+      mileage: Number(document.getElementById('vf-mileage').value),
       engine: document.getElementById('vf-engine').value,
       transmission: document.getElementById('vf-transmission').value,
       color: document.getElementById('vf-color').value,
@@ -270,38 +287,20 @@ const HoricAdmin = (() => {
       features: features,
       images: uploadedImages
     };
-
     try {
       if (id) {
         await api('/api/vehicles/' + id, { method: 'PUT', body: JSON.stringify(data) });
-        toast('Vehicle updated', 'success');
+        toast('Vehicle updated & re-embedded', 'success');
       } else {
         await api('/api/vehicles', { method: 'POST', body: JSON.stringify(data) });
-        toast('Vehicle added', 'success');
+        toast('Vehicle added & embedded', 'success');
       }
       closeVehicleModal();
       renderInventoryTable();
-      renderDashboard();
     } catch (e) { toast(e.message, 'error'); }
   }
 
-  // ── DELETE / SOLD / RELIST ──
-  function openDeleteModal(id) {
-    document.getElementById('deleteVehicleId').value = id;
-    document.getElementById('deleteModal').classList.add('active');
-  }
-
-  async function confirmDelete() {
-    var id = document.getElementById('deleteVehicleId').value;
-    try {
-      await api('/api/vehicles/' + id, { method: 'DELETE' });
-      document.getElementById('deleteModal').classList.remove('active');
-      renderInventoryTable();
-      renderDashboard();
-      toast('Vehicle deleted', 'success');
-    } catch (e) { toast(e.message, 'error'); }
-  }
-
+  // ── SOLD ──
   function openSoldModal(id) {
     document.getElementById('soldVehicleId').value = id;
     document.getElementById('soldPrice').value = '';
@@ -313,23 +312,42 @@ const HoricAdmin = (() => {
     var id = document.getElementById('soldVehicleId').value;
     var price = document.getElementById('soldPrice').value;
     var to = document.getElementById('soldTo').value;
+    if (!price || !to) return toast('Please fill all fields', 'error');
     try {
       await api('/api/vehicles/' + id, { method: 'PUT', body: JSON.stringify({
-        status: 'sold', sold_price: Number(price), sold_date: new Date().toISOString().slice(0, 10), sold_to: to || 'Client'
+        status: 'sold',
+        sold_price: Number(price),
+        sold_date: new Date().toISOString().slice(0, 10),
+        sold_to: to
       })});
       document.getElementById('soldModal').classList.remove('active');
-      renderInventoryTable();
-      renderDashboard();
       toast('Vehicle marked as sold', 'success');
+      renderInventoryTable();
     } catch (e) { toast(e.message, 'error'); }
   }
 
+  // ── DELETE ──
+  function openDeleteModal(id) {
+    document.getElementById('deleteVehicleId').value = id;
+    document.getElementById('deleteModal').classList.add('active');
+  }
+
+  async function confirmDelete() {
+    var id = document.getElementById('deleteVehicleId').value;
+    try {
+      await api('/api/vehicles/' + id, { method: 'DELETE' });
+      document.getElementById('deleteModal').classList.remove('active');
+      toast('Vehicle deleted', 'success');
+      renderInventoryTable();
+    } catch (e) { toast(e.message, 'error'); }
+  }
+
+  // ── RELIST ──
   async function relistVehicle(id) {
     try {
       await api('/api/vehicles/' + id, { method: 'PUT', body: JSON.stringify({ status: 'in_stock', sold_price: null, sold_date: null, sold_to: null }) });
-      renderSales();
-      renderDashboard();
       toast('Vehicle relisted', 'success');
+      renderSales();
     } catch (e) { toast(e.message, 'error'); }
   }
 
@@ -373,10 +391,133 @@ const HoricAdmin = (() => {
     }
   }
 
+  // ── KNOWLEDGE BASE ──
+  var currentKbFilter = 'all';
+
+  async function renderKnowledgeBase(filter) {
+    filter = filter || currentKbFilter;
+    var tbody = document.getElementById('knowledgeTableBody');
+    if (!tbody) return;
+    try {
+      var url = '/api/knowledge' + (filter !== 'all' ? '?type=' + filter : '');
+      var entries = await api(url);
+
+      // Update counts
+      var allEntries = await api('/api/knowledge');
+      document.getElementById('kbTotalCount').textContent = allEntries.length;
+      document.getElementById('kbVehicleCount').textContent = allEntries.filter(function(e) { return e.content_type === 'vehicle'; }).length;
+      document.getElementById('kbFaqCount').textContent = allEntries.filter(function(e) { return e.content_type === 'faq'; }).length;
+      document.getElementById('kbPolicyCount').textContent = allEntries.filter(function(e) { return e.content_type === 'policy'; }).length;
+
+      if (entries.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--gray-400);padding:40px;">No knowledge base entries found. Click "Sync Vehicles" to add your inventory, or add FAQs and policies manually.</td></tr>';
+        return;
+      }
+
+      tbody.innerHTML = entries.map(function(entry) {
+        var content = entry.content.length > 120 ? entry.content.substring(0, 120) + '...' : entry.content;
+        var meta = entry.metadata ? Object.entries(entry.metadata).map(function(kv) { return kv[0] + ': ' + kv[1]; }).join(', ') : '—';
+        var date = entry.updated_at ? new Date(entry.updated_at).toLocaleDateString() : '—';
+        return '<tr>' +
+          '<td><div style="max-width:350px;"><div style="font-weight:500;color:var(--gray-800);margin-bottom:2px;">' + content.replace(/</g, '&lt;') + '</div></div></td>' +
+          '<td><span class="table-status status-' + (entry.content_type === 'vehicle' ? 'in_stock' : entry.content_type === 'faq' ? 'coming_soon' : 'sold') + '">' + entry.content_type + '</span></td>' +
+          '<td style="font-size:0.8rem;color:var(--gray-500);max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + meta + '</td>' +
+          '<td style="white-space:nowrap;">' + date + '</td>' +
+          '<td><div class="table-actions">' +
+          '<button title="Edit" onclick="HoricAdmin.editKnowledgeEntry(\'' + entry.id + '\')">&#9998;</button>' +
+          '<button title="Delete" class="danger" onclick="HoricAdmin.deleteKnowledgeEntry(\'' + entry.id + '\')">&#10005;</button>' +
+          '</div></td></tr>';
+      }).join('');
+    } catch (e) { console.error(e); }
+  }
+
+  function filterKnowledge(filter, btn) {
+    currentKbFilter = filter;
+    document.querySelectorAll('.kb-filter-btn').forEach(function(b) { b.classList.remove('active'); });
+    if (btn) btn.classList.add('active');
+    renderKnowledgeBase(filter);
+  }
+
+  function openKnowledgeModal(id) {
+    document.getElementById('kb-id').value = '';
+    document.getElementById('kb-type').value = 'faq';
+    document.getElementById('kb-category').value = '';
+    document.getElementById('kb-question').value = '';
+    document.getElementById('kb-answer').value = '';
+    document.getElementById('knowledgeModalTitle').textContent = 'Add Knowledge Entry';
+    document.getElementById('knowledgeModal').classList.add('active');
+  }
+
+  function closeKnowledgeModal() {
+    document.getElementById('knowledgeModal').classList.remove('active');
+  }
+
+  async function editKnowledgeEntry(id) {
+    try {
+      var entries = await api('/api/knowledge');
+      var entry = entries.find(function(e) { return e.id === id; });
+      if (!entry) return;
+      document.getElementById('kb-id').value = entry.id;
+      document.getElementById('kb-type').value = entry.content_type;
+      document.getElementById('kb-category').value = (entry.metadata && entry.metadata.category) || '';
+      document.getElementById('kb-question').value = (entry.metadata && entry.metadata.question) || '';
+      document.getElementById('kb-answer').value = entry.content;
+      document.getElementById('knowledgeModalTitle').textContent = 'Edit Knowledge Entry';
+      document.getElementById('knowledgeModal').classList.add('active');
+    } catch (e) { toast(e.message, 'error'); }
+  }
+
+  async function saveKnowledgeEntry(e) {
+    e.preventDefault();
+    var id = document.getElementById('kb-id').value;
+    var type = document.getElementById('kb-type').value;
+    var category = document.getElementById('kb-category').value;
+    var question = document.getElementById('kb-question').value;
+    var answer = document.getElementById('kb-answer').value;
+
+    var content = answer;
+    if (type === 'faq' && question) {
+      content = 'Question: ' + question + '\nAnswer: ' + answer;
+    }
+
+    var metadata = { category: category, type: type };
+    if (type === 'faq' && question) metadata.question = question;
+
+    try {
+      if (id) {
+        await api('/api/knowledge/' + id, { method: 'PUT', body: JSON.stringify({ content: content, content_type: type, metadata: metadata }) });
+        toast('Knowledge entry updated & re-embedded', 'success');
+      } else {
+        await api('/api/knowledge', { method: 'POST', body: JSON.stringify({ content: content, content_type: type, metadata: metadata }) });
+        toast('Knowledge entry created & embedded', 'success');
+      }
+      closeKnowledgeModal();
+      renderKnowledgeBase();
+    } catch (e) { toast(e.message, 'error'); }
+  }
+
+  async function deleteKnowledgeEntry(id) {
+    if (!confirm('Delete this knowledge base entry?')) return;
+    try {
+      await api('/api/knowledge/' + id, { method: 'DELETE' });
+      toast('Entry deleted', 'success');
+      renderKnowledgeBase();
+    } catch (e) { toast(e.message, 'error'); }
+  }
+
+  async function syncVehicleKnowledge() {
+    try {
+      toast('Syncing vehicles to knowledge base...', 'info');
+      var result = await api('/api/knowledge/sync-vehicles', { method: 'POST' });
+      toast('Synced ' + result.synced + ' vehicles to knowledge base', 'success');
+      renderKnowledgeBase();
+    } catch (e) { toast(e.message, 'error'); }
+  }
+
   // ── INIT ──
   function init() {
     if (!document.querySelector('.admin-layout')) return;
-    
+
     // Attach login form handler
     var loginForm = document.getElementById('loginForm');
     if (loginForm && !loginForm._attached) {
@@ -388,8 +529,7 @@ const HoricAdmin = (() => {
     if (saved) {
       try {
         session = JSON.parse(saved);
-        var exp = session.expires_at ? new Date(session.expires_at * 1000) : null;
-        if (exp && exp < new Date()) { session = null; localStorage.removeItem('horic_admin_session'); }
+        if (!session?.token) { session = null; }
       } catch (e) { session = null; }
     }
     if (!session) { showLogin(); return; }
@@ -404,6 +544,8 @@ const HoricAdmin = (() => {
     switchTab: switchTab, switchDashTab: switchDashTab, searchInventory: searchInventory,
     openVehicleModal: openVehicleModal, closeVehicleModal: closeVehicleModal, editVehicle: editVehicle, saveVehicle: saveVehicle,
     openDeleteModal: openDeleteModal, confirmDelete: confirmDelete, openSoldModal: openSoldModal, confirmSold: confirmSold, relistVehicle: relistVehicle,
-    removeImage: removeImage, markEnquiryRead: markEnquiryRead, deleteEnquiry: deleteEnquiry
+    removeImage: removeImage, markEnquiryRead: markEnquiryRead, deleteEnquiry: deleteEnquiry,
+    filterKnowledge: filterKnowledge, openKnowledgeModal: openKnowledgeModal, closeKnowledgeModal: closeKnowledgeModal,
+    editKnowledgeEntry: editKnowledgeEntry, saveKnowledgeEntry: saveKnowledgeEntry, deleteKnowledgeEntry: deleteKnowledgeEntry, syncVehicleKnowledge: syncVehicleKnowledge
   };
 })();
