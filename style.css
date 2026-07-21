@@ -15,18 +15,18 @@
   --gray-700: #344054;
   --gray-800: #1d2939;
   --gray-900: #101828;
-  --green-50: #ecfdf3;
-  --green-100: #d1fadf;
-  --green-200: #a6f4c5;
-  --green-400: #32d583;
-  --green-500: #12b76a;
-  --green-600: #039855;
-  --green-700: #027a48;
-  --green-800: #05603a;
-  --green-900: #054f31;
-  --red-50: #fef3f2;
-  --red-500: #f04438;
-  --red-600: #d92d20;
+  --green-50: #f4f6eb;
+  --green-100: #e5eacc;
+  --green-200: #cdd7a0;
+  --green-400: #96a94e;
+  --green-500: #7A8B3A;
+  --green-600: #657430;
+  --green-700: #505d26;
+  --green-800: #3c461c;
+  --green-900: #2a3114;
+  --red-50: #fde8e8;
+  --red-500: #E31E24;
+  --red-600: #c4191f;
   --amber-50: #fefbf0;
   --amber-500: #f79009;
   --blue-50: #eff4ff;
@@ -42,11 +42,11 @@
   --radius-lg: 16px;
   --radius-xl: 20px;
   --transition: 0.2s ease;
-  --primary: #00b4d8;
-  --primary-dark: #0096b4;
-  --dark-900: #101828;
-  --dark-800: #1d2939;
-  --danger: #d92d20;
+  --primary: #7A8B3A;
+  --primary-dark: #505d26;
+  --dark-900: #1A1A1A;
+  --dark-800: #2a2a2a;
+  --danger: #E31E24;
 }
 
 html { scroll-behavior: smooth; }
@@ -143,7 +143,7 @@ img { max-width: 100%; display: block; }
 
 .hero::after {
   content: ''; position: absolute; right: -10%; top: 10%; width: 500px; height: 500px;
-  background: radial-gradient(circle, rgba(18,183,106,0.06) 0%, transparent 70%);
+  background: radial-gradient(circle, rgba(122,139,58,0.06) 0%, transparent 70%);
   pointer-events: none;
 }
 
@@ -447,7 +447,7 @@ img { max-width: 100%; display: block; }
   transition: border-color var(--transition), box-shadow var(--transition);
 }
 .top-search-bar:focus-within {
-  border-color: var(--green-500); box-shadow: 0 0 0 4px rgba(18,183,106,0.1), var(--shadow-md);
+  border-color: var(--green-500); box-shadow: 0 0 0 4px rgba(122,139,58,0.1), var(--shadow-md);
 }
 .top-search-icon {
   width: 20px; height: 20px; stroke: var(--gray-400); flex-shrink: 0;
@@ -482,7 +482,7 @@ img { max-width: 100%; display: block; }
   color: var(--gray-900); font-size: 0.85rem; font-family: inherit;
   transition: border-color var(--transition), box-shadow var(--transition); outline: none;
 }
-.filter-input:focus, .filter-select:focus { border-color: var(--green-500); box-shadow: 0 0 0 3px rgba(18,183,106,0.1); }
+.filter-input:focus, .filter-select:focus { border-color: var(--green-500); box-shadow: 0 0 0 3px rgba(122,139,58,0.1); }
 .filter-select { cursor: pointer; appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%23667085' viewBox='0 0 16 16'%3E%3Cpath d='M8 11L3 6h10z'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 12px center; padding-right: 32px; }
 .filter-select option { background: var(--white); }
 
@@ -583,10 +583,10 @@ img { max-width: 100%; display: block; }
   width: 56px; height: 56px; border-radius: var(--radius);
   background: var(--green-700); border: none; cursor: pointer;
   display: flex; align-items: center; justify-content: center;
-  box-shadow: 0 4px 12px rgba(5,96,58,0.3);
+  box-shadow: 0 4px 12px rgba(80,93,38,0.3);
   transition: all var(--transition);
 }
-.chat-toggle:hover { background: var(--green-600); box-shadow: 0 6px 20px rgba(5,96,58,0.35); transform: translateY(-1px); }
+.chat-toggle:hover { background: var(--green-600); box-shadow: 0 6px 20px rgba(80,93,38,0.35); transform: translateY(-1px); }
 .chat-toggle svg { width: 24px; height: 24px; fill: var(--white); }
 
 .chat-panel {
@@ -816,7 +816,7 @@ img { max-width: 100%; display: block; }
   color: var(--gray-900); font-size: 0.875rem; font-family: inherit;
   outline: none; transition: border-color var(--transition), box-shadow var(--transition);
 }
-.form-control:focus { border-color: var(--green-500); box-shadow: 0 0 0 3px rgba(18,183,106,0.1); }
+.form-control:focus { border-color: var(--green-500); box-shadow: 0 0 0 3px rgba(122,139,58,0.1); }
 textarea.form-control { resize: vertical; min-height: 72px; }
 select.form-control {
   cursor: pointer; appearance: none;
@@ -989,7 +989,7 @@ select.form-control option { background: var(--white); }
   align-items: center;
   justify-content: center;
   min-height: 100vh;
-  background: linear-gradient(135deg, var(--dark-900) 0%, var(--dark-800) 50%, var(--primary) 100%);
+  background: linear-gradient(135deg, var(--dark-900) 0%, var(--dark-800) 50%, var(--green-700) 100%);
 }
 
 .login-card {
@@ -1047,7 +1047,7 @@ select.form-control option { background: var(--white); }
 .login-form input:focus {
   outline: none;
   border-color: var(--primary);
-  box-shadow: 0 0 0 3px rgba(0, 180, 216, 0.1);
+  box-shadow: 0 0 0 3px rgba(122,139,58,0.15);
 }
 
 .login-form .btn-login {
