@@ -48,12 +48,19 @@ const HoricAdmin = (() => {
     const errEl = document.getElementById('loginError');
     try {
       errEl.classList.remove('show');
-      const data = await api('/api/auth/login', { method: 'POST', body: JSON.stringify({ email, password: pass }) });
+      const res = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password: pass })
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Login failed');
       session = { token: data.token, user: data.user };
       localStorage.setItem('horic_admin_session', JSON.stringify(session));
       document.getElementById('loginOverlay').style.display = 'none';
       document.getElementById('adminLayout').style.display = '';
-      init();
+      renderDashboard();
+      initImageUpload();
     } catch (err) {
       errEl.textContent = err.message;
       errEl.classList.add('show');
