@@ -12,7 +12,7 @@ const PORT = process.env.PORT || 3000;
 const JWT_SECRET = process.env.JWT_SECRET || crypto.randomBytes(32).toString('hex');
 
 app.use(express.json({ limit: '5mb' }));
-app.use(express.static(path.join(__dirname)));
+app.use(express.static(path.join(__dirname, 'public')));
 
 // ── DATABASE ──
 const sql = neon(process.env.DATABASE_URL);
@@ -496,7 +496,7 @@ app.post('/api/chat', async (req, res) => {
 
 // ── CATCH ALL ──
 app.get('*', (req, res) => {
-  res.sendFile(path.join(__dirname, 'index.html'));
+  res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
 // Export for Vercel serverless + local dev
