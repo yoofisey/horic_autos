@@ -220,7 +220,7 @@ const HoricApp = (() => {
       '<div class="cost-row cost-total"><span class="cost-label">Total Monthly</span><span class="cost-value">' + HoricData.formatPrice(costs.total) + '</span></div>';
 
     const waMsg = encodeURIComponent('Hi, I am interested in the ' + car.year + ' ' + car.make + ' ' + car.model + (car.trim ? ' ' + car.trim : '') + ' priced at ' + HoricData.formatPrice(car.price) + '. Can I get more details?');
-    el('modalWhatsApp').href = 'https://wa.me/233XXXXXXXXX?text=' + waMsg;
+    el('modalWhatsApp').href = 'https://wa.me/233548000393?text=' + waMsg;
 
     updateGallery();
     el('carModal').classList.add('active');
