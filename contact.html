@@ -4,9 +4,9 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Contact Us | Horic Autos</title>
-  <meta name="description" content="Get in touch with Horic Autos. WhatsApp, call, or visit us in Accra, Ghana.">
+  <meta name="description" content="Get in touch with Horic Autos via WhatsApp, phone, or our online enquiry form.">
   <meta property="og:title" content="Contact Horic Autos">
-  <meta property="og:description" content="Get in touch with Horic Autos. WhatsApp, call, or visit our showroom in Accra.">
+  <meta property="og:description" content="Get in touch with Horic Autos. WhatsApp, call, or send us an enquiry.">
   <meta property="og:image" content="horic.png">
   <meta property="og:type" content="website">
   <meta name="twitter:card" content="summary_large_image">
@@ -100,66 +100,13 @@
   </div>
 </section>
 
-<section class="contact-location-section">
-  <div class="container">
-    <div class="location-grid">
-      <div class="location-info">
-        <div class="section-eyebrow">Visit Us</div>
-        <h2>Our Showroom</h2>
-        <p>Located in the heart of Accra, our showroom is open and ready to welcome you. Walk in to explore our curated collection of premium vehicles.</p>
-        <div class="location-details">
-          <div class="location-detail">
-            <div class="location-detail-icon">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
-            </div>
-            <div>
-              <strong>Location</strong>
-              <p>Accra, Greater Accra Region, Ghana</p>
-            </div>
-          </div>
-          <div class="location-detail">
-            <div class="location-detail-icon">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-            </div>
-            <div>
-              <strong>Working Hours</strong>
-              <p>Mon - Sat: 8:00 AM - 6:00 PM</p>
-              <p>Sunday: By Appointment Only</p>
-            </div>
-          </div>
-          <div class="location-detail">
-            <div class="location-detail-icon">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
-            </div>
-            <div>
-              <strong>Email</strong>
-              <p>info@horicautos.com</p>
-            </div>
-          </div>
-        </div>
-        <div class="location-actions">
-          <a href="https://wa.me/233548000393" target="_blank" class="btn btn-primary btn-lg">Chat on WhatsApp</a>
-          <a href="tel:+233548000393" class="btn btn-outline-light btn-lg">Call Now</a>
-        </div>
-      </div>
-      <div class="location-map">
-        <!-- Replace the src below with your actual Google Maps embed URL -->
-        <iframe
-          src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d127062.16356295872!2d-0.2286773!3d5.6037168!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0xfdf9084b2b7a773%3A0xbed14ed8650e2dd3!2sAccra%2C%20Ghana!5e0!3m2!1sen!2s!4v1700000000000!5m2!1sen!2s"
-          width="100%" height="100%" style="border:0; border-radius: var(--radius-xl);" allowfullscreen="" loading="lazy"
-          referrerpolicy="no-referrer-when-downgrade"></iframe>
-      </div>
-    </div>
-  </div>
-</section>
-
 <section class="contact-form-section">
   <div class="container">
     <div class="contact-form-grid">
       <div class="contact-form-info">
         <div class="section-eyebrow">Send a Message</div>
         <h2>Make an Enquiry</h2>
-        <p>Interested in a specific vehicle or have a general question? Fill out the form and we'll get back to you within a few hours.</p>
+        <p>Have a question about a vehicle, need help with financing, or want to know what's available? Fill out the form and we'll get back to you within a few hours.</p>
         <div class="contact-form-details">
           <div class="location-detail">
             <div class="location-detail-icon">
@@ -188,12 +135,8 @@
           <input type="email" id="enqEmail" placeholder="e.g. kwame@example.com">
         </div>
         <div class="form-group">
-          <label for="enqVehicle">Interested Vehicle (optional)</label>
-          <input type="text" id="enqVehicle" placeholder="e.g. 2024 Toyota Land Cruiser">
-        </div>
-        <div class="form-group">
           <label for="enqMessage">Message *</label>
-          <textarea id="enqMessage" rows="4" required placeholder="Tell us what you're looking for, your budget, or any questions..."></textarea>
+          <textarea id="enqMessage" rows="5" required placeholder="Tell us what you're looking for — budget, preferred brands, body type, or any questions..."></textarea>
         </div>
         <button type="submit" class="btn btn-primary btn-lg" id="enqSubmitBtn">Send Enquiry</button>
         <div class="enquiry-success" id="enqSuccess" style="display:none;">
@@ -295,8 +238,6 @@ async function handleEnquiry(e) {
   btn.disabled = true;
   btn.textContent = 'Sending...';
 
-  const vehicleText = document.getElementById('enqVehicle').value.trim();
-
   try {
     const res = await fetch('/api/enquiries', {
       method: 'POST',
@@ -305,7 +246,7 @@ async function handleEnquiry(e) {
         customer_name: document.getElementById('enqName').value.trim(),
         customer_phone: document.getElementById('enqPhone').value.trim(),
         customer_email: document.getElementById('enqEmail').value.trim(),
-        message: (vehicleText ? 'Interested in: ' + vehicleText + '\n\n' : '') + document.getElementById('enqMessage').value.trim()
+        message: document.getElementById('enqMessage').value.trim()
       })
     });
     if (res.ok) {

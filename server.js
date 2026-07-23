@@ -494,6 +494,11 @@ app.post('/api/chat', async (req, res) => {
   }
 });
 
+// ── API 404 ──
+app.use('/api/*', (req, res) => {
+  res.status(404).json({ error: 'Endpoint not found' });
+});
+
 // ── CATCH ALL ──
 app.get('*', (req, res) => {
   res.sendFile(path.join(__dirname, 'index.html'));

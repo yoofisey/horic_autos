@@ -262,7 +262,6 @@
 <script src="app.js"></script>
 <script>
   document.addEventListener('DOMContentLoaded', () => {
-    HoricApp.populateFilters();
     const params = new URLSearchParams(window.location.search);
     if (params.get('body')) document.getElementById('filterBody').value = params.get('body');
     if (params.get('fuel')) document.getElementById('filterFuel').value = params.get('fuel');
