@@ -35,7 +35,7 @@ const KB_ENTRIES = [
     type: "faq"
   },
   {
-    content: "Ghana Car Running Costs: Monthly fuel for a typical sedan driving 2000km: Petrol ~GHS 3,135/month (9.5L/100km at GHS 16.50/L). SUV ~GHS 4,290/month (13L/100km). Diesel sedan ~GHS 2,394/month (7L/100km at GHS 17.10/L). Hybrid ~GHS 1,815/month (5.5L/100km). Electric ~GHS 576/month (18kWh/100km at GHS 1.60/kWh). Add insurance ~GHS 45-52/month, maintenance ~GHS 638/month base, and tyres ~GHS 40-63/month amortized.",
+    content: "Ghana Car Running Costs: Monthly fuel for a typical sedan driving 2000km: Petrol ~GHS 2,755/month (9.5L/100km at GHS 14.50/L). SUV ~GHS 3,770/month (13L/100km). Diesel sedan ~GHS 2,260/month (7L/100km at GHS 16.14/L). Hybrid ~GHS 1,595/month (5.5L/100km). Electric ~GHS 709/month (18kWh/100km at GHS 1.97/kWh). Add insurance ~GHS 46/month (third-party GHS 557/yr), maintenance ~GHS 480/month base, and tyres ~GHS 40-63/month amortized.",
     type: "faq"
   },
   {
@@ -43,15 +43,15 @@ const KB_ENTRIES = [
     type: "faq"
   },
   {
-    content: "Ghana Fuel Prices (2024-2025): Petrol (Gasoline) is approximately GHS 16.50 per litre. Diesel is approximately GHS 17.10 per litre. LPG is approximately GHS 14.50 per kilogram. Electricity for EVs is approximately GHS 1.60 per kWh (residential rate). Fuel prices may vary slightly by region and are adjusted by the National Petroleum Authority periodically.",
+    content: "Ghana Fuel Prices (July 2026): Petrol (Gasoline) averages GHS 14.50 per litre (NPA floor GHS 13.28). Diesel averages GHS 16.14 per litre (NPA floor GHS 14.35). LPG approximately GHS 10 per kilogram. Electricity for EVs is approximately GHS 1.97 per kWh (residential rate, 0-300 kWh band). Fuel prices are adjusted every two weeks by the National Petroleum Authority based on international crude prices and the cedi exchange rate.",
     type: "faq"
   },
   {
-    content: "Ghana Insurance Costs: Third-party insurance (mandatory): Sedan ~GHS 530/year, SUV ~GHS 620/year. Comprehensive insurance (recommended): Approximately 3.5% of the vehicle's value per year. For a GHS 200,000 car, comprehensive would be ~GHS 7,000/year. All vehicles must have minimum third-party insurance to be road-legal in Ghana. Horic Autos can help arrange insurance.",
+    content: "Ghana Insurance Costs (2026): Third-party insurance (mandatory): GHS 557/year for all private vehicles (flat rate as of Feb 2026). Comprehensive insurance (recommended): Approximately 5-7% of the vehicle's value per year. For a GHS 200,000 car, comprehensive would be ~GHS 10,000-14,000/year. All vehicles must have minimum third-party insurance to be road-legal in Ghana. Horic Autos can help arrange insurance.",
     type: "faq"
   },
   {
-    content: "Ghana Maintenance Costs: Oil change: GHS 320-650 depending on vehicle type and oil grade. Minor service (oil, filters, fluids): ~GHS 800. Major service (includes timing belt, spark plugs, brake fluid): ~GHS 1,800. Tyre replacement: Budget ~GHS 600 each, Mid-range ~GHS 950 each, Premium ~GHS 1,500 each. Brake pad replacement: GHS 400-800 per axle. Battery replacement: GHS 400-1,200.",
+    content: "Ghana Maintenance Costs (2026): Oil change: GHS 400-650 depending on vehicle type and oil grade. Minor service (oil, filters, fluids): ~GHS 800. Major service (includes timing belt, spark plugs, brake fluid): ~GHS 1,800. Tyre replacement: Budget ~GHS 600 each, Mid-range ~GHS 950 each, Premium ~GHS 1,500 each. Brake pad replacement: GHS 400-800 per axle. Battery replacement: GHS 400-1,200. Roadworthy certificate: GHS 100-150/year.",
     type: "faq"
   },
   {
