@@ -14,6 +14,32 @@ const JWT_SECRET = process.env.JWT_SECRET || crypto.randomBytes(32).toString('he
 app.use(express.json({ limit: '5mb' }));
 app.use(express.static(path.join(__dirname)));
 
+// ── RATE LIMITING (simple in-memory) ──
+const rateBuckets = new Map();
+function rateLimit(maxReqs, windowMs) {
+  return function(req, res, next) {
+    const ip = req.ip || req.connection.remoteAddress;
+    const now = Date.now();
+    const key = ip + ':' + req.baseUrl + req.path;
+    if (!rateBuckets.has(key)) rateBuckets.set(key, []);
+    const hits = rateBuckets.get(key).filter(t => t > now - windowMs);
+    hits.push(now);
+    rateBuckets.set(key, hits);
+    if (hits.length > maxReqs) {
+      return res.status(429).json({ error: 'Too many requests. Please wait a moment.' });
+    }
+    next();
+  };
+}
+
+// Clean up stale buckets every 5 minutes
+setInterval(function() {
+  const cutoff = Date.now() - 300000;
+  for (const [k, v] of rateBuckets) {
+    if (v.length === 0 || v[v.length - 1] < cutoff) rateBuckets.delete(k);
+  }
+}, 300000);
+
 // ── DATABASE ──
 const sql = neon(process.env.DATABASE_URL);
 
@@ -449,7 +475,7 @@ Add maintenance (~GHS 480/mo base, lower for new/electric, higher for SUVs) and 
 - You can compare two vehicles side by side when asked
 - Encourage browsing the inventory page or chatting further`;
 
-app.post('/api/chat', async (req, res) => {
+app.post('/api/chat', rateLimit(15, 60000), async (req, res) => {
   try {
     const { messages } = req.body;
     if (!messages || !Array.isArray(messages)) {
@@ -502,6 +528,14 @@ app.use('/api/*', (req, res) => {
 // ── CATCH ALL ──
 app.get('*', (req, res) => {
   res.sendFile(path.join(__dirname, 'index.html'));
+});
+
+// ── 404 for non-API routes ──
+app.get('*', (req, res) => {
+  if (req.path.startsWith('/api/')) {
+    return res.status(404).json({ error: 'Endpoint not found' });
+  }
+  res.sendFile(path.join(__dirname, '404.html'));
 });
 
 // Export for Vercel serverless + local dev

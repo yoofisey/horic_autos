@@ -4,17 +4,29 @@ const HoricApp = (() => {
   let cachedVehicles = [];
 
   async function fetchVehicles() {
+    fetchError = false;
     try {
       const res = await fetch('/api/vehicles');
       if (res.ok) {
         cachedVehicles = await res.json();
       } else {
         cachedVehicles = [];
+        fetchError = true;
       }
     } catch (e) {
       cachedVehicles = [];
+      fetchError = true;
     }
     return cachedVehicles;
+  }
+
+  let fetchError = false;
+
+  const SKELETON_CARD = '<div class="car-card skeleton-card"><div class="skeleton-img"></div><div class="car-card-body"><div class="skeleton-line skeleton-line-short"></div><div class="skeleton-line skeleton-line-long"></div><div class="skeleton-line skeleton-line-medium"></div><div class="skeleton-pill-row"><div class="skeleton-pill"></div><div class="skeleton-pill"></div><div class="skeleton-pill"></div></div><div class="skeleton-line skeleton-line-medium"></div></div></div>';
+
+  function showSkeletons(gridId, count) {
+    const grid = document.getElementById(gridId);
+    if (grid) grid.innerHTML = Array(count).fill(SKELETON_CARD).join('');
   }
 
   function statusBadge(status) {
@@ -62,8 +74,13 @@ const HoricApp = (() => {
   async function renderFeatured() {
     const grid = document.getElementById('featuredGrid');
     if (!grid) return;
-    const cars = await fetchVehicles();
-    const inStock = cars.filter(c => c.status === 'in_stock').slice(0, 6);
+    showSkeletons('featuredGrid', 6);
+    await fetchVehicles();
+    if (fetchError) {
+      grid.innerHTML = '<div class="error-state"><div class="error-icon">!</div><h3>Something went wrong</h3><p>We could not load our inventory. Please try refreshing the page.</p><button onclick="HoricApp.renderFeatured()" class="btn btn-primary">Retry</button></div>';
+      return;
+    }
+    const inStock = cachedVehicles.filter(c => c.status === 'in_stock').slice(0, 6);
     grid.innerHTML = inStock.map(buildCarCard).join('');
     observeReveal();
   }
@@ -93,7 +110,17 @@ const HoricApp = (() => {
     const countEl = document.getElementById('resultCount');
     if (!grid) return;
 
-    if (!cachedVehicles.length) await fetchVehicles();
+    if (!cachedVehicles.length && !fetchError) {
+      showSkeletons('inventoryGrid', 8);
+      await fetchVehicles();
+    }
+
+    if (fetchError) {
+      grid.innerHTML = '<div class="error-state"><div class="error-icon">!</div><h3>Could not connect to server</h3><p>We could not load our vehicle inventory. Please check your connection and try again.</p><button onclick="HoricApp.renderInventoryGrid()" class="btn btn-primary">Retry</button></div>';
+      if (noResults) noResults.style.display = 'none';
+      if (countEl) countEl.textContent = '0';
+      return;
+    }
 
     const search = document.getElementById('filterSearch')?.value || '';
     const make = document.getElementById('filterMake')?.value || '';

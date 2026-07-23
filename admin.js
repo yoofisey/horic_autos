@@ -201,9 +201,9 @@ const HoricAdmin = (() => {
         return '<div class="enquiry-card ' + (enq.status === 'unread' ? 'unread' : '') + '" onclick="HoricAdmin.markEnquiryRead(\'' + enq.id + '\')">' +
           '<div class="enquiry-header">' +
           '<div><strong>' + enq.customer_name + '</strong> <span class="enquiry-date">' + enq.created_at + '</span></div>' +
-          (car ? '<span class="enquiry-car">' + car.year + ' ' + car.make + ' ' + car.model + '</span>' : '') +
+          (car ? '<span class="enquiry-vehicle">' + car.year + ' ' + car.make + ' ' + car.model + '</span>' : '') +
           '</div>' +
-          '<p class="enquiry-msg">' + enq.message + '</p>' +
+          '<p class="enquiry-message">' + enq.message + '</p>' +
           '<div class="enquiry-actions">' +
           '<button class="btn btn-sm btn-outline" onclick="event.stopPropagation(); HoricAdmin.deleteEnquiry(\'' + enq.id + '\')">Delete</button>' +
           '</div></div>';
