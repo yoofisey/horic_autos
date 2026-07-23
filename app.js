@@ -225,6 +225,8 @@ const HoricApp = (() => {
     updateGallery();
     el('carModal').classList.add('active');
     document.body.style.overflow = 'hidden';
+
+    fetch('/api/vehicles/' + id + '/view', { method: 'POST' }).catch(function() {});
   }
 
   function closeModal() {

@@ -5,6 +5,11 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Contact Us | Horic Autos</title>
   <meta name="description" content="Get in touch with Horic Autos. WhatsApp, call, or visit us in Accra, Ghana.">
+  <meta property="og:title" content="Contact Horic Autos">
+  <meta property="og:description" content="Get in touch with Horic Autos. WhatsApp, call, or visit our showroom in Accra.">
+  <meta property="og:image" content="horic.png">
+  <meta property="og:type" content="website">
+  <meta name="twitter:card" content="summary_large_image">
   <link rel="icon" type="image/png" href="horic.png">
   <link rel="stylesheet" href="style.css">
 </head>
@@ -138,14 +143,64 @@
         </div>
       </div>
       <div class="location-map">
-        <div class="map-placeholder">
-          <div class="map-placeholder-icon">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
+        <!-- Replace the src below with your actual Google Maps embed URL -->
+        <iframe
+          src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d127062.16356295872!2d-0.2286773!3d5.6037168!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0xfdf9084b2b7a773%3A0xbed14ed8650e2dd3!2sAccra%2C%20Ghana!5e0!3m2!1sen!2s!4v1700000000000!5m2!1sen!2s"
+          width="100%" height="100%" style="border:0; border-radius: var(--radius-xl);" allowfullscreen="" loading="lazy"
+          referrerpolicy="no-referrer-when-downgrade"></iframe>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="contact-form-section">
+  <div class="container">
+    <div class="contact-form-grid">
+      <div class="contact-form-info">
+        <div class="section-eyebrow">Send a Message</div>
+        <h2>Make an Enquiry</h2>
+        <p>Interested in a specific vehicle or have a general question? Fill out the form and we'll get back to you within a few hours.</p>
+        <div class="contact-form-details">
+          <div class="location-detail">
+            <div class="location-detail-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 16.92z"/></svg>
+            </div>
+            <div>
+              <strong>Prefer to call?</strong>
+              <p><a href="tel:+233548000393" style="color: var(--green-400);">+233 548 000 393</a></p>
+            </div>
           </div>
-          <h3>Accra, Ghana</h3>
-          <p>We're in the Greater Accra Region</p>
         </div>
       </div>
+      <form class="contact-form" id="enquiryForm" onsubmit="return handleEnquiry(event)">
+        <div class="form-row">
+          <div class="form-group">
+            <label for="enqName">Full Name *</label>
+            <input type="text" id="enqName" required placeholder="e.g. Kwame Asante">
+          </div>
+          <div class="form-group">
+            <label for="enqPhone">Phone Number *</label>
+            <input type="tel" id="enqPhone" required placeholder="e.g. 024 123 4567">
+          </div>
+        </div>
+        <div class="form-group">
+          <label for="enqEmail">Email Address</label>
+          <input type="email" id="enqEmail" placeholder="e.g. kwame@example.com">
+        </div>
+        <div class="form-group">
+          <label for="enqVehicle">Interested Vehicle (optional)</label>
+          <input type="text" id="enqVehicle" placeholder="e.g. 2024 Toyota Land Cruiser">
+        </div>
+        <div class="form-group">
+          <label for="enqMessage">Message *</label>
+          <textarea id="enqMessage" rows="4" required placeholder="Tell us what you're looking for, your budget, or any questions..."></textarea>
+        </div>
+        <button type="submit" class="btn btn-primary btn-lg" id="enqSubmitBtn">Send Enquiry</button>
+        <div class="enquiry-success" id="enqSuccess" style="display:none;">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+          <p><strong>Enquiry sent!</strong> We'll get back to you shortly via phone or WhatsApp.</p>
+        </div>
+      </form>
     </div>
   </div>
 </section>
@@ -191,7 +246,7 @@
         <ul>
           <li><a href="https://wa.me/233548000393">WhatsApp</a></li>
           <li><a href="mailto:info@horicautos.com">Email Us</a></li>
-          <li><a href="admin.html">Admin</a></li>
+          <li><a href="contact.html">Visit Us</a></li>
         </ul>
       </div>
     </div>
@@ -232,5 +287,41 @@
 
 <script src="data.js"></script>
 <script src="chatbot.js"></script>
+<script>
+async function handleEnquiry(e) {
+  e.preventDefault();
+  const btn = document.getElementById('enqSubmitBtn');
+  const success = document.getElementById('enqSuccess');
+  btn.disabled = true;
+  btn.textContent = 'Sending...';
+
+  const vehicleText = document.getElementById('enqVehicle').value.trim();
+
+  try {
+    const res = await fetch('/api/enquiries', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        customer_name: document.getElementById('enqName').value.trim(),
+        customer_phone: document.getElementById('enqPhone').value.trim(),
+        customer_email: document.getElementById('enqEmail').value.trim(),
+        message: (vehicleText ? 'Interested in: ' + vehicleText + '\n\n' : '') + document.getElementById('enqMessage').value.trim()
+      })
+    });
+    if (res.ok) {
+      document.getElementById('enquiryForm').reset();
+      btn.style.display = 'none';
+      success.style.display = 'flex';
+    } else {
+      throw new Error('Failed');
+    }
+  } catch (err) {
+    btn.disabled = false;
+    btn.textContent = 'Send Enquiry';
+    alert('Something went wrong. Please try again or contact us directly via WhatsApp.');
+  }
+  return false;
+}
+</script>
 </body>
 </html>
