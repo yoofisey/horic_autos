@@ -119,10 +119,10 @@ const HoricApp = (() => {
         var textEl = document.getElementById('noResultsText');
         if (make && model && titleEl) {
           titleEl.textContent = 'No ' + make + ' ' + model + ' found';
-          textEl.textContent = 'We don\'t currently have any ' + make + ' ' + model + ' in our inventory. Try browsing other models or let our AI advisor help.';
+          textEl.textContent = 'We don\'t currently have any ' + make + ' ' + model + ' in our inventory. Try browsing other models or let our Horic AI help.';
         } else if (make && titleEl) {
           titleEl.textContent = 'No ' + make + ' vehicles found';
-          textEl.textContent = 'We don\'t currently have any ' + make + ' vehicles in stock. Browse other makes or chat with our AI advisor for alternatives.';
+          textEl.textContent = 'We don\'t currently have any ' + make + ' vehicles in stock. Browse other makes or chat with our Horic AI for alternatives.';
         } else if (search && titleEl) {
           titleEl.textContent = 'No results for "' + search + '"';
           textEl.textContent = 'We couldn\'t find any vehicles matching your search. Try different keywords or reset your filters.';

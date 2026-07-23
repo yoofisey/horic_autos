@@ -539,7 +539,7 @@ img { max-width: 100%; display: block; }
 .contact-strip p { color: rgba(255,255,255,0.5); margin-bottom: 32px; max-width: 480px; margin-left: auto; margin-right: auto; }
 .contact-actions { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
 
-/* ── AI ADVISOR PREVIEW ── */
+/* ── Horic AI PREVIEW ── */
 .advisor-preview {
   background: var(--dark-900); border: 1px solid rgba(255,255,255,0.08);
   border-radius: var(--radius-xl); padding: 56px; text-align: center;
