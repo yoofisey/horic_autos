@@ -950,7 +950,7 @@ select.form-control option { background: var(--white); }
 
 /* ── WHATSAPP FLOAT ── */
 .whatsapp-float {
-  position: fixed; bottom: 24px; right: 24px; z-index: 900;
+  position: fixed; bottom: 24px; left: 24px; z-index: 900;
   width: 60px; height: 60px; border-radius: 50%;
   background: #25d366; display: flex; align-items: center; justify-content: center;
   box-shadow: 0 4px 20px rgba(37,211,102,0.4);
@@ -958,7 +958,7 @@ select.form-control option { background: var(--white); }
 }
 .whatsapp-float:hover { transform: scale(1.1); box-shadow: 0 6px 28px rgba(37,211,102,0.5); }
 .whatsapp-float-tooltip {
-  position: absolute; right: 72px; white-space: nowrap;
+  position: absolute; left: 72px; white-space: nowrap;
   background: var(--gray-900); color: var(--white);
   padding: 8px 14px; border-radius: 8px; font-size: 0.82rem; font-weight: 500;
   opacity: 0; pointer-events: none; transition: opacity 0.2s;
@@ -1153,7 +1153,7 @@ select.form-control option { background: var(--white); }
   .testimonials-grid { grid-template-columns: 1fr; max-width: 480px; margin-left: auto; margin-right: auto; }
   .compare-bar { flex-direction: column; gap: 10px; padding: 12px 16px; }
   .compare-bar-items { flex-wrap: wrap; justify-content: center; }
-  .whatsapp-float { width: 52px; height: 52px; bottom: 16px; right: 16px; }
+  .whatsapp-float { width: 52px; height: 52px; bottom: 16px; left: 16px; }
   .whatsapp-float-tooltip { display: none; }
 }
 
