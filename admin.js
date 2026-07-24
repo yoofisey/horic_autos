@@ -578,6 +578,15 @@ const HoricAdmin = (() => {
     document.getElementById('adminLayout').style.display = '';
     renderDashboard();
     initImageUpload();
+
+    // Poll unread enquiry count every 30s
+    setInterval(async function() {
+      try {
+        var data = await api('/api/enquiries/unread-count');
+        var badge = document.getElementById('enquiryBadge');
+        if (badge) badge.textContent = data.count;
+      } catch (e) {}
+    }, 30000);
   }
 
   document.addEventListener('DOMContentLoaded', init);

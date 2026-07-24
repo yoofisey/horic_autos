@@ -520,14 +520,39 @@ app.post('/api/chat', rateLimit(15, 60000), async (req, res) => {
   }
 });
 
+// ── ENQUIRY COUNT (unseen by admin) ──
+app.get('/api/enquiries/unread-count', requireAuth, async (req, res) => {
+  try {
+    const [result] = await sql`SELECT count(*)::int as count FROM enquiries WHERE status = 'unread'`;
+    res.json({ count: result.count });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ── SITEMAP ──
+app.get('/sitemap.xml', async (req, res) => {
+  try {
+    const vehicles = await sql`SELECT id, updated_at FROM vehicles WHERE status != 'sold'`;
+    const BASE = 'https://gallant-passion-production-680f.up.railway.app';
+    let xml = '<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n';
+    xml += '  <url><loc>' + BASE + '/</loc><changefreq>weekly</changefreq><priority>1.0</priority></url>\n';
+    xml += '  <url><loc>' + BASE + '/inventory.html</loc><changefreq>daily</changefreq><priority>0.9</priority></url>\n';
+    xml += '  <url><loc>' + BASE + '/contact.html</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>\n';
+    vehicles.forEach(v => {
+      xml += '  <url><loc>' + BASE + '/inventory.html?v=' + v.id + '</loc><lastmod>' + (v.updated_at || '').split('T')[0] + '</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>\n';
+    });
+    xml += '</urlset>';
+    res.set('Content-Type', 'application/xml');
+    res.send(xml);
+  } catch (err) {
+    res.status(500).send('Error generating sitemap');
+  }
+});
+
 // ── API 404 ──
 app.use('/api/*', (req, res) => {
   res.status(404).json({ error: 'Endpoint not found' });
-});
-
-// ── CATCH ALL ──
-app.get('*', (req, res) => {
-  res.sendFile(path.join(__dirname, 'index.html'));
 });
 
 // ── 404 for non-API routes ──

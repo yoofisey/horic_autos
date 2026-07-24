@@ -1,0 +1,6 @@
+User-agent: *
+Allow: /
+Disallow: /admin*
+Disallow: /api/*
+
+Sitemap: https://gallant-passion-production-680f.up.railway.app/sitemap.xml
