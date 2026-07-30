@@ -319,41 +319,24 @@
 
     <!-- SCHEDULED VISITS TAB -->
     <div class="admin-panel" id="panel-visits">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;flex-wrap:wrap;gap:12px;">
-        <h2 style="font-size:1.15rem;font-weight:600;color:var(--gray-900);">Scheduled Visits</h2>
+      <div class="visit-header">
+        <h2>Scheduled <span>Visits</span></h2>
       </div>
       <div class="visit-filter-bar">
-        <div class="visit-filter-group">
-          <span class="visit-filter-label">Filter:</span>
-          <button class="btn btn-sm kb-filter-btn active" data-visit-filter="all" onclick="RhuleAdmin.filterVisits('all', this)">All</button>
-          <button class="btn btn-sm kb-filter-btn" data-visit-filter="pending" onclick="RhuleAdmin.filterVisits('pending', this)">Pending</button>
-          <button class="btn btn-sm kb-filter-btn" data-visit-filter="confirmed" onclick="RhuleAdmin.filterVisits('confirmed', this)">Confirmed</button>
-          <button class="btn btn-sm kb-filter-btn" data-visit-filter="completed" onclick="RhuleAdmin.filterVisits('completed', this)">Completed</button>
-          <button class="btn btn-sm kb-filter-btn" data-visit-filter="cancelled" onclick="RhuleAdmin.filterVisits('cancelled', this)">Cancelled</button>
-        </div>
+        <span class="visit-filter-label">Filter:</span>
+        <button class="visit-filter-btn active" data-visit-filter="all" onclick="RhuleAdmin.filterVisits('all', this)">All</button>
+        <button class="visit-filter-btn" data-visit-filter="pending" onclick="RhuleAdmin.filterVisits('pending', this)">Pending</button>
+        <button class="visit-filter-btn" data-visit-filter="confirmed" onclick="RhuleAdmin.filterVisits('confirmed', this)">Confirmed</button>
+        <button class="visit-filter-btn" data-visit-filter="completed" onclick="RhuleAdmin.filterVisits('completed', this)">Completed</button>
+        <button class="visit-filter-btn" data-visit-filter="cancelled" onclick="RhuleAdmin.filterVisits('cancelled', this)">Cancelled</button>
       </div>
-      <div class="visit-stats">
-        <div class="visit-stat"><span class="visit-stat-dot pending"></span><div><div class="visit-stat-label">Pending</div><div class="visit-stat-value" id="visitPendingCount">0</div></div></div>
-        <div class="visit-stat"><span class="visit-stat-dot confirmed"></span><div><div class="visit-stat-label">Confirmed</div><div class="visit-stat-value" id="visitConfirmedCount">0</div></div></div>
-        <div class="visit-stat"><span class="visit-stat-dot completed"></span><div><div class="visit-stat-label">Completed</div><div class="visit-stat-value" id="visitCompletedCount">0</div></div></div>
-        <div class="visit-stat"><span class="visit-stat-dot cancelled"></span><div><div class="visit-stat-label">Cancelled</div><div class="visit-stat-value" id="visitCancelledCount">0</div></div></div>
+      <div class="visit-stats-grid">
+        <div class="visit-stat-card"><div class="visit-stat-top"><div class="visit-stat-icon pending"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div><div><div class="visit-stat-label">Pending</div><div class="visit-stat-value" id="visitPendingCount">0</div></div></div></div>
+        <div class="visit-stat-card"><div class="visit-stat-top"><div class="visit-stat-icon confirmed"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div><div><div class="visit-stat-label">Confirmed</div><div class="visit-stat-value" id="visitConfirmedCount">0</div></div></div></div>
+        <div class="visit-stat-card"><div class="visit-stat-top"><div class="visit-stat-icon completed"><svg viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg></div><div><div class="visit-stat-label">Completed</div><div class="visit-stat-value" id="visitCompletedCount">0</div></div></div></div>
+        <div class="visit-stat-card"><div class="visit-stat-top"><div class="visit-stat-icon cancelled"><svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></div><div><div class="visit-stat-label">Cancelled</div><div class="visit-stat-value" id="visitCancelledCount">0</div></div></div></div>
       </div>
-      <div class="data-table-wrapper">
-        <table class="data-table">
-          <thead>
-            <tr>
-              <th>Customer</th>
-              <th>Phone</th>
-              <th>Date & Time</th>
-              <th>Vehicle</th>
-              <th>Message</th>
-              <th>Status</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody id="visitsTableBody"></tbody>
-        </table>
-      </div>
+      <div id="visitsContainer" class="visit-cards"></div>
     </div>
 
   </main>

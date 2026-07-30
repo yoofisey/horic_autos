@@ -719,8 +719,8 @@ const RhuleAdmin = (() => {
 
   async function renderVisits(filter) {
     filter = filter || currentVisitFilter;
-    var tbody = document.getElementById('visitsTableBody');
-    if (!tbody) return;
+    var container = document.getElementById('visitsContainer');
+    if (!container) return;
     try {
       var url = '/api/visits' + (filter !== 'all' ? '?status=' + filter : '');
       var visits = await api(url);
@@ -736,31 +736,66 @@ const RhuleAdmin = (() => {
       document.getElementById('visitBadge').textContent = counts.pending;
 
       if (visits.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:var(--gray-400);padding:40px;">No scheduled visits found.</td></tr>';
+        container.innerHTML =
+          '<div class="visit-empty">' +
+          '<div class="visit-empty-icon"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></div>' +
+          '<h3>No ' + (filter !== 'all' ? filter : '') + ' visits</h3>' +
+          '<p>' + (filter !== 'all' ? 'No visits with "' + filter + '" status.' : 'No scheduled visits yet.') + '</p></div>';
         return;
       }
 
-      var statusColors = { pending: 'status-coming_soon', confirmed: 'status-in_stock', completed: 'status-in_stock', cancelled: 'status-sold' };
       var statusLabels = { pending: 'Pending', confirmed: 'Confirmed', completed: 'Completed', cancelled: 'Cancelled' };
 
-      tbody.innerHTML = visits.map(function(v) {
+      container.innerHTML = visits.map(function(v) {
         var vehicleStr = v.vehicle_id ? (v.year + ' ' + v.make + ' ' + v.model).trim() || 'Vehicle #' + v.vehicle_id.slice(0, 8) : '—';
         var dateStr = v.preferred_date ? new Date(v.preferred_date).toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' }) : '—';
-        var timeStr = v.preferred_time ? ' at ' + v.preferred_time : '';
-        return '<tr>' +
-          '<td><div style="font-weight:600;">' + escapeHtml(v.customer_name) + '</div><div style="font-size:0.78rem;color:var(--gray-400);">' + escapeHtml(v.customer_email || '') + '</div></td>' +
-          '<td><a href="https://wa.me/' + v.customer_phone.replace(/^0/, '233') + '" target="_blank" style="color:var(--green-600);text-decoration:none;">' + escapeHtml(v.customer_phone) + '</a></td>' +
-          '<td style="white-space:nowrap;">' + dateStr + timeStr + '</td>' +
-          '<td>' + vehicleStr + '</td>' +
-          '<td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--gray-500);">' + (v.message ? escapeHtml(v.message.substring(0, 80)) : '—') + '</td>' +
-          '<td><span class="table-status ' + (statusColors[v.status] || 'status-coming_soon') + '">' + (statusLabels[v.status] || v.status) + '</span></td>' +
-          '<td><div class="table-actions">' +
-          (v.status === 'pending' ? '<button class="table-action-btn table-action-confirm" onclick="RhuleAdmin.updateVisitStatus(\'' + v.id + '\',\'confirmed\')">Confirm</button>' : '') +
-          (v.status === 'confirmed' ? '<button class="table-action-btn table-action-complete" onclick="RhuleAdmin.updateVisitStatus(\'' + v.id + '\',\'completed\')">Complete</button>' : '') +
-          (v.status !== 'cancelled' ? '<button class="table-action-btn table-action-cancel" onclick="RhuleAdmin.updateVisitStatus(\'' + v.id + '\',\'cancelled\')">Cancel</button>' : '') +
-          (v.status === 'cancelled' ? '<span style="color:var(--gray-400);font-size:0.72rem;font-style:italic;">cancelled</span>' : '') +
-          '<button title="Delete" class="table-action-delete" onclick="RhuleAdmin.deleteVisit(\'' + v.id + '\')">&#10005;</button>' +
-          '</div></td></tr>';
+        var timeStr = v.preferred_time || '—';
+
+        var actionsHtml = '';
+        if (v.status === 'pending') {
+          actionsHtml += '<button class="visit-action visit-action-confirm" onclick="RhuleAdmin.updateVisitStatus(\'' + v.id + '\',\'confirmed\')">Confirm</button>';
+        }
+        if (v.status === 'confirmed') {
+          actionsHtml += '<button class="visit-action visit-action-complete" onclick="RhuleAdmin.updateVisitStatus(\'' + v.id + '\',\'completed\')">Complete</button>';
+        }
+        if (v.status !== 'cancelled') {
+          actionsHtml += '<button class="visit-action visit-action-cancel" onclick="RhuleAdmin.updateVisitStatus(\'' + v.id + '\',\'cancelled\')">Cancel</button>';
+        }
+        actionsHtml += '<button class="visit-action-delete" title="Delete" onclick="RhuleAdmin.deleteVisit(\'' + v.id + '\')">&#10005;</button>';
+
+        return '<div class="visit-card">' +
+          '<div class="visit-card-row">' +
+            '<div class="visit-card-main">' +
+              '<div class="visit-card-info">' +
+                '<div class="visit-card-name">' + escapeHtml(v.customer_name) + '</div>' +
+                '<div class="visit-card-email">' + escapeHtml(v.customer_email || '') + '</div>' +
+                '<div class="visit-card-phone">' +
+                  '<svg width="12" height="12" viewBox="0 0 24 24" style="stroke:var(--gray-400);fill:none;stroke-width:2;vertical-align:middle;"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>' +
+                  '<a href="https://wa.me/' + v.customer_phone.replace(/^0/, '233') + '" target="_blank">' + escapeHtml(v.customer_phone) + '</a>' +
+                '</div>' +
+              '</div>' +
+              '<div class="visit-card-meta">' +
+                '<div class="visit-card-meta-item">' +
+                  '<div class="visit-card-meta-label">Date</div>' +
+                  '<div class="visit-card-meta-value">' + dateStr + '</div>' +
+                '</div>' +
+                '<div class="visit-card-meta-item">' +
+                  '<div class="visit-card-meta-label">Time</div>' +
+                  '<div class="visit-card-meta-value">' + timeStr + '</div>' +
+                '</div>' +
+                '<div class="visit-card-meta-item">' +
+                  '<div class="visit-card-meta-label">Vehicle</div>' +
+                  '<div class="visit-card-meta-value vehicle">' + escapeHtml(vehicleStr) + '</div>' +
+                '</div>' +
+              '</div>' +
+            '</div>' +
+            '<div class="visit-card-side">' +
+              '<span class="visit-status-badge ' + v.status + '"><span class="visit-status-dot"></span>' + (statusLabels[v.status] || v.status) + '</span>' +
+              '<div class="visit-card-actions">' + actionsHtml + '</div>' +
+            '</div>' +
+          '</div>' +
+          (v.message ? '<div class="visit-card-message">' + escapeHtml(v.message) + '</div>' : '') +
+        '</div>';
       }).join('');
     } catch (e) { console.error(e); }
   }
