@@ -754,11 +754,12 @@ const RhuleAdmin = (() => {
           '<td>' + vehicleStr + '</td>' +
           '<td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--gray-500);">' + (v.message ? escapeHtml(v.message.substring(0, 80)) : '—') + '</td>' +
           '<td><span class="table-status ' + (statusColors[v.status] || 'status-coming_soon') + '">' + (statusLabels[v.status] || v.status) + '</span></td>' +
-          '<td><div class="table-actions" style="gap:4px;">' +
-          (v.status === 'pending' ? '<button class="btn btn-sm" style="background:var(--green-600);color:white;padding:4px 10px;font-size:0.75rem;" onclick="RhuleAdmin.updateVisitStatus(\'' + v.id + '\',\'confirmed\')">Confirm</button>' : '') +
-          (v.status === 'confirmed' ? '<button class="btn btn-sm" style="background:var(--blue-600);color:white;padding:4px 10px;font-size:0.75rem;" onclick="RhuleAdmin.updateVisitStatus(\'' + v.id + '\',\'completed\')">Complete</button>' : '') +
-          (v.status !== 'cancelled' ? '<button class="btn btn-sm" style="background:var(--red-500);color:white;padding:4px 10px;font-size:0.75rem;" onclick="RhuleAdmin.updateVisitStatus(\'' + v.id + '\',\'cancelled\')">Cancel</button>' : '') +
-          '<button title="Delete" class="danger" style="padding:4px 8px;" onclick="RhuleAdmin.deleteVisit(\'' + v.id + '\')">&#10005;</button>' +
+          '<td><div class="table-actions">' +
+          (v.status === 'pending' ? '<button class="table-action-btn table-action-confirm" onclick="RhuleAdmin.updateVisitStatus(\'' + v.id + '\',\'confirmed\')">Confirm</button>' : '') +
+          (v.status === 'confirmed' ? '<button class="table-action-btn table-action-complete" onclick="RhuleAdmin.updateVisitStatus(\'' + v.id + '\',\'completed\')">Complete</button>' : '') +
+          (v.status !== 'cancelled' ? '<button class="table-action-btn table-action-cancel" onclick="RhuleAdmin.updateVisitStatus(\'' + v.id + '\',\'cancelled\')">Cancel</button>' : '') +
+          (v.status === 'cancelled' ? '<span style="color:var(--gray-400);font-size:0.72rem;font-style:italic;">cancelled</span>' : '') +
+          '<button title="Delete" class="table-action-delete" onclick="RhuleAdmin.deleteVisit(\'' + v.id + '\')">&#10005;</button>' +
           '</div></td></tr>';
       }).join('');
     } catch (e) { console.error(e); }

@@ -319,9 +319,12 @@
 
     <!-- SCHEDULED VISITS TAB -->
     <div class="admin-panel" id="panel-visits">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:24px;flex-wrap:wrap;gap:12px;">
-        <div style="display:flex;gap:8px;align-items:center;">
-          <span style="font-size:0.75rem;color:var(--gray-500);text-transform:uppercase;letter-spacing:0.05em;">Filter:</span>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;flex-wrap:wrap;gap:12px;">
+        <h2 style="font-size:1.15rem;font-weight:600;color:var(--gray-900);">Scheduled Visits</h2>
+      </div>
+      <div class="visit-filter-bar">
+        <div class="visit-filter-group">
+          <span class="visit-filter-label">Filter:</span>
           <button class="btn btn-sm kb-filter-btn active" data-visit-filter="all" onclick="RhuleAdmin.filterVisits('all', this)">All</button>
           <button class="btn btn-sm kb-filter-btn" data-visit-filter="pending" onclick="RhuleAdmin.filterVisits('pending', this)">Pending</button>
           <button class="btn btn-sm kb-filter-btn" data-visit-filter="confirmed" onclick="RhuleAdmin.filterVisits('confirmed', this)">Confirmed</button>
@@ -329,11 +332,11 @@
           <button class="btn btn-sm kb-filter-btn" data-visit-filter="cancelled" onclick="RhuleAdmin.filterVisits('cancelled', this)">Cancelled</button>
         </div>
       </div>
-      <div id="visitsStats" style="margin-bottom:20px;padding:16px;background:var(--gray-50);border-radius:12px;display:flex;gap:24px;flex-wrap:wrap;">
-        <div><span style="font-size:0.75rem;color:var(--gray-500);text-transform:uppercase;letter-spacing:0.05em;">Pending</span><br><strong id="visitPendingCount" style="color:#f79009;">0</strong></div>
-        <div><span style="font-size:0.75rem;color:var(--gray-500);text-transform:uppercase;letter-spacing:0.05em;">Confirmed</span><br><strong id="visitConfirmedCount" style="color:#039855;">0</strong></div>
-        <div><span style="font-size:0.75rem;color:var(--gray-500);text-transform:uppercase;letter-spacing:0.05em;">Completed</span><br><strong id="visitCompletedCount" style="color:#175cd3;">0</strong></div>
-        <div><span style="font-size:0.75rem;color:var(--gray-500);text-transform:uppercase;letter-spacing:0.05em;">Cancelled</span><br><strong id="visitCancelledCount" style="color:#d92d20;">0</strong></div>
+      <div class="visit-stats">
+        <div class="visit-stat"><span class="visit-stat-dot pending"></span><div><div class="visit-stat-label">Pending</div><div class="visit-stat-value" id="visitPendingCount">0</div></div></div>
+        <div class="visit-stat"><span class="visit-stat-dot confirmed"></span><div><div class="visit-stat-label">Confirmed</div><div class="visit-stat-value" id="visitConfirmedCount">0</div></div></div>
+        <div class="visit-stat"><span class="visit-stat-dot completed"></span><div><div class="visit-stat-label">Completed</div><div class="visit-stat-value" id="visitCompletedCount">0</div></div></div>
+        <div class="visit-stat"><span class="visit-stat-dot cancelled"></span><div><div class="visit-stat-label">Cancelled</div><div class="visit-stat-value" id="visitCancelledCount">0</div></div></div>
       </div>
       <div class="data-table-wrapper">
         <table class="data-table">
