@@ -11,7 +11,7 @@ const KB_ENTRIES = [
     type: "business"
   },
   {
-    content: "Rhule Auto Hub Location & Contact: We are located in Accra, Ghana. WhatsApp us at +233 548 000 393 for enquiries. You can also reach us via our website live chat. Our working hours are Monday to Saturday, 8:00 AM to 6:00 PM. Sundays by appointment only.",
+    content: "Rhule Auto Hub Location & Contact: We are located in Accra, Ghana. WhatsApp us at +233 53 886 1301 for enquiries. You can also reach us via our website live chat. Our working hours are Monday to Saturday, 8:00 AM to 6:00 PM. Sundays by appointment only.",
     type: "business"
   },
   {

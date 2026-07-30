@@ -267,7 +267,7 @@ const RhuleApp = (() => {
       '<div class="cost-row cost-total"><span class="cost-label">Total Monthly</span><span class="cost-value">' + RhuleData.formatPrice(costs.total) + '</span></div>';
 
     var waMsg = encodeURIComponent('Hi, I am interested in the ' + car.year + ' ' + car.make + ' ' + car.model + (car.trim ? ' ' + car.trim : '') + ' priced at ' + RhuleData.formatPrice(car.price) + '. Can I get more details?');
-    el('modalWhatsApp').href = 'https://wa.me/233548000393?text=' + waMsg;
+    el('modalWhatsApp').href = 'https://wa.me/233538861301?text=' + waMsg;
 
     updateGallery();
     el('carModal').classList.add('active');
