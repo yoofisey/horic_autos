@@ -53,7 +53,7 @@ const HoricApp = (() => {
     var costs = HoricData.estimateRunningCosts(car);
     var imgHtml;
     if (car.images && car.images.length > 0) {
-      imgHtml = '<img src="' + car.images[0] + '" alt="' + car.make + ' ' + car.model + '">';
+      imgHtml = '<img src="' + car.images[0] + '" alt="' + car.make + ' ' + car.model + '" loading="lazy">';
     } else {
       imgHtml = '<div class="car-card-img-placeholder"><div class="car-card-img-icon">' + CAR_SVG + '</div><div class="car-card-img-label">' + car.make + '</div></div>';
     }
@@ -300,6 +300,7 @@ const HoricApp = (() => {
         gallery.appendChild(img);
       }
       img.src = modalCar.images[modalImageIndex];
+      img.loading = 'lazy';
       img.style.display = '';
       counter.textContent = (modalImageIndex + 1) + ' / ' + modalCar.images.length;
     } else {

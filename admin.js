@@ -73,13 +73,14 @@ const HoricAdmin = (() => {
     document.querySelectorAll('.sidebar-nav-item').forEach(function(n) { n.classList.remove('active'); });
     document.getElementById('panel-' + tab)?.classList.add('active');
     document.querySelector('[data-tab="' + tab + '"]')?.classList.add('active');
-    var titles = { dashboard: 'Dashboard', inventory: 'Inventory Management', sales: 'Sales History', enquiries: 'Enquiries', knowledge: 'Knowledge Base (RAG)' };
+    var titles = { dashboard: 'Dashboard', inventory: 'Inventory Management', sales: 'Sales History', enquiries: 'Enquiries', knowledge: 'Knowledge Base (RAG)', blog: 'Blog Management' };
     document.getElementById('adminPageTitle').textContent = titles[tab] || 'Dashboard';
     if (tab === 'dashboard') renderDashboard();
     if (tab === 'inventory') renderInventoryTable();
     if (tab === 'sales') renderSales();
     if (tab === 'enquiries') renderEnquiries();
     if (tab === 'knowledge') renderKnowledgeBase();
+    if (tab === 'blog') renderBlogTable();
   }
 
   function switchDashTab(tab, el) {
@@ -98,7 +99,55 @@ const HoricAdmin = (() => {
       document.getElementById('statUnread').textContent = stats.unreadEnquiries;
       document.getElementById('enquiryBadge').textContent = stats.unreadEnquiries;
       renderDashboardTable('recent');
+      initCharts();
     } catch (e) { console.error(e); }
+  }
+
+  let chartsInitialized = false;
+  async function initCharts() {
+    if (chartsInitialized) return;
+    chartsInitialized = true;
+    try {
+      const [bodyData, salesData, enqData] = await Promise.all([
+        api('/api/stats/body-distribution'),
+        api('/api/stats/monthly-sold'),
+        api('/api/stats/enquiry-trend')
+      ]);
+      const colors = ['#7A8B3A','#E31E24','#2970ff','#f79009','#039855','#9b8afb','#dd2590','#175cd3'];
+      var bodyCtx = document.getElementById('bodyChart');
+      if (bodyCtx) {
+        new Chart(bodyCtx, {
+          type: 'doughnut',
+          data: {
+            labels: bodyData.map(function(d) { return d.body_type; }),
+            datasets: [{ data: bodyData.map(function(d) { return d.count; }), backgroundColor: colors.slice(0, bodyData.length) }]
+          },
+          options: { responsive: true, maintainAspectRatio: true, plugins: { legend: { position: 'bottom', labels: { boxWidth: 12, padding: 12, font: { size: 11 } } } } }
+        });
+      }
+      var salesCtx = document.getElementById('salesChart');
+      if (salesCtx) {
+        new Chart(salesCtx, {
+          type: 'bar',
+          data: {
+            labels: salesData.map(function(d) { return d.month; }),
+            datasets: [{ label: 'Sold', data: salesData.map(function(d) { return d.count; }), backgroundColor: '#7A8B3A', borderRadius: 4 }]
+          },
+          options: { responsive: true, maintainAspectRatio: true, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { stepSize: 1, font: { size: 11 } } }, x: { ticks: { font: { size: 11 } } } } }
+        });
+      }
+      var enqCtx = document.getElementById('enquiryChart');
+      if (enqCtx) {
+        new Chart(enqCtx, {
+          type: 'line',
+          data: {
+            labels: enqData.map(function(d) { return d.month; }),
+            datasets: [{ label: 'Enquiries', data: enqData.map(function(d) { return d.count; }), borderColor: '#E31E24', backgroundColor: 'rgba(227,30,36,0.08)', fill: true, tension: 0.3, pointRadius: 3 }]
+          },
+          options: { responsive: true, maintainAspectRatio: true, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { stepSize: 1, font: { size: 11 } } }, x: { ticks: { font: { size: 11 } } } } }
+        });
+      }
+    } catch (e) { console.error('Charts init error:', e); }
   }
 
   async function renderDashboardTable(mode) {
@@ -552,6 +601,116 @@ const HoricAdmin = (() => {
     } catch (e) { toast(e.message, 'error'); }
   }
 
+  // ── BLOG CRUD ──
+  let blogPosts = [];
+  let blogFilter = 'all';
+
+  async function renderBlogTable() {
+    try {
+      blogPosts = await api('/api/blog?published=false');
+      var tbody = document.getElementById('blogTableBody');
+      var totalEl = document.getElementById('blogTotalCount');
+      var pubEl = document.getElementById('blogPublishedCount');
+      var draftEl = document.getElementById('blogDraftCount');
+      if (totalEl) totalEl.textContent = blogPosts.length;
+      if (pubEl) pubEl.textContent = blogPosts.filter(function(p) { return p.published; }).length;
+      if (draftEl) draftEl.textContent = blogPosts.filter(function(p) { return !p.published; }).length;
+
+      if (!tbody) return;
+      var filtered = blogPosts;
+      if (blogFilter === 'published') filtered = blogPosts.filter(function(p) { return p.published; });
+      if (blogFilter === 'draft') filtered = blogPosts.filter(function(p) { return !p.published; });
+
+      tbody.innerHTML = filtered.length === 0
+        ? '<tr><td colspan="6" style="text-align:center;color:var(--gray-400);padding:32px;">No posts found</td></tr>'
+        : filtered.map(function(p) {
+            var date = p.updated_at ? new Date(p.updated_at).toLocaleDateString('en-GB') : '';
+            var tags = (p.tags || []).slice(0, 3).join(', ');
+            var status = p.published ? '<span style="color:var(--green-600);font-weight:600;">Published</span>' : '<span style="color:var(--gray-400);">Draft</span>';
+            return '<tr><td style="font-weight:600;">' + escapeHtml(p.title) + '</td><td>' + status + '</td><td>' + escapeHtml(p.author) + '</td><td>' + escapeHtml(tags) + '</td><td>' + date + '</td><td style="white-space:nowrap;">' +
+              '<button class="btn btn-sm btn-outline" onclick="HoricAdmin.editBlogPost(\'' + p.id + '\')" style="margin-right:6px;">Edit</button>' +
+              '<button class="btn btn-sm btn-danger" onclick="HoricAdmin.deleteBlogPost(\'' + p.id + '\')">Delete</button></td></tr>';
+          }).join('');
+    } catch (e) { toast(e.message, 'error'); }
+  }
+
+  function filterBlogPosts(filter, el) {
+    blogFilter = filter;
+    document.querySelectorAll('[data-blog-filter]').forEach(function(b) { b.classList.remove('active'); });
+    if (el) el.classList.add('active');
+    renderBlogTable();
+  }
+
+  function openBlogModal() {
+    document.getElementById('blogModalTitle').textContent = 'New Blog Post';
+    document.getElementById('blogForm').reset();
+    document.getElementById('blog-id').value = '';
+    document.getElementById('blog-published').checked = true;
+    document.getElementById('blogModal').classList.add('active');
+  }
+
+  function closeBlogModal() {
+    document.getElementById('blogModal').classList.remove('active');
+  }
+
+  function editBlogPost(id) {
+    var p = blogPosts.find(function(b) { return b.id === id; });
+    if (!p) return;
+    document.getElementById('blogModalTitle').textContent = 'Edit Blog Post';
+    document.getElementById('blog-id').value = p.id;
+    document.getElementById('blog-title').value = p.title;
+    document.getElementById('blog-slug').value = p.slug;
+    document.getElementById('blog-author').value = p.author;
+    document.getElementById('blog-cover').value = p.cover_image;
+    document.getElementById('blog-excerpt').value = p.excerpt;
+    document.getElementById('blog-tags').value = (p.tags || []).join(', ');
+    document.getElementById('blog-content').value = p.content;
+    document.getElementById('blog-published').checked = p.published;
+    document.getElementById('blogModal').classList.add('active');
+  }
+
+  async function saveBlogPost(e) {
+    e.preventDefault();
+    var id = document.getElementById('blog-id').value;
+    var data = {
+      title: document.getElementById('blog-title').value.trim(),
+      slug: document.getElementById('blog-slug').value.trim() || undefined,
+      author: document.getElementById('blog-author').value.trim() || 'Horic Autos',
+      cover_image: document.getElementById('blog-cover').value.trim(),
+      excerpt: document.getElementById('blog-excerpt').value.trim(),
+      tags: document.getElementById('blog-tags').value.split(',').map(function(t) { return t.trim(); }).filter(Boolean),
+      content: document.getElementById('blog-content').value.trim(),
+      published: document.getElementById('blog-published').checked
+    };
+    try {
+      if (id) {
+        await api('/api/blog/' + id, { method: 'PUT', body: JSON.stringify(data) });
+        toast('Post updated', 'success');
+      } else {
+        await api('/api/blog', { method: 'POST', body: JSON.stringify(data) });
+        toast('Post created', 'success');
+      }
+      closeBlogModal();
+      renderBlogTable();
+    } catch (e) { toast(e.message, 'error'); }
+  }
+
+  async function deleteBlogPost(id) {
+    if (!confirm('Delete this blog post?')) return;
+    try {
+      await api('/api/blog/' + id, { method: 'DELETE' });
+      toast('Post deleted', 'info');
+      renderBlogTable();
+    } catch (e) { toast(e.message, 'error'); }
+  }
+
+  function escapeHtml(s) {
+    if (!s) return '';
+    var d = document.createElement('div');
+    d.textContent = s;
+    return d.innerHTML;
+  }
+
   // ── INIT ──
   function init() {
     if (!document.querySelector('.admin-layout')) return;
@@ -585,9 +744,70 @@ const HoricAdmin = (() => {
         var data = await api('/api/enquiries/unread-count');
         var badge = document.getElementById('enquiryBadge');
         if (badge) badge.textContent = data.count;
+        var notifData = await api('/api/notifications/unread-count');
+        updateNotifBadge(notifData.count);
       } catch (e) {}
     }, 30000);
+
+    // Close notification dropdown on outside click
+    document.addEventListener('click', function(e) {
+      var btn = document.getElementById('notificationBtn');
+      if (btn && !btn.contains(e.target)) {
+        var dd = document.getElementById('notifDropdown');
+        if (dd) dd.style.display = 'none';
+      }
+    });
   }
+
+  let notifsVisible = false;
+
+  function updateNotifBadge(count) {
+    var badge = document.getElementById('notifBadge');
+    if (!badge) return;
+    if (count > 0) {
+      badge.style.display = '';
+      badge.textContent = count;
+    } else {
+      badge.style.display = 'none';
+    }
+  }
+
+  async function toggleNotifications() {
+    var dd = document.getElementById('notifDropdown');
+    if (!dd) return;
+    notifsVisible = !notifsVisible;
+    dd.style.display = notifsVisible ? '' : 'none';
+    if (notifsVisible) {
+      try {
+        var notifs = await api('/api/notifications');
+        var list = document.getElementById('notifList');
+        if (list) {
+          list.innerHTML = notifs.length === 0
+            ? '<div style="padding:24px 16px;text-align:center;color:var(--gray-400);font-size:0.85rem;">No notifications yet</div>'
+            : notifs.map(function(n) {
+                var date = n.created_at ? new Date(n.created_at).toLocaleString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) : '';
+                return '<div style="padding:10px 16px;border-bottom:1px solid var(--gray-50);font-size:0.85rem;' + (n.seen ? '' : 'background:var(--green-50);') + '">' +
+                  '<div style="font-weight:600;color:var(--gray-900);margin-bottom:2px;">' + (n.title || '') + '</div>' +
+                  '<div style="color:var(--gray-500);font-size:0.8rem;">' + (n.message || '') + '</div>' +
+                  '<div style="color:var(--gray-400);font-size:0.72rem;margin-top:4px;">' + date + '</div></div>';
+              }).join('');
+        }
+      } catch (e) {}
+    }
+  }
+
+  async function markNotifsSeen() {
+    try {
+      await api('/api/notifications/seen', { method: 'POST' });
+      updateNotifBadge(0);
+      var list = document.getElementById('notifList');
+      if (list) {
+        list.querySelectorAll('div[style*="background"]').forEach(function(el) { el.style.background = ''; });
+      }
+    } catch (e) {}
+  }
+
+  // ── INIT CONTINUED ──
 
   document.addEventListener('DOMContentLoaded', init);
 
@@ -598,6 +818,8 @@ const HoricAdmin = (() => {
     openDeleteModal: openDeleteModal, confirmDelete: confirmDelete, openSoldModal: openSoldModal, confirmSold: confirmSold, relistVehicle: relistVehicle,
     removeImage: removeImage, markEnquiryRead: markEnquiryRead, deleteEnquiry: deleteEnquiry,
     filterKnowledge: filterKnowledge, openKnowledgeModal: openKnowledgeModal, closeKnowledgeModal: closeKnowledgeModal,
-    editKnowledgeEntry: editKnowledgeEntry, saveKnowledgeEntry: saveKnowledgeEntry, deleteKnowledgeEntry: deleteKnowledgeEntry, syncVehicleKnowledge: syncVehicleKnowledge
+    editKnowledgeEntry: editKnowledgeEntry, saveKnowledgeEntry: saveKnowledgeEntry, deleteKnowledgeEntry: deleteKnowledgeEntry, syncVehicleKnowledge: syncVehicleKnowledge,
+    renderBlogTable: renderBlogTable, filterBlogPosts: filterBlogPosts, openBlogModal: openBlogModal, closeBlogModal: closeBlogModal, editBlogPost: editBlogPost, saveBlogPost: saveBlogPost, deleteBlogPost: deleteBlogPost,
+    toggleNotifications: toggleNotifications, markNotifsSeen: markNotifsSeen
   };
 })();

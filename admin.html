@@ -6,6 +6,7 @@
   <title>Admin Dashboard | Horic Autos</title>
   <link rel="icon" type="image/png" href="horic.png">
   <link rel="stylesheet" href="style.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
 </head>
 <body>
 
@@ -61,6 +62,10 @@
         <svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
         Knowledge Base
       </button>
+      <button class="sidebar-nav-item" data-tab="blog" onclick="HoricAdmin.switchTab('blog')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+        Blog
+      </button>
       <button class="sidebar-nav-item" onclick="window.open('index.html','_blank')">
         <svg viewBox="0 0 24 24"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
         View Site
@@ -80,6 +85,19 @@
       <div class="admin-search">
         <input type="text" id="adminSearch" placeholder="Search vehicles..." oninput="HoricAdmin.searchInventory(this.value)">
         <button class="btn btn-primary" onclick="HoricAdmin.openVehicleModal()">+ Add Vehicle</button>
+        <button class="btn btn-ghost" id="notificationBtn" onclick="HoricAdmin.toggleNotifications()" style="position:relative;padding:8px;">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>
+          <span id="notifBadge" class="badge-count" style="position:absolute;top:2px;right:2px;font-size:0.6rem;min-width:16px;height:16px;line-height:16px;display:none;">0</span>
+        </button>
+        <div id="notifDropdown" style="display:none;position:absolute;top:100%;right:0;width:320px;max-height:360px;overflow-y:auto;background:var(--white);border:1px solid var(--gray-200);border-radius:var(--radius-lg);box-shadow:var(--shadow-lg);z-index:100;margin-top:4px;">
+          <div style="padding:14px 16px;border-bottom:1px solid var(--gray-100);font-weight:600;font-size:0.85rem;display:flex;justify-content:space-between;align-items:center;">
+            <span>Notifications</span>
+            <button onclick="HoricAdmin.markNotifsSeen()" style="background:none;border:none;font-size:0.75rem;color:var(--green-600);cursor:pointer;">Mark all seen</button>
+          </div>
+          <div id="notifList" style="padding:8px 0;">
+            <div style="padding:24px 16px;text-align:center;color:var(--gray-400);font-size:0.85rem;">No notifications yet</div>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -129,6 +147,21 @@
               <svg viewBox="0 0 24 24" stroke="#f04438"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
             </div>
           </div>
+        </div>
+      </div>
+
+      <div class="charts-grid">
+        <div class="chart-card">
+          <h4 class="chart-title">Vehicle Distribution</h4>
+          <canvas id="bodyChart"></canvas>
+        </div>
+        <div class="chart-card">
+          <h4 class="chart-title">Monthly Sales Trend</h4>
+          <canvas id="salesChart"></canvas>
+        </div>
+        <div class="chart-card">
+          <h4 class="chart-title">Enquiry Trend</h4>
+          <canvas id="enquiryChart"></canvas>
         </div>
       </div>
 
@@ -242,6 +275,39 @@
             </tr>
           </thead>
           <tbody id="knowledgeTableBody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- BLOG TAB -->
+    <div class="admin-panel" id="panel-blog">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:24px; flex-wrap:wrap; gap:12px;">
+        <div style="display:flex; gap:8px; align-items:center;">
+          <span style="font-size:0.75rem; color:var(--gray-500); text-transform:uppercase; letter-spacing:0.05em;">Status:</span>
+          <button class="btn btn-sm kb-filter-btn active" data-blog-filter="all" onclick="HoricAdmin.filterBlogPosts('all', this)">All</button>
+          <button class="btn btn-sm kb-filter-btn" data-blog-filter="published" onclick="HoricAdmin.filterBlogPosts('published', this)">Published</button>
+          <button class="btn btn-sm kb-filter-btn" data-blog-filter="draft" onclick="HoricAdmin.filterBlogPosts('draft', this)">Drafts</button>
+        </div>
+        <button class="btn btn-primary" onclick="HoricAdmin.openBlogModal()">+ New Post</button>
+      </div>
+      <div id="blogStats" style="margin-bottom:20px; padding:16px; background:var(--gray-50); border-radius:12px; display:flex; gap:24px; flex-wrap:wrap;">
+        <div><span style="font-size:0.75rem; color:var(--gray-500); text-transform:uppercase; letter-spacing:0.05em;">Total Posts</span><br><strong id="blogTotalCount">0</strong></div>
+        <div><span style="font-size:0.75rem; color:var(--gray-500); text-transform:uppercase; letter-spacing:0.05em;">Published</span><br><strong id="blogPublishedCount">0</strong></div>
+        <div><span style="font-size:0.75rem; color:var(--gray-500); text-transform:uppercase; letter-spacing:0.05em;">Drafts</span><br><strong id="blogDraftCount">0</strong></div>
+      </div>
+      <div class="data-table-wrapper">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Title</th>
+              <th>Status</th>
+              <th>Author</th>
+              <th>Tags</th>
+              <th>Updated</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="blogTableBody"></tbody>
         </table>
       </div>
     </div>
@@ -445,6 +511,59 @@
 </div>
 
 <div class="toast-container" id="toastContainer"></div>
+
+<!-- BLOG POST MODAL -->
+<div class="modal-backdrop" id="blogModal">
+  <div class="modal-card" style="max-width: 700px;">
+    <button class="modal-close" onclick="HoricAdmin.closeBlogModal()">&times;</button>
+    <div class="modal-body">
+      <h2 style="font-family:'DM Serif Display',serif; margin-bottom:20px; color:var(--gray-900);" id="blogModalTitle">New Blog Post</h2>
+      <form id="blogForm" onsubmit="HoricAdmin.saveBlogPost(event)">
+        <input type="hidden" id="blog-id">
+        <div class="form-group" style="margin-bottom:14px;">
+          <label>Title *</label>
+          <input type="text" class="form-control" id="blog-title" required placeholder="e.g. Best SUVs for Ghanaian Roads in 2026">
+        </div>
+        <div class="form-row" style="margin-bottom:14px;">
+          <div class="form-group">
+            <label>Slug (URL)</label>
+            <input type="text" class="form-control" id="blog-slug" placeholder="Auto-generated from title if empty">
+          </div>
+          <div class="form-group">
+            <label>Author</label>
+            <input type="text" class="form-control" id="blog-author" placeholder="Horic Autos">
+          </div>
+        </div>
+        <div class="form-group" style="margin-bottom:14px;">
+          <label>Cover Image URL</label>
+          <input type="text" class="form-control" id="blog-cover" placeholder="https://example.com/image.jpg">
+        </div>
+        <div class="form-group" style="margin-bottom:14px;">
+          <label>Excerpt (short summary for card)</label>
+          <textarea class="form-control" id="blog-excerpt" rows="2" placeholder="Brief description for the blog listing..."></textarea>
+        </div>
+        <div class="form-group" style="margin-bottom:14px;">
+          <label>Tags (comma-separated)</label>
+          <input type="text" class="form-control" id="blog-tags" placeholder="e.g. SUVs, Buying Guide, Running Costs">
+        </div>
+        <div class="form-group" style="margin-bottom:20px;">
+          <label>Content *</label>
+          <textarea class="form-control" id="blog-content" rows="12" required placeholder="Write your blog post here..."></textarea>
+        </div>
+        <div class="form-group" style="margin-bottom:20px;">
+          <label style="display:flex; align-items:center; gap:8px; cursor:pointer;">
+            <input type="checkbox" id="blog-published" checked>
+            <span>Published (uncheck for draft)</span>
+          </label>
+        </div>
+        <div class="form-actions">
+          <button type="button" class="btn btn-outline" onclick="HoricAdmin.closeBlogModal()">Cancel</button>
+          <button type="submit" class="btn btn-primary">Save Post</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
 
 <script src="data.js"></script>
 <script src="admin.js"></script>
