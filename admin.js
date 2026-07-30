@@ -1,4 +1,4 @@
-const HoricAdmin = (() => {
+const RhuleAdmin = (() => {
   let session = null;
   let uploadedImages = [];
 
@@ -13,7 +13,7 @@ const HoricAdmin = (() => {
     const res = await fetch(path, { ...opts, headers: { ...headers, ...opts.headers } });
     if (res.status === 401) {
       session = null;
-      localStorage.removeItem('horic_admin_session');
+      localStorage.removeItem('rhule_admin_session');
       showLogin();
       throw new Error('__AUTH_EXPIRED__');
     }
@@ -56,7 +56,7 @@ const HoricAdmin = (() => {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Login failed');
       session = { token: data.token, user: data.user };
-      localStorage.setItem('horic_admin_session', JSON.stringify(session));
+      localStorage.setItem('rhule_admin_session', JSON.stringify(session));
       document.getElementById('loginOverlay').style.display = 'none';
       document.getElementById('adminLayout').style.display = '';
       renderDashboard();
@@ -194,9 +194,9 @@ const HoricAdmin = (() => {
           '<td>' + car.year + '</td>' +
           '<td>' + (car.mileage > 0 ? car.mileage.toLocaleString() + ' km' : '—') + '</td>' +
           '<td><div class="table-actions">' +
-          '<button title="Edit" onclick="HoricAdmin.editVehicle(\'' + car.id + '\')">&#9998;</button>' +
-          (car.status !== 'sold' ? '<button title="Mark Sold" onclick="HoricAdmin.openSoldModal(\'' + car.id + '\')">$</button>' : '') +
-          '<button title="Delete" class="danger" onclick="HoricAdmin.openDeleteModal(\'' + car.id + '\')">&#10005;</button>' +
+          '<button title="Edit" onclick="RhuleAdmin.editVehicle(\'' + car.id + '\')">&#9998;</button>' +
+          (car.status !== 'sold' ? '<button title="Mark Sold" onclick="RhuleAdmin.openSoldModal(\'' + car.id + '\')">$</button>' : '') +
+          '<button title="Delete" class="danger" onclick="RhuleAdmin.openDeleteModal(\'' + car.id + '\')">&#10005;</button>' +
           '</div></td></tr>';
       }).join('');
     } catch (e) { console.error(e); }
@@ -230,7 +230,7 @@ const HoricAdmin = (() => {
           '<td style="font-weight:600;color:var(--green-700);">' + formatPrice(car.sold_price || car.price) + '</td>' +
           '<td>' + (car.sold_to || '—') + '</td>' +
           '<td>' + (car.sold_date || '—') + '</td>' +
-          '<td><div class="table-actions"><button title="Relist" onclick="HoricAdmin.relistVehicle(\'' + car.id + '\')">&#8634;</button></div></td></tr>';
+          '<td><div class="table-actions"><button title="Relist" onclick="RhuleAdmin.relistVehicle(\'' + car.id + '\')">&#8634;</button></div></td></tr>';
       }).join('');
     } catch (e) { console.error(e); }
   }
@@ -250,14 +250,14 @@ const HoricAdmin = (() => {
       }
       list.innerHTML = enquiries.map(function(enq) {
         var car = vMap[enq.vehicle_id];
-        return '<div class="enquiry-card ' + (enq.status === 'unread' ? 'unread' : '') + '" onclick="HoricAdmin.markEnquiryRead(\'' + enq.id + '\')">' +
+        return '<div class="enquiry-card ' + (enq.status === 'unread' ? 'unread' : '') + '" onclick="RhuleAdmin.markEnquiryRead(\'' + enq.id + '\')">' +
           '<div class="enquiry-header">' +
           '<div><strong>' + enq.customer_name + '</strong> <span class="enquiry-date">' + enq.created_at + '</span></div>' +
           (car ? '<span class="enquiry-vehicle">' + car.year + ' ' + car.make + ' ' + car.model + '</span>' : '') +
           '</div>' +
           '<p class="enquiry-message">' + enq.message + '</p>' +
           '<div class="enquiry-actions">' +
-          '<button class="btn btn-sm btn-outline" onclick="event.stopPropagation(); HoricAdmin.deleteEnquiry(\'' + enq.id + '\')">Delete</button>' +
+          '<button class="btn btn-sm btn-outline" onclick="event.stopPropagation(); RhuleAdmin.deleteEnquiry(\'' + enq.id + '\')">Delete</button>' +
           '</div></div>';
       }).join('');
     } catch (e) { console.error(e); }
@@ -284,7 +284,7 @@ const HoricAdmin = (() => {
     var makeSelect = document.getElementById('vf-make');
     var modelSelect = document.getElementById('vf-model');
     if (!makeSelect) return;
-    var makes = Object.keys(HoricData.CAR_MAKES_MODELS).sort();
+    var makes = Object.keys(RhuleData.CAR_MAKES_MODELS).sort();
     var currentMake = selectMake || '';
     makeSelect.innerHTML = '<option value="">Select Make</option>' +
       makes.map(function(m) { return '<option value="' + m + '"' + (m === currentMake ? ' selected' : '') + '>' + m + '</option>'; }).join('');
@@ -295,8 +295,8 @@ const HoricAdmin = (() => {
     var modelSelect = document.getElementById('vf-model');
     if (!modelSelect) return;
     selectedMake = selectedMake || document.getElementById('vf-make').value;
-    var models = selectedMake && HoricData.CAR_MAKES_MODELS[selectedMake]
-      ? HoricData.CAR_MAKES_MODELS[selectedMake].slice().sort()
+    var models = selectedMake && RhuleData.CAR_MAKES_MODELS[selectedMake]
+      ? RhuleData.CAR_MAKES_MODELS[selectedMake].slice().sort()
       : [];
     modelSelect.innerHTML = '<option value="">' + (models.length ? 'Select Model' : 'Select Make First') + '</option>' +
       models.map(function(m) { return '<option value="' + m + '">' + m + '</option>'; }).join('');
@@ -446,7 +446,7 @@ const HoricAdmin = (() => {
     var grid = document.getElementById('imagePreviewGrid');
     grid.innerHTML = uploadedImages.map(function(src, i) {
       return '<div class="image-preview-item"><img src="' + src + '" alt="Upload ' + (i + 1) + '">' +
-        '<button class="image-preview-remove" onclick="HoricAdmin.removeImage(' + i + ')">&#10005;</button></div>';
+        '<button class="image-preview-remove" onclick="RhuleAdmin.removeImage(' + i + ')">&#10005;</button></div>';
     }).join('');
   }
 
@@ -514,8 +514,8 @@ const HoricAdmin = (() => {
           '<td style="font-size:0.8rem;color:var(--gray-500);max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + meta + '</td>' +
           '<td style="white-space:nowrap;">' + date + '</td>' +
           '<td><div class="table-actions">' +
-          '<button title="Edit" onclick="HoricAdmin.editKnowledgeEntry(\'' + entry.id + '\')">&#9998;</button>' +
-          '<button title="Delete" class="danger" onclick="HoricAdmin.deleteKnowledgeEntry(\'' + entry.id + '\')">&#10005;</button>' +
+          '<button title="Edit" onclick="RhuleAdmin.editKnowledgeEntry(\'' + entry.id + '\')">&#9998;</button>' +
+          '<button title="Delete" class="danger" onclick="RhuleAdmin.deleteKnowledgeEntry(\'' + entry.id + '\')">&#10005;</button>' +
           '</div></td></tr>';
       }).join('');
     } catch (e) { console.error(e); }
@@ -631,8 +631,8 @@ const HoricAdmin = (() => {
             var tags = (p.tags || []).slice(0, 3).join(', ');
             var status = p.published ? '<span style="color:var(--green-600);font-weight:600;">Published</span>' : '<span style="color:var(--gray-400);">Draft</span>';
             return '<tr><td style="font-weight:600;">' + escapeHtml(p.title) + '</td><td>' + status + '</td><td>' + escapeHtml(p.author) + '</td><td>' + escapeHtml(tags) + '</td><td>' + date + '</td><td style="white-space:nowrap;">' +
-              '<button class="btn btn-sm btn-outline" onclick="HoricAdmin.editBlogPost(\'' + p.id + '\')" style="margin-right:6px;">Edit</button>' +
-              '<button class="btn btn-sm btn-danger" onclick="HoricAdmin.deleteBlogPost(\'' + p.id + '\')">Delete</button></td></tr>';
+              '<button class="btn btn-sm btn-outline" onclick="RhuleAdmin.editBlogPost(\'' + p.id + '\')" style="margin-right:6px;">Edit</button>' +
+              '<button class="btn btn-sm btn-danger" onclick="RhuleAdmin.deleteBlogPost(\'' + p.id + '\')">Delete</button></td></tr>';
           }).join('');
     } catch (e) { toast(e.message, 'error'); }
   }
@@ -678,7 +678,7 @@ const HoricAdmin = (() => {
     var data = {
       title: document.getElementById('blog-title').value.trim(),
       slug: document.getElementById('blog-slug').value.trim() || undefined,
-      author: document.getElementById('blog-author').value.trim() || 'Horic Autos',
+      author: document.getElementById('blog-author').value.trim() || 'Rhule Auto Hub',
       cover_image: document.getElementById('blog-cover').value.trim(),
       excerpt: document.getElementById('blog-excerpt').value.trim(),
       tags: document.getElementById('blog-tags').value.split(',').map(function(t) { return t.trim(); }).filter(Boolean),
@@ -755,10 +755,10 @@ const HoricAdmin = (() => {
           '<td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--gray-500);">' + (v.message ? escapeHtml(v.message.substring(0, 80)) : '—') + '</td>' +
           '<td><span class="table-status ' + (statusColors[v.status] || 'status-coming_soon') + '">' + (statusLabels[v.status] || v.status) + '</span></td>' +
           '<td><div class="table-actions" style="gap:4px;">' +
-          (v.status === 'pending' ? '<button class="btn btn-sm" style="background:var(--green-600);color:white;padding:4px 10px;font-size:0.75rem;" onclick="HoricAdmin.updateVisitStatus(\'' + v.id + '\',\'confirmed\')">Confirm</button>' : '') +
-          (v.status === 'confirmed' ? '<button class="btn btn-sm" style="background:var(--blue-600);color:white;padding:4px 10px;font-size:0.75rem;" onclick="HoricAdmin.updateVisitStatus(\'' + v.id + '\',\'completed\')">Complete</button>' : '') +
-          (v.status !== 'cancelled' ? '<button class="btn btn-sm" style="background:var(--red-500);color:white;padding:4px 10px;font-size:0.75rem;" onclick="HoricAdmin.updateVisitStatus(\'' + v.id + '\',\'cancelled\')">Cancel</button>' : '') +
-          '<button title="Delete" class="danger" style="padding:4px 8px;" onclick="HoricAdmin.deleteVisit(\'' + v.id + '\')">&#10005;</button>' +
+          (v.status === 'pending' ? '<button class="btn btn-sm" style="background:var(--green-600);color:white;padding:4px 10px;font-size:0.75rem;" onclick="RhuleAdmin.updateVisitStatus(\'' + v.id + '\',\'confirmed\')">Confirm</button>' : '') +
+          (v.status === 'confirmed' ? '<button class="btn btn-sm" style="background:var(--blue-600);color:white;padding:4px 10px;font-size:0.75rem;" onclick="RhuleAdmin.updateVisitStatus(\'' + v.id + '\',\'completed\')">Complete</button>' : '') +
+          (v.status !== 'cancelled' ? '<button class="btn btn-sm" style="background:var(--red-500);color:white;padding:4px 10px;font-size:0.75rem;" onclick="RhuleAdmin.updateVisitStatus(\'' + v.id + '\',\'cancelled\')">Cancel</button>' : '') +
+          '<button title="Delete" class="danger" style="padding:4px 8px;" onclick="RhuleAdmin.deleteVisit(\'' + v.id + '\')">&#10005;</button>' +
           '</div></td></tr>';
       }).join('');
     } catch (e) { console.error(e); }
@@ -800,12 +800,12 @@ const HoricAdmin = (() => {
     }
 
     // Check saved session
-    var saved = localStorage.getItem('horic_admin_session');
+    var saved = localStorage.getItem('rhule_admin_session');
     if (saved) {
       try {
         session = JSON.parse(saved);
-        if (!session?.token) { session = null; localStorage.removeItem('horic_admin_session'); }
-      } catch (e) { session = null; localStorage.removeItem('horic_admin_session'); }
+        if (!session?.token) { session = null; localStorage.removeItem('rhule_admin_session'); }
+      } catch (e) { session = null; localStorage.removeItem('rhule_admin_session'); }
     }
     if (!session) { showLogin(); return; }
 

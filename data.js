@@ -1,4 +1,4 @@
-const HoricData = (() => {
+const RhuleData = (() => {
   const COST_ASSUMPTIONS = Object.freeze({
     monthlyKm: 2000,
     fuelPrice: { petrol: 14.50, diesel: 16.14, hybrid: 14.50, electric: 1.97 },

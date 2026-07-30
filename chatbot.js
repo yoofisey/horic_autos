@@ -1,4 +1,4 @@
-const HoricChatbot = (() => {
+const RhuleChatbot = (() => {
   let isOpen = false;
   let hasGreeted = false;
   let conversationHistory = [];
@@ -90,7 +90,7 @@ const HoricChatbot = (() => {
       toggle.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" width="24" height="24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>';
       if (!hasGreeted) {
         hasGreeted = true;
-        appendMessage('bot', "Welcome to Horic Autos.\n\nI am your AI car advisor. I can help you find the perfect vehicle, estimate running costs, compare options, and more.\n\nWhat are you looking for today?");
+        appendMessage('bot', "Welcome to Rhule Auto Hub.\n\nI am your AI car advisor. I can help you find the perfect vehicle, estimate running costs, compare options, and more.\n\nWhat are you looking for today?");
       }
     } else {
       panel.classList.remove('active');
@@ -122,4 +122,4 @@ const HoricChatbot = (() => {
   return { toggleChat, sendMessage };
 })();
 
-window.HoricAdvisor = { open: () => HoricChatbot.toggleChat(), close: () => HoricChatbot.toggleChat(), submit: (msg) => HoricChatbot.sendMessage(msg) };
+window.RhuleAdvisor = { open: () => RhuleChatbot.toggleChat(), close: () => RhuleChatbot.toggleChat(), submit: (msg) => RhuleChatbot.sendMessage(msg) };

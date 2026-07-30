@@ -555,7 +555,7 @@ app.post('/api/knowledge/sync-vehicles', requireAuth, async (req, res) => {
 });
 
 // ── CHATBOT (RAG + Gemini) ──
-const SYSTEM_PROMPT = `You are the AI Car Advisor for Horic Autos, Ghana's premier car dealership based in Accra.
+const SYSTEM_PROMPT = `You are the AI Car Advisor for Rhule Auto Hub, Ghana's premier car dealership based in Accra.
 
 ## Your Role
 You help customers find the right vehicle, estimate running costs, compare cars, and answer questions about buying/owning a car in Ghana. Be warm, knowledgeable, and concise.
@@ -674,7 +674,7 @@ app.post('/api/blog', requireAuth, async (req, res) => {
     const id = 'b' + Date.now().toString(36) + crypto.randomBytes(3).toString('hex');
     const slug = b.slug || b.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
     const [post] = await sql`INSERT INTO blog_posts (id, title, slug, content, excerpt, cover_image, author, tags, published)
-      VALUES (${id}, ${b.title}, ${slug}, ${b.content || ''}, ${b.excerpt || ''}, ${b.cover_image || ''}, ${b.author || 'Horic Autos'}, ${(b.tags || []).map(t => t.trim())}, ${b.published === true})
+      VALUES (${id}, ${b.title}, ${slug}, ${b.content || ''}, ${b.excerpt || ''}, ${b.cover_image || ''}, ${b.author || 'Rhule Auto Hub'}, ${(b.tags || []).map(t => t.trim())}, ${b.published === true})
       RETURNING *`;
     res.json(post);
   } catch (err) {
@@ -689,7 +689,7 @@ app.put('/api/blog/:id', requireAuth, async (req, res) => {
     const slug = b.slug || b.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
     const [post] = await sql`UPDATE blog_posts SET
       title = ${b.title}, slug = ${slug}, content = ${b.content || ''}, excerpt = ${b.excerpt || ''},
-      cover_image = ${b.cover_image || ''}, author = ${b.author || 'Horic Autos'},
+      cover_image = ${b.cover_image || ''}, author = ${b.author || 'Rhule Auto Hub'},
       tags = ${(b.tags || []).map(t => t.trim())}, published = ${b.published === true},
       updated_at = now()
       WHERE id = ${req.params.id} RETURNING *`;
@@ -788,7 +788,7 @@ if (require.main === module) {
     content text NOT NULL DEFAULT '',
     excerpt text NOT NULL DEFAULT '',
     cover_image text NOT NULL DEFAULT '',
-    author text NOT NULL DEFAULT 'Horic Autos',
+    author text NOT NULL DEFAULT 'Rhule Auto Hub',
     tags text[] DEFAULT '{}',
     published boolean DEFAULT false,
     created_at timestamp DEFAULT now(),
@@ -822,6 +822,6 @@ if (require.main === module) {
   )`.catch(e => console.error('Visit schedules table creation warning:', e.message));
 
   app.listen(PORT, () => {
-    console.log('Horic Autos running at http://localhost:' + PORT);
+    console.log('Rhule Auto Hub running at http://localhost:' + PORT);
   });
 }

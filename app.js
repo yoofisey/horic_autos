@@ -1,10 +1,10 @@
-const HoricApp = (() => {
+const RhuleApp = (() => {
   let modalCar = null;
   let modalImageIndex = 0;
   let cachedVehicles = [];
   let fetchError = false;
   let compareList = [];
-  let favourites = JSON.parse(localStorage.getItem('horic_favourites') || '[]');
+  let favourites = JSON.parse(localStorage.getItem('rhule_favourites') || '[]');
 
   async function fetchVehicles() {
     fetchError = false;
@@ -50,7 +50,7 @@ const HoricApp = (() => {
   var CHECK_SVG = '<svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>';
 
   function buildCarCard(car) {
-    var costs = HoricData.estimateRunningCosts(car);
+    var costs = RhuleData.estimateRunningCosts(car);
     var imgHtml;
     if (car.images && car.images.length > 0) {
       imgHtml = '<img src="' + car.images[0] + '" alt="' + car.make + ' ' + car.model + '" loading="lazy">';
@@ -66,13 +66,13 @@ const HoricApp = (() => {
 
     var controls = '';
     if (isOnInventory) {
-      controls = '<button class="' + favClass + '" onclick="event.stopPropagation();HoricApp.toggleFavourite(\'' + car.id + '\')" aria-label="Save to favourites">' + HEART_SVG + '</button>' +
-        '<div class="' + checkClass + '" onclick="event.stopPropagation();HoricApp.toggleCompare(\'' + car.id + '\')">' + CHECK_SVG + '</div>';
+      controls = '<button class="' + favClass + '" onclick="event.stopPropagation();RhuleApp.toggleFavourite(\'' + car.id + '\')" aria-label="Save to favourites">' + HEART_SVG + '</button>' +
+        '<div class="' + checkClass + '" onclick="event.stopPropagation();RhuleApp.toggleCompare(\'' + car.id + '\')">' + CHECK_SVG + '</div>';
     } else {
-      controls = '<button class="' + favClass + '" onclick="event.stopPropagation();HoricApp.toggleFavourite(\'' + car.id + '\')" aria-label="Save to favourites">' + HEART_SVG + '</button>';
+      controls = '<button class="' + favClass + '" onclick="event.stopPropagation();RhuleApp.toggleFavourite(\'' + car.id + '\')" aria-label="Save to favourites">' + HEART_SVG + '</button>';
     }
 
-    return '<div class="car-card reveal" onclick="HoricApp.openModal(\'' + car.id + '\')">' +
+    return '<div class="car-card reveal" onclick="RhuleApp.openModal(\'' + car.id + '\')">' +
       '<div class="car-card-image">' + controls + imgHtml +
       '<div class="car-card-badges">' + conditionBadge(car.condition) + statusBadge(car.status) + '</div></div>' +
       '<div class="car-card-body">' +
@@ -85,8 +85,8 @@ const HoricApp = (() => {
       (car.mileage > 0 ? '<span class="spec-pill">' + car.mileage.toLocaleString() + ' km</span>' : '') +
       '</div>' +
       '<div class="car-card-footer">' +
-      '<div><div class="car-card-price">' + HoricData.formatPrice(car.price) + '</div>' +
-      '<div class="car-card-cost">~<span>' + HoricData.formatPrice(costs.total) + '/mo</span> running</div></div>' +
+      '<div><div class="car-card-price">' + RhuleData.formatPrice(car.price) + '</div>' +
+      '<div class="car-card-cost">~<span>' + RhuleData.formatPrice(costs.total) + '/mo</span> running</div></div>' +
       '</div></div></div>';
   }
 
@@ -96,7 +96,7 @@ const HoricApp = (() => {
     showSkeletons('featuredGrid', 6);
     await fetchVehicles();
     if (fetchError) {
-      grid.innerHTML = '<div class="error-state"><div class="error-icon">!</div><h3>Something went wrong</h3><p>We could not load our inventory. Please try refreshing the page.</p><button onclick="HoricApp.renderFeatured()" class="btn btn-primary">Retry</button></div>';
+      grid.innerHTML = '<div class="error-state"><div class="error-icon">!</div><h3>Something went wrong</h3><p>We could not load our inventory. Please try refreshing the page.</p><button onclick="RhuleApp.renderFeatured()" class="btn btn-primary">Retry</button></div>';
       return;
     }
     var inStock = cachedVehicles.filter(function(c) { return c.status === 'in_stock'; }).slice(0, 6);
@@ -117,9 +117,9 @@ const HoricApp = (() => {
       var featured = inStockCars[Math.floor(Math.random() * Math.min(stats.inStock, 3))];
       if (featured) {
         if (el('heroCarName')) el('heroCarName').textContent = featured.year + ' ' + featured.make + ' ' + featured.model;
-        if (el('heroCarPrice')) el('heroCarPrice').textContent = HoricData.formatPrice(featured.price);
-        var costs = HoricData.estimateRunningCosts(featured);
-        if (el('heroCarCost')) el('heroCarCost').textContent = 'Est. ' + HoricData.formatPrice(costs.total) + '/month running cost';
+        if (el('heroCarPrice')) el('heroCarPrice').textContent = RhuleData.formatPrice(featured.price);
+        var costs = RhuleData.estimateRunningCosts(featured);
+        if (el('heroCarCost')) el('heroCarCost').textContent = 'Est. ' + RhuleData.formatPrice(costs.total) + '/month running cost';
       }
     }
   }
@@ -136,7 +136,7 @@ const HoricApp = (() => {
     }
 
     if (fetchError) {
-      grid.innerHTML = '<div class="error-state"><div class="error-icon">!</div><h3>Could not connect to server</h3><p>We could not load our vehicle inventory. Please check your connection and try again.</p><button onclick="HoricApp.renderInventoryGrid()" class="btn btn-primary">Retry</button></div>';
+      grid.innerHTML = '<div class="error-state"><div class="error-icon">!</div><h3>Could not connect to server</h3><p>We could not load our vehicle inventory. Please check your connection and try again.</p><button onclick="RhuleApp.renderInventoryGrid()" class="btn btn-primary">Retry</button></div>';
       if (noResults) noResults.style.display = 'none';
       if (countEl) countEl.textContent = '0';
       return;
@@ -155,7 +155,7 @@ const HoricApp = (() => {
     var maxMileage = Number((document.getElementById('filterMaxMileage') || {}).value) || Infinity;
     var sort = (document.getElementById('sortSelect') || {}).value || 'newest';
 
-    var results = HoricData.filterInventory(cachedVehicles, { search: search, make: make, model: model, body_type: body_type, fuel: fuel, condition: condition, status: status, minPrice: minPrice, maxPrice: maxPrice, minYear: minYear, maxMileage: maxMileage === 0 ? Infinity : maxMileage, sort: sort });
+    var results = RhuleData.filterInventory(cachedVehicles, { search: search, make: make, model: model, body_type: body_type, fuel: fuel, condition: condition, status: status, minPrice: minPrice, maxPrice: maxPrice, minYear: minYear, maxMileage: maxMileage === 0 ? Infinity : maxMileage, sort: sort });
 
     if (countEl) countEl.textContent = results.length;
     if (results.length === 0) {
@@ -166,10 +166,10 @@ const HoricApp = (() => {
         var textEl = document.getElementById('noResultsText');
         if (make && model && titleEl) {
           titleEl.textContent = 'No ' + make + ' ' + model + ' found';
-          textEl.textContent = 'We don\'t currently have any ' + make + ' ' + model + ' in our inventory. Try browsing other models or let our Horic AI help.';
+          textEl.textContent = 'We don\'t currently have any ' + make + ' ' + model + ' in our inventory. Try browsing other models or let our Rhule AI help.';
         } else if (make && titleEl) {
           titleEl.textContent = 'No ' + make + ' vehicles found';
-          textEl.textContent = 'We don\'t currently have any ' + make + ' vehicles in stock. Browse other makes or chat with our Horic AI for alternatives.';
+          textEl.textContent = 'We don\'t currently have any ' + make + ' vehicles in stock. Browse other makes or chat with our Rhule AI for alternatives.';
         } else if (search && titleEl) {
           titleEl.textContent = 'No results for "' + search + '"';
           textEl.textContent = 'We couldn\'t find any vehicles matching your search. Try different keywords or reset your filters.';
@@ -203,7 +203,7 @@ const HoricApp = (() => {
     var modelSelect = document.getElementById('filterModel');
     if (!makeSelect) return;
 
-    var makes = Object.keys(HoricData.CAR_MAKES_MODELS).sort();
+    var makes = Object.keys(RhuleData.CAR_MAKES_MODELS).sort();
     var currentMake = makeSelect.value;
 
     makeSelect.innerHTML = '<option value="">All Makes</option>' +
@@ -226,8 +226,8 @@ const HoricApp = (() => {
     if (!makeSelect || !modelSelect) return;
 
     var selectedMake = makeSelect.value;
-    var models = selectedMake && HoricData.CAR_MAKES_MODELS[selectedMake]
-      ? HoricData.CAR_MAKES_MODELS[selectedMake].slice().sort()
+    var models = selectedMake && RhuleData.CAR_MAKES_MODELS[selectedMake]
+      ? RhuleData.CAR_MAKES_MODELS[selectedMake].slice().sort()
       : [];
     var currentModel = modelSelect.value;
 
@@ -244,7 +244,7 @@ const HoricApp = (() => {
     var el = function(eid) { return document.getElementById(eid); };
     el('modalTitle').textContent = car.make + ' ' + car.model + (car.trim ? ' ' + car.trim : '');
     el('modalYear').textContent = car.year + '  ·  ' + (car.condition === 'new' ? 'New' : 'Pre-Owned') + '  ·  ' + (car.status === 'in_stock' ? 'In Stock' : car.status === 'sold' ? 'Sold' : 'Coming Soon');
-    el('modalPrice').textContent = HoricData.formatPrice(car.price);
+    el('modalPrice').textContent = RhuleData.formatPrice(car.price);
     el('modalDesc').textContent = car.description || '';
 
     el('modalSpecs').innerHTML = [
@@ -258,15 +258,15 @@ const HoricApp = (() => {
 
     el('modalFeatures').innerHTML = (car.features || []).map(function(f) { return '<span class="modal-feature-tag">' + f + '</span>'; }).join('');
 
-    var costs = HoricData.estimateRunningCosts(car);
+    var costs = RhuleData.estimateRunningCosts(car);
     el('modalCosts').innerHTML =
       '<h4>Monthly Running Cost Estimate</h4>' +
-      '<div class="cost-row"><span class="cost-label">Fuel</span><span class="cost-value">' + HoricData.formatPrice(costs.fuel) + '</span></div>' +
-      '<div class="cost-row"><span class="cost-label">Maintenance</span><span class="cost-value">' + HoricData.formatPrice(costs.maintenance) + '</span></div>' +
-      '<div class="cost-row"><span class="cost-label">Insurance</span><span class="cost-value">' + HoricData.formatPrice(costs.insurance) + '</span></div>' +
-      '<div class="cost-row cost-total"><span class="cost-label">Total Monthly</span><span class="cost-value">' + HoricData.formatPrice(costs.total) + '</span></div>';
+      '<div class="cost-row"><span class="cost-label">Fuel</span><span class="cost-value">' + RhuleData.formatPrice(costs.fuel) + '</span></div>' +
+      '<div class="cost-row"><span class="cost-label">Maintenance</span><span class="cost-value">' + RhuleData.formatPrice(costs.maintenance) + '</span></div>' +
+      '<div class="cost-row"><span class="cost-label">Insurance</span><span class="cost-value">' + RhuleData.formatPrice(costs.insurance) + '</span></div>' +
+      '<div class="cost-row cost-total"><span class="cost-label">Total Monthly</span><span class="cost-value">' + RhuleData.formatPrice(costs.total) + '</span></div>';
 
-    var waMsg = encodeURIComponent('Hi, I am interested in the ' + car.year + ' ' + car.make + ' ' + car.model + (car.trim ? ' ' + car.trim : '') + ' priced at ' + HoricData.formatPrice(car.price) + '. Can I get more details?');
+    var waMsg = encodeURIComponent('Hi, I am interested in the ' + car.year + ' ' + car.make + ' ' + car.model + (car.trim ? ' ' + car.trim : '') + ' priced at ' + RhuleData.formatPrice(car.price) + '. Can I get more details?');
     el('modalWhatsApp').href = 'https://wa.me/233548000393?text=' + waMsg;
 
     updateGallery();
@@ -345,7 +345,7 @@ const HoricApp = (() => {
   function shareVehicle() {
     if (!modalCar) return;
     var title = modalCar.year + ' ' + modalCar.make + ' ' + modalCar.model + (modalCar.trim ? ' ' + modalCar.trim : '');
-    var text = 'Check out this ' + title + ' at Horic Autos - ' + HoricData.formatPrice(modalCar.price);
+    var text = 'Check out this ' + title + ' at Rhule Auto Hub - ' + RhuleData.formatPrice(modalCar.price);
     var url = window.location.origin + '/inventory.html';
 
     if (navigator.share) {
@@ -371,7 +371,7 @@ const HoricApp = (() => {
       favourites.splice(idx, 1);
       showToast('Removed from favourites', 'info');
     }
-    localStorage.setItem('horic_favourites', JSON.stringify(favourites));
+    localStorage.setItem('rhule_favourites', JSON.stringify(favourites));
     renderFavouritesBar();
     renderInventoryGrid();
   }
@@ -389,13 +389,13 @@ const HoricApp = (() => {
     items.innerHTML = favourites.map(function(id) {
       var car = cachedVehicles.find(function(c) { return c.id === id; });
       if (!car) return '';
-      return '<div class="favourite-chip">' + car.year + ' ' + car.make + ' ' + car.model + '<button onclick="HoricApp.toggleFavourite(\'' + id + '\')">&times;</button></div>';
+      return '<div class="favourite-chip">' + car.year + ' ' + car.make + ' ' + car.model + '<button onclick="RhuleApp.toggleFavourite(\'' + id + '\')">&times;</button></div>';
     }).join('');
   }
 
   function clearFavourites() {
     favourites = [];
-    localStorage.setItem('horic_favourites', JSON.stringify(favourites));
+    localStorage.setItem('rhule_favourites', JSON.stringify(favourites));
     renderFavouritesBar();
     renderInventoryGrid();
     showToast('Favourites cleared', 'info');
@@ -431,7 +431,7 @@ const HoricApp = (() => {
     items.innerHTML = compareList.map(function(id) {
       var car = cachedVehicles.find(function(c) { return c.id === id; });
       if (!car) return '';
-      return '<div class="compare-bar-item">' + car.year + ' ' + car.make + ' ' + car.model + '<button onclick="HoricApp.toggleCompare(\'' + id + '\')">&times;</button></div>';
+      return '<div class="compare-bar-item">' + car.year + ' ' + car.make + ' ' + car.model + '<button onclick="RhuleApp.toggleCompare(\'' + id + '\')">&times;</button></div>';
     }).join('');
     if (countEl) countEl.textContent = compareList.length + ' selected';
   }
@@ -450,7 +450,7 @@ const HoricApp = (() => {
     var cars = compareList.map(function(id) { return cachedVehicles.find(function(c) { return c.id === id; }); }).filter(Boolean);
     var rows = [
       { label: 'Year', key: 'year' },
-      { label: 'Price', key: 'price', format: function(v) { return HoricData.formatPrice(v); } },
+      { label: 'Price', key: 'price', format: function(v) { return RhuleData.formatPrice(v); } },
       { label: 'Body Type', key: 'body_type' },
       { label: 'Fuel', key: 'fuel' },
       { label: 'Transmission', key: 'transmission' },
@@ -458,10 +458,10 @@ const HoricApp = (() => {
       { label: 'Engine', key: 'engine', fallback: '—' },
       { label: 'Color', key: 'color', fallback: '—' },
       { label: 'Condition', key: 'condition', format: function(v) { return v === 'new' ? 'New' : 'Pre-Owned'; } },
-      { label: 'Monthly Fuel', compute: function(c) { return HoricData.estimateRunningCosts(c).fuel; }, format: function(v) { return HoricData.formatPrice(v); } },
-      { label: 'Monthly Maintenance', compute: function(c) { return HoricData.estimateRunningCosts(c).maintenance; }, format: function(v) { return HoricData.formatPrice(v); } },
-      { label: 'Monthly Insurance', compute: function(c) { return HoricData.estimateRunningCosts(c).insurance; }, format: function(v) { return HoricData.formatPrice(v); } },
-      { label: 'Total Monthly Cost', compute: function(c) { return HoricData.estimateRunningCosts(c).total; }, format: function(v) { return HoricData.formatPrice(v); } }
+      { label: 'Monthly Fuel', compute: function(c) { return RhuleData.estimateRunningCosts(c).fuel; }, format: function(v) { return RhuleData.formatPrice(v); } },
+      { label: 'Monthly Maintenance', compute: function(c) { return RhuleData.estimateRunningCosts(c).maintenance; }, format: function(v) { return RhuleData.formatPrice(v); } },
+      { label: 'Monthly Insurance', compute: function(c) { return RhuleData.estimateRunningCosts(c).insurance; }, format: function(v) { return RhuleData.formatPrice(v); } },
+      { label: 'Total Monthly Cost', compute: function(c) { return RhuleData.estimateRunningCosts(c).total; }, format: function(v) { return RhuleData.formatPrice(v); } }
     ];
 
     var header = '<thead><tr><th></th>' + cars.map(function(c) {
