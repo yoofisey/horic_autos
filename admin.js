@@ -73,7 +73,7 @@ const HoricAdmin = (() => {
     document.querySelectorAll('.sidebar-nav-item').forEach(function(n) { n.classList.remove('active'); });
     document.getElementById('panel-' + tab)?.classList.add('active');
     document.querySelector('[data-tab="' + tab + '"]')?.classList.add('active');
-    var titles = { dashboard: 'Dashboard', inventory: 'Inventory Management', sales: 'Sales History', enquiries: 'Enquiries', knowledge: 'Knowledge Base (RAG)', blog: 'Blog Management' };
+    var titles = { dashboard: 'Dashboard', inventory: 'Inventory Management', sales: 'Sales History', enquiries: 'Enquiries', knowledge: 'Knowledge Base (RAG)', blog: 'Blog Management', visits: 'Scheduled Visits' };
     document.getElementById('adminPageTitle').textContent = titles[tab] || 'Dashboard';
     if (tab === 'dashboard') renderDashboard();
     if (tab === 'inventory') renderInventoryTable();
@@ -81,6 +81,7 @@ const HoricAdmin = (() => {
     if (tab === 'enquiries') renderEnquiries();
     if (tab === 'knowledge') renderKnowledgeBase();
     if (tab === 'blog') renderBlogTable();
+    if (tab === 'visits') renderVisits();
   }
 
   function switchDashTab(tab, el) {
@@ -98,6 +99,8 @@ const HoricAdmin = (() => {
       document.getElementById('statValue').textContent = formatPrice(stats.totalValue);
       document.getElementById('statUnread').textContent = stats.unreadEnquiries;
       document.getElementById('enquiryBadge').textContent = stats.unreadEnquiries;
+      var visitBadge = document.getElementById('visitBadge');
+      if (visitBadge) visitBadge.textContent = stats.pendingVisits || 0;
       renderDashboardTable('recent');
       initCharts();
     } catch (e) { console.error(e); }
@@ -711,6 +714,80 @@ const HoricAdmin = (() => {
     return d.innerHTML;
   }
 
+  // ── VISIT SCHEDULING (ADMIN) ──
+  let currentVisitFilter = 'all';
+
+  async function renderVisits(filter) {
+    filter = filter || currentVisitFilter;
+    var tbody = document.getElementById('visitsTableBody');
+    if (!tbody) return;
+    try {
+      var url = '/api/visits' + (filter !== 'all' ? '?status=' + filter : '');
+      var visits = await api(url);
+
+      var counts = { pending: 0, confirmed: 0, completed: 0, cancelled: 0 };
+      var allVisits = await api('/api/visits');
+      allVisits.forEach(function(v) { if (counts[v.status] !== undefined) counts[v.status]++; });
+
+      document.getElementById('visitPendingCount').textContent = counts.pending;
+      document.getElementById('visitConfirmedCount').textContent = counts.confirmed;
+      document.getElementById('visitCompletedCount').textContent = counts.completed;
+      document.getElementById('visitCancelledCount').textContent = counts.cancelled;
+      document.getElementById('visitBadge').textContent = counts.pending;
+
+      if (visits.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:var(--gray-400);padding:40px;">No scheduled visits found.</td></tr>';
+        return;
+      }
+
+      var statusColors = { pending: 'status-coming_soon', confirmed: 'status-in_stock', completed: 'status-in_stock', cancelled: 'status-sold' };
+      var statusLabels = { pending: 'Pending', confirmed: 'Confirmed', completed: 'Completed', cancelled: 'Cancelled' };
+
+      tbody.innerHTML = visits.map(function(v) {
+        var vehicleStr = v.vehicle_id ? (v.year + ' ' + v.make + ' ' + v.model).trim() || 'Vehicle #' + v.vehicle_id.slice(0, 8) : '—';
+        var dateStr = v.preferred_date ? new Date(v.preferred_date).toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' }) : '—';
+        var timeStr = v.preferred_time ? ' at ' + v.preferred_time : '';
+        return '<tr>' +
+          '<td><div style="font-weight:600;">' + escapeHtml(v.customer_name) + '</div><div style="font-size:0.78rem;color:var(--gray-400);">' + escapeHtml(v.customer_email || '') + '</div></td>' +
+          '<td><a href="https://wa.me/' + v.customer_phone.replace(/^0/, '233') + '" target="_blank" style="color:var(--green-600);text-decoration:none;">' + escapeHtml(v.customer_phone) + '</a></td>' +
+          '<td style="white-space:nowrap;">' + dateStr + timeStr + '</td>' +
+          '<td>' + vehicleStr + '</td>' +
+          '<td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--gray-500);">' + (v.message ? escapeHtml(v.message.substring(0, 80)) : '—') + '</td>' +
+          '<td><span class="table-status ' + (statusColors[v.status] || 'status-coming_soon') + '">' + (statusLabels[v.status] || v.status) + '</span></td>' +
+          '<td><div class="table-actions" style="gap:4px;">' +
+          (v.status === 'pending' ? '<button class="btn btn-sm" style="background:var(--green-600);color:white;padding:4px 10px;font-size:0.75rem;" onclick="HoricAdmin.updateVisitStatus(\'' + v.id + '\',\'confirmed\')">Confirm</button>' : '') +
+          (v.status === 'confirmed' ? '<button class="btn btn-sm" style="background:var(--blue-600);color:white;padding:4px 10px;font-size:0.75rem;" onclick="HoricAdmin.updateVisitStatus(\'' + v.id + '\',\'completed\')">Complete</button>' : '') +
+          (v.status !== 'cancelled' ? '<button class="btn btn-sm" style="background:var(--red-500);color:white;padding:4px 10px;font-size:0.75rem;" onclick="HoricAdmin.updateVisitStatus(\'' + v.id + '\',\'cancelled\')">Cancel</button>' : '') +
+          '<button title="Delete" class="danger" style="padding:4px 8px;" onclick="HoricAdmin.deleteVisit(\'' + v.id + '\')">&#10005;</button>' +
+          '</div></td></tr>';
+      }).join('');
+    } catch (e) { console.error(e); }
+  }
+
+  function filterVisits(filter, el) {
+    currentVisitFilter = filter;
+    document.querySelectorAll('[data-visit-filter]').forEach(function(b) { b.classList.remove('active'); });
+    if (el) el.classList.add('active');
+    renderVisits(filter);
+  }
+
+  async function updateVisitStatus(id, status) {
+    try {
+      await api('/api/visits/' + id, { method: 'PUT', body: JSON.stringify({ status: status }) });
+      toast('Visit ' + status, 'success');
+      renderVisits();
+    } catch (e) { toast(e.message, 'error'); }
+  }
+
+  async function deleteVisit(id) {
+    if (!confirm('Delete this scheduled visit?')) return;
+    try {
+      await api('/api/visits/' + id, { method: 'DELETE' });
+      toast('Visit deleted', 'info');
+      renderVisits();
+    } catch (e) { toast(e.message, 'error'); }
+  }
+
   // ── INIT ──
   function init() {
     if (!document.querySelector('.admin-layout')) return;
@@ -746,6 +823,9 @@ const HoricAdmin = (() => {
         if (badge) badge.textContent = data.count;
         var notifData = await api('/api/notifications/unread-count');
         updateNotifBadge(notifData.count);
+        var stats = await api('/api/stats');
+        var vb = document.getElementById('visitBadge');
+        if (vb) vb.textContent = stats.pendingVisits || 0;
       } catch (e) {}
     }, 30000);
 
@@ -820,6 +900,7 @@ const HoricAdmin = (() => {
     filterKnowledge: filterKnowledge, openKnowledgeModal: openKnowledgeModal, closeKnowledgeModal: closeKnowledgeModal,
     editKnowledgeEntry: editKnowledgeEntry, saveKnowledgeEntry: saveKnowledgeEntry, deleteKnowledgeEntry: deleteKnowledgeEntry, syncVehicleKnowledge: syncVehicleKnowledge,
     renderBlogTable: renderBlogTable, filterBlogPosts: filterBlogPosts, openBlogModal: openBlogModal, closeBlogModal: closeBlogModal, editBlogPost: editBlogPost, saveBlogPost: saveBlogPost, deleteBlogPost: deleteBlogPost,
-    toggleNotifications: toggleNotifications, markNotifsSeen: markNotifsSeen
+    toggleNotifications: toggleNotifications, markNotifsSeen: markNotifsSeen,
+    renderVisits: renderVisits, filterVisits: filterVisits, updateVisitStatus: updateVisitStatus, deleteVisit: deleteVisit
   };
 })();

@@ -488,6 +488,61 @@ const HoricApp = (() => {
     document.body.style.overflow = '';
   }
 
+  // ── SCHEDULE VISIT ──
+  function openScheduleModal(vehicleId) {
+    var id = vehicleId || (modalCar ? modalCar.id : '');
+    document.getElementById('schedVehicleId').value = id;
+    var dateInput = document.getElementById('schedDate');
+    if (dateInput) {
+      var min = new Date();
+      min.setDate(min.getDate() + 1);
+      dateInput.min = min.toISOString().split('T')[0];
+      dateInput.value = '';
+    }
+    document.getElementById('schedName').value = '';
+    document.getElementById('schedPhone').value = '';
+    document.getElementById('schedEmail').value = '';
+    document.getElementById('schedTime').value = '';
+    document.getElementById('schedMessage').value = '';
+    document.getElementById('scheduleModal').classList.add('active');
+    document.body.style.overflow = 'hidden';
+  }
+
+  function closeScheduleModal() {
+    var modal = document.getElementById('scheduleModal');
+    if (modal) modal.classList.remove('active');
+    document.body.style.overflow = '';
+  }
+
+  async function submitSchedule(e) {
+    e.preventDefault();
+    var btn = e.target.querySelector('button[type="submit"]');
+    btn.disabled = true;
+    btn.textContent = 'Submitting...';
+    try {
+      var res = await fetch('/api/visits', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          customer_name: document.getElementById('schedName').value.trim(),
+          customer_phone: document.getElementById('schedPhone').value.trim(),
+          customer_email: document.getElementById('schedEmail').value.trim(),
+          preferred_date: document.getElementById('schedDate').value,
+          preferred_time: document.getElementById('schedTime').value,
+          message: document.getElementById('schedMessage').value.trim(),
+          vehicle_id: document.getElementById('schedVehicleId').value || null
+        })
+      });
+      if (!res.ok) throw new Error('Failed to schedule visit');
+      closeScheduleModal();
+      showToast('Visit request submitted! We will confirm your appointment shortly.', 'success');
+    } catch (err) {
+      showToast('Something went wrong. Please try again or contact us via WhatsApp.', 'error');
+    }
+    btn.disabled = false;
+    btn.textContent = 'Request Visit';
+  }
+
   // ── INIT ──
   async function init() {
     await fetchVehicles();
@@ -515,12 +570,19 @@ const HoricApp = (() => {
         if (e.target.classList.contains('modal-backdrop')) closeModal();
       });
     }
-    document.addEventListener('keydown', function(e) { if (e.key === 'Escape') { closeModal(); closeCompare(); } });
+    document.addEventListener('keydown', function(e) { if (e.key === 'Escape') { closeModal(); closeCompare(); closeScheduleModal(); } });
 
     var compareOverlay = document.getElementById('compareOverlay');
     if (compareOverlay) {
       compareOverlay.addEventListener('click', function(e) {
         if (e.target.classList.contains('compare-table-overlay')) closeCompare();
+      });
+    }
+
+    var scheduleModal = document.getElementById('scheduleModal');
+    if (scheduleModal) {
+      scheduleModal.addEventListener('click', function(e) {
+        if (e.target.classList.contains('modal-backdrop')) closeScheduleModal();
       });
     }
   }
@@ -544,6 +606,9 @@ const HoricApp = (() => {
     toggleCompare: toggleCompare,
     clearCompare: clearCompare,
     openCompare: openCompare,
-    closeCompare: closeCompare
+    closeCompare: closeCompare,
+    openScheduleModal: openScheduleModal,
+    closeScheduleModal: closeScheduleModal,
+    submitSchedule: submitSchedule
   };
 })();

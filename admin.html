@@ -66,6 +66,11 @@
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
         Blog
       </button>
+      <button class="sidebar-nav-item" data-tab="visits" onclick="HoricAdmin.switchTab('visits')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+        Scheduled Visits
+        <span class="badge-count" id="visitBadge">0</span>
+      </button>
       <button class="sidebar-nav-item" onclick="window.open('index.html','_blank')">
         <svg viewBox="0 0 24 24"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
         View Site
@@ -311,6 +316,43 @@
         </table>
       </div>
     </div>
+
+    <!-- SCHEDULED VISITS TAB -->
+    <div class="admin-panel" id="panel-visits">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:24px;flex-wrap:wrap;gap:12px;">
+        <div style="display:flex;gap:8px;align-items:center;">
+          <span style="font-size:0.75rem;color:var(--gray-500);text-transform:uppercase;letter-spacing:0.05em;">Filter:</span>
+          <button class="btn btn-sm kb-filter-btn active" data-visit-filter="all" onclick="HoricAdmin.filterVisits('all', this)">All</button>
+          <button class="btn btn-sm kb-filter-btn" data-visit-filter="pending" onclick="HoricAdmin.filterVisits('pending', this)">Pending</button>
+          <button class="btn btn-sm kb-filter-btn" data-visit-filter="confirmed" onclick="HoricAdmin.filterVisits('confirmed', this)">Confirmed</button>
+          <button class="btn btn-sm kb-filter-btn" data-visit-filter="completed" onclick="HoricAdmin.filterVisits('completed', this)">Completed</button>
+          <button class="btn btn-sm kb-filter-btn" data-visit-filter="cancelled" onclick="HoricAdmin.filterVisits('cancelled', this)">Cancelled</button>
+        </div>
+      </div>
+      <div id="visitsStats" style="margin-bottom:20px;padding:16px;background:var(--gray-50);border-radius:12px;display:flex;gap:24px;flex-wrap:wrap;">
+        <div><span style="font-size:0.75rem;color:var(--gray-500);text-transform:uppercase;letter-spacing:0.05em;">Pending</span><br><strong id="visitPendingCount" style="color:#f79009;">0</strong></div>
+        <div><span style="font-size:0.75rem;color:var(--gray-500);text-transform:uppercase;letter-spacing:0.05em;">Confirmed</span><br><strong id="visitConfirmedCount" style="color:#039855;">0</strong></div>
+        <div><span style="font-size:0.75rem;color:var(--gray-500);text-transform:uppercase;letter-spacing:0.05em;">Completed</span><br><strong id="visitCompletedCount" style="color:#175cd3;">0</strong></div>
+        <div><span style="font-size:0.75rem;color:var(--gray-500);text-transform:uppercase;letter-spacing:0.05em;">Cancelled</span><br><strong id="visitCancelledCount" style="color:#d92d20;">0</strong></div>
+      </div>
+      <div class="data-table-wrapper">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Customer</th>
+              <th>Phone</th>
+              <th>Date & Time</th>
+              <th>Vehicle</th>
+              <th>Message</th>
+              <th>Status</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="visitsTableBody"></tbody>
+        </table>
+      </div>
+    </div>
+
   </main>
 </div>
 

@@ -53,6 +53,10 @@ function genEnqId() {
   return 'e' + Date.now().toString(36) + crypto.randomBytes(3).toString('hex');
 }
 
+function genVisitId() {
+  return 'vs_' + Date.now().toString(36) + crypto.randomBytes(3).toString('hex');
+}
+
 function generateToken(admin) {
   return jwt.sign({ id: admin.id, email: admin.email }, JWT_SECRET, { expiresIn: '7d' });
 }
@@ -320,12 +324,67 @@ app.delete('/api/enquiries/:id', requireAuth, async (req, res) => {
   }
 });
 
+// ── VISIT SCHEDULING ──
+app.post('/api/visits', async (req, res) => {
+  try {
+    const v = req.body;
+    if (!v.customer_name || !v.customer_phone || !v.preferred_date) {
+      return res.status(400).json({ error: 'Name, phone, and preferred date are required' });
+    }
+    const id = genVisitId();
+    const [visit] = await sql`INSERT INTO visit_schedules (id, customer_name, customer_phone, customer_email, preferred_date, preferred_time, message, vehicle_id, status)
+      VALUES (${id}, ${v.customer_name}, ${v.customer_phone}, ${v.customer_email || ''}, ${v.preferred_date}, ${v.preferred_time || ''}, ${v.message || ''}, ${v.vehicle_id || null}, 'pending')
+      RETURNING *`;
+    sql`INSERT INTO notification_log (id, type, title, message, link, seen)
+      VALUES (${'n' + Date.now().toString(36) + Math.random().toString(36).slice(2, 8)}, 'visit', ${'Visit scheduled by ' + v.customer_name}, ${(v.customer_name || '') + ' wants to view a vehicle on ' + v.preferred_date + (v.preferred_time ? ' at ' + v.preferred_time : '')}, '/admin.html', false)`.catch(function() {});
+    res.json(visit);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.get('/api/visits', requireAuth, async (req, res) => {
+  try {
+    const status = req.query.status || '';
+    let rows;
+    if (status) {
+      rows = await sql`SELECT v.*, veh.make, veh.model, veh.year FROM visit_schedules v LEFT JOIN vehicles veh ON v.vehicle_id = veh.id WHERE v.status = ${status} ORDER BY v.preferred_date ASC`;
+    } else {
+      rows = await sql`SELECT v.*, veh.make, veh.model, veh.year FROM visit_schedules v LEFT JOIN vehicles veh ON v.vehicle_id = veh.id ORDER BY v.created_at DESC`;
+    }
+    res.json(rows);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.put('/api/visits/:id', requireAuth, async (req, res) => {
+  try {
+    const v = req.body;
+    const [visit] = await sql`UPDATE visit_schedules SET status = ${v.status}, updated_at = now() WHERE id = ${req.params.id} RETURNING *`;
+    if (!visit) return res.status(404).json({ error: 'Visit not found' });
+    res.json(visit);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.delete('/api/visits/:id', requireAuth, async (req, res) => {
+  try {
+    await sql`DELETE FROM visit_schedules WHERE id = ${req.params.id}`;
+    res.json({ ok: true });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // ── STATS ──
 app.get('/api/stats', requireAuth, async (req, res) => {
   try {
     const cars = await sql`SELECT * FROM vehicles`;
     const enqs = await sql`SELECT * FROM enquiries`;
     const [kbRow] = await sql`SELECT count(*)::int as count FROM knowledge_base`;
+    const [visitCount] = await sql`SELECT count(*)::int as count FROM visit_schedules WHERE status = 'pending'`;
     const inStock = cars.filter(c => c.status === 'in_stock');
     const sold = cars.filter(c => c.status === 'sold');
     const totalValue = inStock.reduce((s, c) => s + (Number(c.price) || 0), 0);
@@ -336,7 +395,8 @@ app.get('/api/stats', requireAuth, async (req, res) => {
       totalValue,
       totalEnquiries: enqs.length,
       unreadEnquiries: enqs.filter(e => e.status === 'unread').length,
-      knowledgeEntries: kbRow?.count || 0
+      knowledgeEntries: kbRow?.count || 0,
+      pendingVisits: visitCount?.count || 0
     });
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -745,6 +805,21 @@ if (require.main === module) {
     seen boolean DEFAULT false,
     created_at timestamp DEFAULT now()
   )`.catch(e => console.error('Notification table creation warning:', e.message));
+
+  // Create visit_schedules table
+  sql`CREATE TABLE IF NOT EXISTS visit_schedules (
+    id text PRIMARY KEY,
+    customer_name text NOT NULL,
+    customer_phone text NOT NULL,
+    customer_email text NOT NULL DEFAULT '',
+    preferred_date date NOT NULL,
+    preferred_time text NOT NULL DEFAULT '',
+    message text NOT NULL DEFAULT '',
+    vehicle_id text,
+    status text NOT NULL DEFAULT 'pending',
+    created_at timestamp DEFAULT now(),
+    updated_at timestamp DEFAULT now()
+  )`.catch(e => console.error('Visit schedules table creation warning:', e.message));
 
   app.listen(PORT, () => {
     console.log('Horic Autos running at http://localhost:' + PORT);
