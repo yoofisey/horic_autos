@@ -305,12 +305,22 @@ app.post('/api/enquiries', async (req, res) => {
 app.put('/api/enquiries/:id', requireAuth, async (req, res) => {
   try {
     const e = req.body;
-    const [enquiry] = await sql`UPDATE enquiries SET
-      status = COALESCE(${e.status}, status),
-      admin_reply = COALESCE(${e.admin_reply}, admin_reply),
-      replied_at = CASE WHEN ${e.admin_reply} IS NOT NULL THEN NOW() ELSE replied_at END
-      WHERE id = ${req.params.id}
-      RETURNING *`;
+    const sets = [];
+    const values = [];
+    if (e.status !== undefined && e.status !== null) {
+      values.push(e.status);
+      sets.push('status = $' + values.length);
+    }
+    if (e.admin_reply !== undefined && e.admin_reply !== null) {
+      values.push(e.admin_reply);
+      sets.push('admin_reply = $' + values.length);
+      values.push(new Date().toISOString());
+      sets.push('replied_at = $' + values.length);
+    }
+    if (sets.length === 0) return res.status(400).json({ error: 'No fields to update' });
+    values.push(req.params.id);
+    const query = 'UPDATE enquiries SET ' + sets.join(', ') + ' WHERE id = $' + values.length + ' RETURNING *';
+    const [enquiry] = await sql(query, values);
     res.json(enquiry);
   } catch (err) {
     res.status(500).json({ error: err.message });
