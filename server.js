@@ -659,69 +659,6 @@ app.get('/api/enquiries/unread-count', requireAuth, async (req, res) => {
   }
 });
 
-// ── BLOG CRUD ──
-app.get('/api/blog', async (req, res) => {
-  try {
-    const publishedOnly = req.query.published !== 'false';
-    const rows = await sql`SELECT * FROM blog_posts ${publishedOnly ? sql`WHERE published = true` : sql``} ORDER BY created_at DESC`;
-    res.json(rows);
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
-
-app.get('/api/blog/:slug', async (req, res) => {
-  try {
-    const [post] = await sql`SELECT * FROM blog_posts WHERE slug = ${req.params.slug}`;
-    if (!post) return res.status(404).json({ error: 'Post not found' });
-    res.json(post);
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
-
-app.post('/api/blog', requireAuth, async (req, res) => {
-  try {
-    const b = req.body;
-    const id = 'b' + Date.now().toString(36) + crypto.randomBytes(3).toString('hex');
-    const slug = b.slug || b.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
-    const [post] = await sql`INSERT INTO blog_posts (id, title, slug, content, excerpt, cover_image, author, tags, published)
-      VALUES (${id}, ${b.title}, ${slug}, ${b.content || ''}, ${b.excerpt || ''}, ${b.cover_image || ''}, ${b.author || 'Rhule Auto Hub'}, ${(b.tags || []).map(t => t.trim())}, ${b.published === true})
-      RETURNING *`;
-    res.json(post);
-  } catch (err) {
-    if (err.message.includes('duplicate key')) return res.status(400).json({ error: 'A post with this slug already exists' });
-    res.status(500).json({ error: err.message });
-  }
-});
-
-app.put('/api/blog/:id', requireAuth, async (req, res) => {
-  try {
-    const b = req.body;
-    const slug = b.slug || b.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
-    const [post] = await sql`UPDATE blog_posts SET
-      title = ${b.title}, slug = ${slug}, content = ${b.content || ''}, excerpt = ${b.excerpt || ''},
-      cover_image = ${b.cover_image || ''}, author = ${b.author || 'Rhule Auto Hub'},
-      tags = ${(b.tags || []).map(t => t.trim())}, published = ${b.published === true},
-      updated_at = now()
-      WHERE id = ${req.params.id} RETURNING *`;
-    if (!post) return res.status(404).json({ error: 'Post not found' });
-    res.json(post);
-  } catch (err) {
-    if (err.message.includes('duplicate key')) return res.status(400).json({ error: 'A post with this slug already exists' });
-    res.status(500).json({ error: err.message });
-  }
-});
-
-app.delete('/api/blog/:id', requireAuth, async (req, res) => {
-  try {
-    await sql`DELETE FROM blog_posts WHERE id = ${req.params.id}`;
-    res.json({ ok: true });
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
-
 // ── NOTIFICATIONS ──
 app.get('/api/notifications', requireAuth, async (req, res) => {
   try {
@@ -754,18 +691,13 @@ app.get('/api/notifications/unread-count', requireAuth, async (req, res) => {
 app.get('/sitemap.xml', async (req, res) => {
   try {
     const vehicles = await sql`SELECT id, updated_at FROM vehicles WHERE status != 'sold'`;
-    const posts = await sql`SELECT slug, updated_at FROM blog_posts WHERE published = true`;
     const BASE = 'https://gallant-passion-production-680f.up.railway.app';
     let xml = '<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n';
     xml += '  <url><loc>' + BASE + '/</loc><changefreq>weekly</changefreq><priority>1.0</priority></url>\n';
     xml += '  <url><loc>' + BASE + '/inventory.html</loc><changefreq>daily</changefreq><priority>0.9</priority></url>\n';
-    xml += '  <url><loc>' + BASE + '/blog.html</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>\n';
     xml += '  <url><loc>' + BASE + '/contact.html</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>\n';
     vehicles.forEach(v => {
       xml += '  <url><loc>' + BASE + '/inventory.html?v=' + v.id + '</loc><lastmod>' + (v.updated_at || '').split('T')[0] + '</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>\n';
-    });
-    posts.forEach(p => {
-      xml += '  <url><loc>' + BASE + '/blog.html?slug=' + p.slug + '</loc><lastmod>' + (p.updated_at || '').split('T')[0] + '</lastmod><changefreq>monthly</changefreq><priority>0.6</priority></url>\n';
     });
     xml += '</urlset>';
     res.set('Content-Type', 'application/xml');
@@ -792,21 +724,6 @@ app.get('*', (req, res) => {
 module.exports = app;
 
 if (require.main === module) {
-  // Create blog table if not exists
-  sql`CREATE TABLE IF NOT EXISTS blog_posts (
-    id text PRIMARY KEY,
-    title text NOT NULL,
-    slug text UNIQUE NOT NULL,
-    content text NOT NULL DEFAULT '',
-    excerpt text NOT NULL DEFAULT '',
-    cover_image text NOT NULL DEFAULT '',
-    author text NOT NULL DEFAULT 'Rhule Auto Hub',
-    tags text[] DEFAULT '{}',
-    published boolean DEFAULT false,
-    created_at timestamp DEFAULT now(),
-    updated_at timestamp DEFAULT now()
-  )`.catch(e => console.error('Blog table creation warning:', e.message));
-
   // Create notification log table
   sql`CREATE TABLE IF NOT EXISTS notification_log (
     id text PRIMARY KEY,

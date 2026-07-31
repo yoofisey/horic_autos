@@ -73,14 +73,13 @@ const RhuleAdmin = (() => {
     document.querySelectorAll('.sidebar-nav-item').forEach(function(n) { n.classList.remove('active'); });
     document.getElementById('panel-' + tab)?.classList.add('active');
     document.querySelector('[data-tab="' + tab + '"]')?.classList.add('active');
-    var titles = { dashboard: 'Dashboard', inventory: 'Inventory Management', sales: 'Sales History', enquiries: 'Enquiries', knowledge: 'Knowledge Base (RAG)', blog: 'Blog Management', visits: 'Scheduled Visits' };
+    var titles = { dashboard: 'Dashboard', inventory: 'Inventory Management', sales: 'Sales History', enquiries: 'Enquiries', knowledge: 'Knowledge Base (RAG)', visits: 'Scheduled Visits' };
     document.getElementById('adminPageTitle').textContent = titles[tab] || 'Dashboard';
     if (tab === 'dashboard') renderDashboard();
     if (tab === 'inventory') renderInventoryTable();
     if (tab === 'sales') renderSales();
     if (tab === 'enquiries') renderEnquiries();
     if (tab === 'knowledge') renderKnowledgeBase();
-    if (tab === 'blog') renderBlogTable();
     if (tab === 'visits') renderVisits();
   }
 
@@ -659,109 +658,6 @@ const RhuleAdmin = (() => {
     } catch (e) { toast(e.message, 'error'); }
   }
 
-  // ── BLOG CRUD ──
-  let blogPosts = [];
-  let blogFilter = 'all';
-
-  async function renderBlogTable() {
-    try {
-      blogPosts = await api('/api/blog?published=false');
-      var tbody = document.getElementById('blogTableBody');
-      var totalEl = document.getElementById('blogTotalCount');
-      var pubEl = document.getElementById('blogPublishedCount');
-      var draftEl = document.getElementById('blogDraftCount');
-      if (totalEl) totalEl.textContent = blogPosts.length;
-      if (pubEl) pubEl.textContent = blogPosts.filter(function(p) { return p.published; }).length;
-      if (draftEl) draftEl.textContent = blogPosts.filter(function(p) { return !p.published; }).length;
-
-      if (!tbody) return;
-      var filtered = blogPosts;
-      if (blogFilter === 'published') filtered = blogPosts.filter(function(p) { return p.published; });
-      if (blogFilter === 'draft') filtered = blogPosts.filter(function(p) { return !p.published; });
-
-      tbody.innerHTML = filtered.length === 0
-        ? '<tr><td colspan="6" style="text-align:center;color:var(--gray-400);padding:32px;">No posts found</td></tr>'
-        : filtered.map(function(p) {
-            var date = p.updated_at ? new Date(p.updated_at).toLocaleDateString('en-GB') : '';
-            var tags = (p.tags || []).slice(0, 3).join(', ');
-            var status = p.published ? '<span style="color:var(--green-600);font-weight:600;">Published</span>' : '<span style="color:var(--gray-400);">Draft</span>';
-            return '<tr><td style="font-weight:600;">' + escapeHtml(p.title) + '</td><td>' + status + '</td><td>' + escapeHtml(p.author) + '</td><td>' + escapeHtml(tags) + '</td><td>' + date + '</td><td style="white-space:nowrap;">' +
-              '<button class="btn btn-sm btn-outline" onclick="RhuleAdmin.editBlogPost(\'' + p.id + '\')" style="margin-right:6px;">Edit</button>' +
-              '<button class="btn btn-sm btn-danger" onclick="RhuleAdmin.deleteBlogPost(\'' + p.id + '\')">Delete</button></td></tr>';
-          }).join('');
-    } catch (e) { toast(e.message, 'error'); }
-  }
-
-  function filterBlogPosts(filter, el) {
-    blogFilter = filter;
-    document.querySelectorAll('[data-blog-filter]').forEach(function(b) { b.classList.remove('active'); });
-    if (el) el.classList.add('active');
-    renderBlogTable();
-  }
-
-  function openBlogModal() {
-    document.getElementById('blogModalTitle').textContent = 'New Blog Post';
-    document.getElementById('blogForm').reset();
-    document.getElementById('blog-id').value = '';
-    document.getElementById('blog-published').checked = true;
-    document.getElementById('blogModal').classList.add('active');
-  }
-
-  function closeBlogModal() {
-    document.getElementById('blogModal').classList.remove('active');
-  }
-
-  function editBlogPost(id) {
-    var p = blogPosts.find(function(b) { return b.id === id; });
-    if (!p) return;
-    document.getElementById('blogModalTitle').textContent = 'Edit Blog Post';
-    document.getElementById('blog-id').value = p.id;
-    document.getElementById('blog-title').value = p.title;
-    document.getElementById('blog-slug').value = p.slug;
-    document.getElementById('blog-author').value = p.author;
-    document.getElementById('blog-cover').value = p.cover_image;
-    document.getElementById('blog-excerpt').value = p.excerpt;
-    document.getElementById('blog-tags').value = (p.tags || []).join(', ');
-    document.getElementById('blog-content').value = p.content;
-    document.getElementById('blog-published').checked = p.published;
-    document.getElementById('blogModal').classList.add('active');
-  }
-
-  async function saveBlogPost(e) {
-    e.preventDefault();
-    var id = document.getElementById('blog-id').value;
-    var data = {
-      title: document.getElementById('blog-title').value.trim(),
-      slug: document.getElementById('blog-slug').value.trim() || undefined,
-      author: document.getElementById('blog-author').value.trim() || 'Rhule Auto Hub',
-      cover_image: document.getElementById('blog-cover').value.trim(),
-      excerpt: document.getElementById('blog-excerpt').value.trim(),
-      tags: document.getElementById('blog-tags').value.split(',').map(function(t) { return t.trim(); }).filter(Boolean),
-      content: document.getElementById('blog-content').value.trim(),
-      published: document.getElementById('blog-published').checked
-    };
-    try {
-      if (id) {
-        await api('/api/blog/' + id, { method: 'PUT', body: JSON.stringify(data) });
-        toast('Post updated', 'success');
-      } else {
-        await api('/api/blog', { method: 'POST', body: JSON.stringify(data) });
-        toast('Post created', 'success');
-      }
-      closeBlogModal();
-      renderBlogTable();
-    } catch (e) { toast(e.message, 'error'); }
-  }
-
-  async function deleteBlogPost(id) {
-    if (!confirm('Delete this blog post?')) return;
-    try {
-      await api('/api/blog/' + id, { method: 'DELETE' });
-      toast('Post deleted', 'info');
-      renderBlogTable();
-    } catch (e) { toast(e.message, 'error'); }
-  }
-
   function escapeHtml(s) {
     if (!s) return '';
     var d = document.createElement('div');
@@ -960,7 +856,6 @@ const RhuleAdmin = (() => {
     removeImage: removeImage, deleteEnquiry: deleteEnquiry, toggleReply: toggleReply, cancelReply: cancelReply, sendReply: sendReply, markReplied: markReplied,
     filterKnowledge: filterKnowledge, openKnowledgeModal: openKnowledgeModal, closeKnowledgeModal: closeKnowledgeModal,
     editKnowledgeEntry: editKnowledgeEntry, saveKnowledgeEntry: saveKnowledgeEntry, deleteKnowledgeEntry: deleteKnowledgeEntry, syncVehicleKnowledge: syncVehicleKnowledge,
-    renderBlogTable: renderBlogTable, filterBlogPosts: filterBlogPosts, openBlogModal: openBlogModal, closeBlogModal: closeBlogModal, editBlogPost: editBlogPost, saveBlogPost: saveBlogPost, deleteBlogPost: deleteBlogPost,
     toggleNotifications: toggleNotifications, markNotifsSeen: markNotifsSeen,
     renderVisits: renderVisits, filterVisits: filterVisits, updateVisitStatus: updateVisitStatus, deleteVisit: deleteVisit
   };
