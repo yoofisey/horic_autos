@@ -74,7 +74,7 @@ async function cloudifyImages(images) {
       continue;
     }
     try {
-      const result = await cloudinary.uploader.upload(img, { folder: 'horic-autos' });
+      const result = await cloudinary.uploader.upload(img, { folder: 'rhule-auto-hub' });
       out.push(result.secure_url);
     } catch (e) {
       out.push(img);
@@ -535,7 +535,7 @@ app.post('/api/upload', requireAuth, async (req, res) => {
 
     if (CLOUDINARY_CONFIGURED) {
       const ext = filename.split('.').pop() || 'jpg';
-      const result = await cloudinary.uploader.upload(`data:image/${ext};base64,${base64Data}`, { folder: 'horic-autos' });
+      const result = await cloudinary.uploader.upload(`data:image/${ext};base64,${base64Data}`, { folder: 'rhule-auto-hub' });
       return res.json({ url: result.secure_url });
     }
 
