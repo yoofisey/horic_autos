@@ -245,27 +245,82 @@ const RhuleAdmin = (() => {
       var vMap = {};
       vehicles.forEach(function(v) { vMap[v.id] = v; });
       if (enquiries.length === 0) {
-        list.innerHTML = '<div style="text-align:center;padding:60px;color:var(--gray-400);">No enquiries yet.</div>';
+        list.innerHTML = '<div style="text-align:center;padding:60px;color:var(--gray-400);font-size:0.9rem;">No enquiries yet.</div>';
         return;
       }
       list.innerHTML = enquiries.map(function(enq) {
         var car = vMap[enq.vehicle_id];
-        return '<div class="enquiry-card ' + (enq.status === 'unread' ? 'unread' : '') + '" onclick="RhuleAdmin.markEnquiryRead(\'' + enq.id + '\')">' +
-          '<div class="enquiry-header">' +
-          '<div><strong>' + enq.customer_name + '</strong> <span class="enquiry-date">' + enq.created_at + '</span></div>' +
-          (car ? '<span class="enquiry-vehicle">' + car.year + ' ' + car.make + ' ' + car.model + '</span>' : '') +
+        var statusClass = enq.status === 'unread' ? 'unread' : (enq.status === 'replied' ? 'replied' : '');
+        var statusLabel = enq.status === 'unread' ? 'Unread' : (enq.status === 'replied' ? 'Replied' : 'Read');
+        var phone = enq.customer_phone || '';
+        var email = enq.customer_email || '';
+        var waLink = phone ? 'https://wa.me/' + phone.replace(/^0/, '233') : '#';
+        var waMsg = encodeURIComponent('Hello ' + (enq.customer_name || 'there') + ', thank you for your enquiry at Rhule Auto Hub. ' + (enq.message ? 'Re: "' + enq.message.substring(0, 60) + '"' : '') + '\n\nHow can we assist you further?');
+        var mailSubject = encodeURIComponent('Re: Your Rhule Auto Hub Enquiry');
+        var mailBody = encodeURIComponent('Dear ' + (enq.customer_name || 'Customer') + ',\n\nThank you for reaching out to Rhule Auto Hub.\n\n' + (enq.message ? 'Regarding your enquiry: "' + enq.message.substring(0, 100) + '"\n\n' : '') + 'We would be happy to assist you. Please feel free to contact us or visit our showroom.\n\nBest regards,\nRhule Auto Hub\n+233 53 886 1301');
+
+        return '<div class="enquiry-card ' + statusClass + '">' +
+          '<div class="enquiry-top">' +
+            '<div class="enquiry-name">' + escapeHtml(enq.customer_name || 'Anonymous') + (enq.created_at ? ' <span style="font-weight:400;font-size:0.78rem;color:var(--gray-400);">' + enq.created_at + '</span>' : '') + '</div>' +
+            '<span class="enquiry-status-badge ' + (enq.status || 'unread') + '">' + (enq.status === 'replied' ? '&#10003; ' : '') + statusLabel + '</span>' +
           '</div>' +
-          '<p class="enquiry-message">' + enq.message + '</p>' +
+          '<div class="enquiry-contact-row">' +
+            (phone ? '<span class="enquiry-contact-item"><svg viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg><a href="https://wa.me/' + phone.replace(/^0/, '233') + '" target="_blank">' + escapeHtml(phone) + '</a></span>' : '') +
+            (email ? '<span class="enquiry-contact-item"><svg viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg><a href="mailto:' + escapeHtml(email) + '?subject=' + mailSubject + '&body=' + mailBody + '">' + escapeHtml(email) + '</a></span>' : '') +
+          '</div>' +
+          (car ? '<div class="enquiry-vehicle-tag"><svg viewBox="0 0 24 24"><path d="M5 17h14M5 17a2 2 0 0 1-2-2V9a2 2 0 0 1 2-2h1l2-3h8l2 3h1a2 2 0 0 1 2 2v6a2 2 0 0 1-2 2M5 17a2 2 0 1 0 4 0M15 17a2 2 0 1 0 4 0M5 9h14"/></svg>' + escapeHtml(car.year + ' ' + car.make + ' ' + car.model) + '</div>' : '') +
+          '<div class="enquiry-message">' + escapeHtml(enq.message || '') + '</div>' +
+
+          (enq.admin_reply ? '<div style="padding:8px 12px;margin-bottom:10px;background:#ecfdf5;border-radius:8px;border:1px solid #abefc6;font-size:0.82rem;color:var(--gray-700);"><span style="font-weight:600;color:#067647;">Your reply:</span> ' + escapeHtml(enq.admin_reply) + '</div>' : '') +
+
+          '<div class="enquiry-reply-box" id="replyBox-' + enq.id + '">' +
+            '<textarea class="enquiry-reply-textarea" id="replyText-' + enq.id + '" placeholder="Type your reply here..." oninput="document.getElementById(\'replySendWa-' + enq.id + '\').href = \'https://wa.me/' + phone.replace(/^0/, '233') + '?text=\' + encodeURIComponent(this.value)"></textarea>' +
+            '<div class="enquiry-reply-actions">' +
+              '<button class="btn btn-sm btn-primary" onclick="RhuleAdmin.sendReply(\'' + enq.id + '\')">Save & Mark Replied</button>' +
+              '<a class="btn btn-sm" id="replySendWa-' + enq.id + '" href="' + waLink + '?text=' + waMsg + '" target="_blank" style="background:#25d366;color:white;text-decoration:none;padding:7px 14px;border-radius:6px;font-size:0.78rem;font-weight:600;">Send via WhatsApp</a>' +
+              (email ? '<a class="btn btn-sm btn-outline" href="mailto:' + escapeHtml(email) + '?subject=' + mailSubject + '&body=' + mailBody + '" style="padding:7px 14px;font-size:0.78rem;">Send via Email</a>' : '') +
+              '<button class="btn btn-sm btn-ghost" onclick="RhuleAdmin.cancelReply(\'' + enq.id + '\')">Cancel</button>' +
+            '</div>' +
+            '<div class="enquiry-reply-note">WhatsApp opens in a new tab. Save to mark this enquiry as replied.</div>' +
+          '</div>' +
+
           '<div class="enquiry-actions">' +
-          '<button class="btn btn-sm btn-outline" onclick="event.stopPropagation(); RhuleAdmin.deleteEnquiry(\'' + enq.id + '\')">Delete</button>' +
+            '<button class="enquiry-action enquiry-action-reply" onclick="RhuleAdmin.toggleReply(\'' + enq.id + '\')"><svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>Reply</button>' +
+            (phone ? '<a class="enquiry-action enquiry-action-whatsapp" href="' + waLink + '?text=' + waMsg + '" target="_blank"><svg viewBox="0 0 24 24"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>WhatsApp</a>' : '') +
+            (email ? '<a class="enquiry-action enquiry-action-email" href="mailto:' + escapeHtml(email) + '?subject=' + mailSubject + '&body=' + mailBody + '"><svg viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>Email</a>' : '') +
+            (phone ? '<a class="enquiry-action enquiry-action-call" href="tel:' + phone.replace(/[^0-9+]/g, '') + '"><svg viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>Call</a>' : '') +
+            (enq.status !== 'replied' ? '<button class="enquiry-action enquiry-action-replied" onclick="RhuleAdmin.markReplied(\'' + enq.id + '\')"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>Mark Replied</button>' : '') +
+            '<button class="enquiry-action-delete" title="Delete" onclick="event.stopPropagation(); RhuleAdmin.deleteEnquiry(\'' + enq.id + '\')">&#10005;</button>' +
           '</div></div>';
       }).join('');
     } catch (e) { console.error(e); }
   }
 
-  async function markEnquiryRead(id) {
+  function toggleReply(id) {
+    var box = document.getElementById('replyBox-' + id);
+    if (box) box.classList.toggle('open');
+  }
+
+  function cancelReply(id) {
+    var box = document.getElementById('replyBox-' + id);
+    if (box) { box.classList.remove('open'); document.getElementById('replyText-' + id).value = ''; }
+  }
+
+  async function sendReply(id) {
+    var textarea = document.getElementById('replyText-' + id);
+    var reply = textarea ? textarea.value.trim() : '';
+    if (!reply) { toast('Please type a reply first', 'error'); return; }
     try {
-      await api('/api/enquiries/' + id, { method: 'PUT', body: JSON.stringify({ status: 'read' }) });
+      await api('/api/enquiries/' + id, { method: 'PUT', body: JSON.stringify({ admin_reply: reply, status: 'replied' }) });
+      toast('Reply saved', 'success');
+      renderEnquiries();
+    } catch (e) { toast(e.message, 'error'); }
+  }
+
+  async function markReplied(id) {
+    try {
+      await api('/api/enquiries/' + id, { method: 'PUT', body: JSON.stringify({ status: 'replied' }) });
+      toast('Marked as replied', 'success');
       renderEnquiries();
     } catch (e) { toast(e.message, 'error'); }
   }
@@ -902,7 +957,7 @@ const RhuleAdmin = (() => {
     openVehicleModal: openVehicleModal, closeVehicleModal: closeVehicleModal, editVehicle: editVehicle, saveVehicle: saveVehicle,
     populateAdminMakeDropdown: populateAdminMakeDropdown, populateAdminModels: populateAdminModels,
     openDeleteModal: openDeleteModal, confirmDelete: confirmDelete, openSoldModal: openSoldModal, confirmSold: confirmSold, relistVehicle: relistVehicle,
-    removeImage: removeImage, markEnquiryRead: markEnquiryRead, deleteEnquiry: deleteEnquiry,
+    removeImage: removeImage, deleteEnquiry: deleteEnquiry, toggleReply: toggleReply, cancelReply: cancelReply, sendReply: sendReply, markReplied: markReplied,
     filterKnowledge: filterKnowledge, openKnowledgeModal: openKnowledgeModal, closeKnowledgeModal: closeKnowledgeModal,
     editKnowledgeEntry: editKnowledgeEntry, saveKnowledgeEntry: saveKnowledgeEntry, deleteKnowledgeEntry: deleteKnowledgeEntry, syncVehicleKnowledge: syncVehicleKnowledge,
     renderBlogTable: renderBlogTable, filterBlogPosts: filterBlogPosts, openBlogModal: openBlogModal, closeBlogModal: closeBlogModal, editBlogPost: editBlogPost, saveBlogPost: saveBlogPost, deleteBlogPost: deleteBlogPost,

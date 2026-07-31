@@ -306,7 +306,9 @@ app.put('/api/enquiries/:id', requireAuth, async (req, res) => {
   try {
     const e = req.body;
     const [enquiry] = await sql`UPDATE enquiries SET
-      status = ${e.status}, customer_name = ${e.customer_name}, message = ${e.message}
+      status = COALESCE(${e.status}, status),
+      admin_reply = COALESCE(${e.admin_reply}, admin_reply),
+      replied_at = CASE WHEN ${e.admin_reply} IS NOT NULL THEN NOW() ELSE replied_at END
       WHERE id = ${req.params.id}
       RETURNING *`;
     res.json(enquiry);
