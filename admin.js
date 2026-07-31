@@ -81,6 +81,7 @@ const RhuleAdmin = (() => {
     if (tab === 'enquiries') renderEnquiries();
     if (tab === 'knowledge') renderKnowledgeBase();
     if (tab === 'visits') renderVisits();
+    if (tab === 'settings') renderAdmins();
   }
 
   function switchDashTab(tab, el) {
@@ -235,11 +236,14 @@ const RhuleAdmin = (() => {
   }
 
   // ── ENQUIRIES ──
+  let enquiriesCache = [];
+
   async function renderEnquiries() {
     var list = document.getElementById('enquiriesList');
     if (!list) return;
     try {
       var enquiries = await api('/api/enquiries');
+      enquiriesCache = enquiries;
       var vehicles = await api('/api/vehicles');
       var vMap = {};
       vehicles.forEach(function(v) { vMap[v.id] = v; });
@@ -277,7 +281,7 @@ const RhuleAdmin = (() => {
             '<div class="enquiry-reply-actions">' +
               '<button class="btn btn-sm btn-primary" onclick="RhuleAdmin.sendReply(\'' + enq.id + '\')">Save & Mark Replied</button>' +
               '<a class="btn btn-sm" id="replySendWa-' + enq.id + '" href="' + waLink + '?text=' + waMsg + '" target="_blank" style="background:#25d366;color:white;text-decoration:none;padding:7px 14px;border-radius:6px;font-size:0.78rem;font-weight:600;">Send via WhatsApp</a>' +
-              (email ? '<a class="btn btn-sm btn-outline" href="mailto:' + escapeHtml(email) + '?subject=' + mailSubject + '&body=' + mailBody + '" style="padding:7px 14px;font-size:0.78rem;">Send via Email</a>' : '') +
+              (email ? '<button class="btn btn-sm btn-outline" onclick="RhuleAdmin.sendEmailReply(\'' + enq.id + '\')" style="padding:7px 14px;font-size:0.78rem;">Send via Email</button>' : '') +
               '<button class="btn btn-sm btn-ghost" onclick="RhuleAdmin.cancelReply(\'' + enq.id + '\')">Cancel</button>' +
             '</div>' +
             '<div class="enquiry-reply-note">WhatsApp opens in a new tab. Save to mark this enquiry as replied.</div>' +
@@ -862,6 +866,68 @@ const RhuleAdmin = (() => {
     }
   }
 
+  // ── ADMIN ACCOUNTS ──
+  async function renderAdmins() {
+    var tbody = document.getElementById('adminsTableBody');
+    if (!tbody) return;
+    try {
+      var admins = await api('/api/admins');
+      tbody.innerHTML = admins.length === 0
+        ? '<tr><td colspan="3" style="text-align:center;color:var(--gray-400);padding:24px;">No admins found</td></tr>'
+        : admins.map(function(a) {
+            var date = a.created_at ? new Date(a.created_at).toLocaleDateString('en-GB') : '';
+            return '<tr><td>' + escapeHtml(a.email) + '</td><td style="white-space:nowrap;">' + date + '</td>' +
+              '<td style="white-space:nowrap;">' +
+              '<button class="btn btn-sm btn-outline" onclick="RhuleAdmin.resetAdminPassword(\'' + a.id + '\')" style="margin-right:6px;">Reset Password</button>' +
+              '<button class="btn btn-sm btn-danger" onclick="RhuleAdmin.deleteAdmin(\'' + a.id + '\')">Delete</button>' +
+              '</td></tr>';
+          }).join('');
+    } catch (e) { toast(e.message, 'error'); }
+  }
+
+  async function addAdmin(e) {
+    e.preventDefault();
+    var email = document.getElementById('aa-email').value.trim();
+    var password = document.getElementById('aa-password').value;
+    try {
+      await api('/api/auth/signup', { method: 'POST', body: JSON.stringify({ email: email, password: password }) });
+      toast('Admin added', 'success');
+      e.target.reset();
+      renderAdmins();
+    } catch (err) { toast(err.message, 'error'); }
+  }
+
+  async function deleteAdmin(id) {
+    if (!confirm('Delete this admin account? This cannot be undone.')) return;
+    try {
+      await api('/api/admins/' + id, { method: 'DELETE' });
+      toast('Admin deleted', 'info');
+      renderAdmins();
+    } catch (err) { toast(err.message, 'error'); }
+  }
+
+  async function resetAdminPassword(id) {
+    if (!confirm('Reset this admin\'s password? They will need the new temporary password to log in.')) return;
+    try {
+      var result = await api('/api/admins/' + id + '/reset-password', { method: 'POST' });
+      toast('Temporary password: ' + result.tempPassword + ' — share it securely.', 'success');
+    } catch (err) { toast(err.message, 'error'); }
+  }
+
+  async function sendEmailReply(id) {
+    var enq = enquiriesCache.find(function(e) { return e.id === id; });
+    if (!enq || !enq.customer_email) { toast('No email address on file for this enquiry', 'error'); return; }
+    var subject = 'Re: Your Rhule Auto Hub Enquiry';
+    var body = 'Dear ' + (enq.customer_name || 'Customer') + ',\n\nThank you for reaching out to Rhule Auto Hub.\n\n' + (enq.message ? 'Regarding your enquiry: "' + enq.message.substring(0, 100) + '"\n\n' : '') + 'We would be happy to assist you. Please feel free to contact us or visit our showroom.\n\nBest regards,\nRhule Auto Hub\n+233 53 886 1301';
+    try {
+      await api('/api/enquiries/' + id + '/send-email', { method: 'POST', body: JSON.stringify({ subject: subject, body: body }) });
+      toast('Email sent to ' + enq.customer_email, 'success');
+    } catch (err) {
+      window.location.href = 'mailto:' + enq.customer_email + '?subject=' + encodeURIComponent(subject) + '&body=' + encodeURIComponent(body);
+      toast(err.message || 'Email not configured — opened your email app instead', 'info');
+    }
+  }
+
   // ── INIT CONTINUED ──
 
   document.addEventListener('DOMContentLoaded', init);
@@ -876,6 +942,6 @@ const RhuleAdmin = (() => {
     editKnowledgeEntry: editKnowledgeEntry, saveKnowledgeEntry: saveKnowledgeEntry, deleteKnowledgeEntry: deleteKnowledgeEntry, syncVehicleKnowledge: syncVehicleKnowledge,
     toggleNotifications: toggleNotifications, markNotifsSeen: markNotifsSeen,
     renderVisits: renderVisits, filterVisits: filterVisits, updateVisitStatus: updateVisitStatus, deleteVisit: deleteVisit,
-    changePassword: changePassword
+    changePassword: changePassword, renderAdmins: renderAdmins, addAdmin: addAdmin, deleteAdmin: deleteAdmin, resetAdminPassword: resetAdminPassword, sendEmailReply: sendEmailReply
   };
 })();

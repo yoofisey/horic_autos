@@ -7,6 +7,7 @@ const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
 const path = require('path');
 const cloudinary = require('cloudinary').v2;
+const nodemailer = require('nodemailer');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -20,6 +21,31 @@ const sql = neon(process.env.DATABASE_URL);
 
 // ── CLOUDINARY (optional: set CLOUDINARY_URL to enable hosted image uploads) ──
 const CLOUDINARY_CONFIGURED = !!(process.env.CLOUDINARY_URL && process.env.CLOUDINARY_URL.trim());
+
+// ── EMAIL (optional: set SMTP_* to enable real email sending) ──
+const SMTP_HOST = process.env.SMTP_HOST || '';
+const SMTP_PORT = Number(process.env.SMTP_PORT) || 587;
+const SMTP_USER = process.env.SMTP_USER || '';
+const SMTP_PASS = process.env.SMTP_PASS || '';
+const SMTP_FROM = process.env.SMTP_FROM || (SMTP_USER ? SMTP_USER : 'Rhule Auto Hub <no-reply@rhuleautohub.com>');
+const SMTP_CONFIGURED = !!(SMTP_HOST && SMTP_USER);
+
+async function sendEmail(to, subject, html) {
+  if (!SMTP_CONFIGURED || !to) return false;
+  try {
+    const transporter = nodemailer.createTransport({
+      host: SMTP_HOST,
+      port: SMTP_PORT,
+      secure: SMTP_PORT === 465,
+      auth: { user: SMTP_USER, pass: SMTP_PASS }
+    });
+    await transporter.sendMail({ from: SMTP_FROM, to, subject, html });
+    return true;
+  } catch (err) {
+    console.error('Email error:', err.message);
+    return false;
+  }
+}
 
 // ── RATE LIMITING (DB-backed, survives restarts) ──
 function rateLimit(maxReqs, windowMs) {
@@ -153,6 +179,43 @@ app.post('/api/auth/change-password', requireAuth, async (req, res) => {
     const hash = await bcrypt.hash(String(newPassword), 10);
     await sql`UPDATE admins SET password_hash = ${hash} WHERE id = ${admin.id}`;
     res.json({ ok: true });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ── ADMIN ACCOUNT MANAGEMENT ──
+app.get('/api/admins', requireAuth, async (req, res) => {
+  try {
+    const rows = await sql`SELECT id, email, created_at FROM admins ORDER BY created_at ASC`;
+    res.json(rows);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.delete('/api/admins/:id', requireAuth, async (req, res) => {
+  try {
+    if (req.params.id === req.user.id) return res.status(400).json({ error: 'You cannot delete your own account' });
+    const [target] = await sql`SELECT id FROM admins WHERE id = ${req.params.id}`;
+    if (!target) return res.status(404).json({ error: 'Admin not found' });
+    const [{ count }] = await sql`SELECT count(*)::int AS count FROM admins`;
+    if (count <= 1) return res.status(400).json({ error: 'Cannot delete the last admin account' });
+    await sql`DELETE FROM admins WHERE id = ${req.params.id}`;
+    res.json({ ok: true });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.post('/api/admins/:id/reset-password', requireAuth, async (req, res) => {
+  try {
+    const [target] = await sql`SELECT id FROM admins WHERE id = ${req.params.id}`;
+    if (!target) return res.status(404).json({ error: 'Admin not found' });
+    const tempPassword = crypto.randomBytes(4).toString('hex') + Math.floor(100 + Math.random() * 900);
+    const hash = await bcrypt.hash(tempPassword, 10);
+    await sql`UPDATE admins SET password_hash = ${hash} WHERE id = ${req.params.id}`;
+    res.json({ ok: true, tempPassword });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -390,6 +453,22 @@ app.delete('/api/enquiries/:id', requireAuth, async (req, res) => {
   try {
     await sql`DELETE FROM enquiries WHERE id = ${req.params.id}`;
     res.json({ ok: true });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.post('/api/enquiries/:id/send-email', requireAuth, async (req, res) => {
+  try {
+    const { subject, body } = req.body;
+    const [enq] = await sql`SELECT * FROM enquiries WHERE id = ${req.params.id}`;
+    if (!enq) return res.status(404).json({ error: 'Enquiry not found' });
+    if (!enq.customer_email) return res.status(400).json({ error: 'No email address on file for this enquiry' });
+
+    const html = '<p>' + String(body || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/\n/g, '<br>') + '</p>';
+    const sent = await sendEmail(enq.customer_email, String(subject || 'Re: Your Rhule Auto Hub Enquiry'), html);
+    if (!sent) return res.status(400).json({ error: 'Email sending is not configured. Set the SMTP_* env vars to enable it.' });
+    res.json({ ok: true, to: enq.customer_email });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
