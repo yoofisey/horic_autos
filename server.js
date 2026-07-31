@@ -6,6 +6,7 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
 const path = require('path');
+const cloudinary = require('cloudinary').v2;
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -14,34 +15,35 @@ const JWT_SECRET = process.env.JWT_SECRET || crypto.randomBytes(32).toString('he
 app.use(express.json({ limit: '5mb' }));
 app.use(express.static(path.join(__dirname)));
 
-// ── RATE LIMITING (simple in-memory) ──
-const rateBuckets = new Map();
+// ── DATABASE ──
+const sql = neon(process.env.DATABASE_URL);
+
+// ── CLOUDINARY (optional: set CLOUDINARY_URL to enable hosted image uploads) ──
+const CLOUDINARY_CONFIGURED = !!(process.env.CLOUDINARY_URL && process.env.CLOUDINARY_URL.trim());
+
+// ── RATE LIMITING (DB-backed, survives restarts) ──
 function rateLimit(maxReqs, windowMs) {
-  return function(req, res, next) {
+  return async function(req, res, next) {
     const ip = req.ip || req.connection.remoteAddress;
-    const now = Date.now();
-    const key = ip + ':' + req.baseUrl + req.path;
-    if (!rateBuckets.has(key)) rateBuckets.set(key, []);
-    const hits = rateBuckets.get(key).filter(t => t > now - windowMs);
-    hits.push(now);
-    rateBuckets.set(key, hits);
-    if (hits.length > maxReqs) {
-      return res.status(429).json({ error: 'Too many requests. Please wait a moment.' });
+    const key = (ip + ':' + req.baseUrl + req.path).substring(0, 255);
+    const cutoff = new Date(Date.now() - windowMs).toISOString();
+    try {
+      await sql`INSERT INTO rate_limits (key, ts) VALUES (${key}, now())`;
+      const [row] = await sql`SELECT count(*)::int AS count FROM rate_limits WHERE key = ${key} AND ts >= ${cutoff}::timestamptz`;
+      if (row.count > maxReqs) {
+        return res.status(429).json({ error: 'Too many requests. Please wait a moment.' });
+      }
+    } catch (e) {
+      // Fail open if the rate-limit table is unavailable
     }
     next();
   };
 }
 
-// Clean up stale buckets every 5 minutes
+// Clean up stale rate-limit rows every 10 minutes
 setInterval(function() {
-  const cutoff = Date.now() - 300000;
-  for (const [k, v] of rateBuckets) {
-    if (v.length === 0 || v[v.length - 1] < cutoff) rateBuckets.delete(k);
-  }
-}, 300000);
-
-// ── DATABASE ──
-const sql = neon(process.env.DATABASE_URL);
+  sql`DELETE FROM rate_limits WHERE ts < now() - interval '1 hour'`.catch(function() {});
+}, 600000);
 
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
@@ -59,6 +61,35 @@ function genVisitId() {
 
 function generateToken(admin) {
   return jwt.sign({ id: admin.id, email: admin.email }, JWT_SECRET, { expiresIn: '7d' });
+}
+
+// Upload base64 data-URL images to Cloudinary; returns hosted URLs.
+// Falls back to the original URL when Cloudinary is not configured or upload fails.
+async function cloudifyImages(images) {
+  if (!Array.isArray(images) || images.length === 0) return images || [];
+  const out = [];
+  for (const img of images) {
+    if (!CLOUDINARY_CONFIGURED || typeof img !== 'string' || !img.startsWith('data:image')) {
+      out.push(img);
+      continue;
+    }
+    try {
+      const result = await cloudinary.uploader.upload(img, { folder: 'horic-autos' });
+      out.push(result.secure_url);
+    } catch (e) {
+      out.push(img);
+    }
+  }
+  return out;
+}
+
+function notifId() {
+  return 'n' + Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+}
+
+function addNotification(type, title, message) {
+  sql`INSERT INTO notification_log (id, type, title, message, link, seen)
+    VALUES (${notifId()}, ${type}, ${title}, ${message}, '/admin.html', false)`.catch(function() {});
 }
 
 // ── AUTH MIDDLEWARE ──
@@ -103,6 +134,26 @@ app.post('/api/auth/signup', requireAuth, async (req, res) => {
     res.json({ user: admin });
   } catch (err) {
     if (err.code === '23505') return res.status(400).json({ error: 'Email already exists' });
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.post('/api/auth/change-password', requireAuth, async (req, res) => {
+  try {
+    const { currentPassword, newPassword } = req.body;
+    if (!currentPassword || !newPassword) return res.status(400).json({ error: 'Current and new password required' });
+    if (String(newPassword).length < 8) return res.status(400).json({ error: 'New password must be at least 8 characters' });
+
+    const [admin] = await sql`SELECT * FROM admins WHERE id = ${req.user.id}`;
+    if (!admin) return res.status(404).json({ error: 'Admin not found' });
+
+    const valid = await bcrypt.compare(currentPassword, admin.password_hash);
+    if (!valid) return res.status(401).json({ error: 'Current password is incorrect' });
+
+    const hash = await bcrypt.hash(String(newPassword), 10);
+    await sql`UPDATE admins SET password_hash = ${hash} WHERE id = ${admin.id}`;
+    res.json({ ok: true });
+  } catch (err) {
     res.status(500).json({ error: err.message });
   }
 });
@@ -217,7 +268,8 @@ app.post('/api/vehicles', requireAuth, async (req, res) => {
     const now = new Date().toISOString();
     const v = req.body;
     const featuresJson = JSON.stringify(v.features || []);
-    const imagesJson = JSON.stringify(v.images || []);
+    const images = await cloudifyImages(v.images || []);
+    const imagesJson = JSON.stringify(images);
 
     const [vehicle] = await sql`INSERT INTO vehicles (id, make, model, trim, year, price, condition, status, body_type, fuel, mileage, engine, transmission, color, description, features, images, created_at, updated_at, views, enquiries)
       VALUES (${id}, ${v.make || ''}, ${v.model || ''}, ${v.trim || ''}, ${Number(v.year) || 2024}, ${Number(v.price) || 0}, ${v.condition || 'new'}, ${v.status || 'in_stock'}, ${v.body_type || 'sedan'}, ${v.fuel || 'petrol'}, ${Number(v.mileage) || 0}, ${v.engine || ''}, ${v.transmission || 'automatic'}, ${v.color || ''}, ${v.description || ''}, ${featuresJson}::jsonb, ${imagesJson}::jsonb, ${now}::timestamptz, ${now}::timestamptz, 0, 0)
@@ -238,7 +290,11 @@ app.put('/api/vehicles/:id', requireAuth, async (req, res) => {
     const v = req.body;
     const now = new Date().toISOString();
     const featuresJson = JSON.stringify(v.features || []);
-    const imagesJson = JSON.stringify(v.images || []);
+    const images = await cloudifyImages(v.images || []);
+    const imagesJson = JSON.stringify(images);
+
+    const [existing] = await sql`SELECT id, make, model, year, status FROM vehicles WHERE id = ${req.params.id}`;
+    if (!existing) return res.status(404).json({ error: 'Vehicle not found' });
 
     const [vehicle] = await sql`UPDATE vehicles SET
       make = ${v.make}, model = ${v.model}, trim = ${v.trim || ''}, year = ${Number(v.year)}, price = ${Number(v.price)},
@@ -251,6 +307,10 @@ app.put('/api/vehicles/:id', requireAuth, async (req, res) => {
       updated_at = ${now}::timestamptz
       WHERE id = ${req.params.id}
       RETURNING *`;
+
+    if (existing.status !== 'sold' && vehicle.status === 'sold') {
+      addNotification('sale', existing.make + ' ' + existing.model + ' (' + existing.year + ') marked as sold', 'Recorded as sold at GHS ' + (v.sold_price ? Number(v.sold_price).toLocaleString() : vehicle.price));
+    }
 
     // Re-embed updated vehicle
     const kbText = vehicleToKnowledge(vehicle);
@@ -293,8 +353,7 @@ app.post('/api/enquiries', async (req, res) => {
     const [enquiry] = await sql`INSERT INTO enquiries (id, vehicle_id, customer_name, customer_phone, customer_email, message, status, created_at)
       VALUES (${id}, ${e.vehicle_id || null}, ${e.customer_name || 'Anonymous'}, ${e.customer_phone || ''}, ${e.customer_email || ''}, ${e.message || ''}, 'unread', now())
       RETURNING *`;
-    sql`INSERT INTO notification_log (id, type, title, message, link, seen)
-      VALUES (${'n' + Date.now().toString(36) + Math.random().toString(36).slice(2, 8)}, 'enquiry', ${'New enquiry from ' + (e.customer_name || 'Anonymous')}, ${(e.message || '').substring(0, 100)}, '/admin.html', false)`.catch(function() {});
+    addNotification('enquiry', 'New enquiry from ' + (e.customer_name || 'Anonymous'), (e.message || '').substring(0, 100));
     // TODO: Send email notification — add SMTP env vars and nodemailer to enable
     res.json(enquiry);
   } catch (err) {
@@ -347,8 +406,7 @@ app.post('/api/visits', async (req, res) => {
     const [visit] = await sql`INSERT INTO visit_schedules (id, customer_name, customer_phone, customer_email, preferred_date, preferred_time, message, vehicle_id, status)
       VALUES (${id}, ${v.customer_name}, ${v.customer_phone}, ${v.customer_email || ''}, ${v.preferred_date}, ${v.preferred_time || ''}, ${v.message || ''}, ${v.vehicle_id || null}, 'pending')
       RETURNING *`;
-    sql`INSERT INTO notification_log (id, type, title, message, link, seen)
-      VALUES (${'n' + Date.now().toString(36) + Math.random().toString(36).slice(2, 8)}, 'visit', ${'Visit scheduled by ' + v.customer_name}, ${(v.customer_name || '') + ' wants to view a vehicle on ' + v.preferred_date + (v.preferred_time ? ' at ' + v.preferred_time : '')}, '/admin.html', false)`.catch(function() {});
+    addNotification('visit', 'Visit scheduled by ' + v.customer_name, (v.customer_name || '') + ' wants to view a vehicle on ' + v.preferred_date + (v.preferred_time ? ' at ' + v.preferred_time : ''));
     res.json(visit);
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -471,14 +529,16 @@ app.get('/api/stats/enquiry-trend', requireAuth, async (req, res) => {
 
 // ── IMAGE UPLOAD ──
 app.post('/api/upload', requireAuth, async (req, res) => {
-  // For Neon, we'll use a simple file system approach
-  // In production, use Cloudinary, S3, or similar
   try {
     const { filename, data: base64Data } = req.body;
     if (!filename || !base64Data) return res.status(400).json({ error: 'filename and data required' });
 
-    // Return base64 data URL directly (for simplicity)
-    // In production, upload to cloud storage
+    if (CLOUDINARY_CONFIGURED) {
+      const ext = filename.split('.').pop() || 'jpg';
+      const result = await cloudinary.uploader.upload(`data:image/${ext};base64,${base64Data}`, { folder: 'horic-autos' });
+      return res.json({ url: result.secure_url });
+    }
+
     const ext = filename.split('.').pop() || 'jpg';
     const dataUrl = `data:image/${ext};base64,${base64Data}`;
     res.json({ url: dataUrl });
@@ -728,12 +788,20 @@ if (require.main === module) {
   sql`CREATE TABLE IF NOT EXISTS notification_log (
     id text PRIMARY KEY,
     type text NOT NULL DEFAULT 'info',
-    title text NOT NULL,
+    title text NOT NULL DEFAULT '',
     message text NOT NULL DEFAULT '',
     link text NOT NULL DEFAULT '',
     seen boolean DEFAULT false,
     created_at timestamp DEFAULT now()
   )`.catch(e => console.error('Notification table creation warning:', e.message));
+
+  // Create rate limit table
+  sql`CREATE TABLE IF NOT EXISTS rate_limits (
+    id serial PRIMARY KEY,
+    key text NOT NULL,
+    ts timestamp DEFAULT now()
+  )`.catch(e => console.error('Rate limit table creation warning:', e.message));
+  sql`CREATE INDEX IF NOT EXISTS idx_rate_limits_key_ts ON rate_limits (key, ts)`.catch(function() {});
 
   // Create visit_schedules table
   sql`CREATE TABLE IF NOT EXISTS visit_schedules (

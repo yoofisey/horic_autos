@@ -73,7 +73,7 @@ const RhuleAdmin = (() => {
     document.querySelectorAll('.sidebar-nav-item').forEach(function(n) { n.classList.remove('active'); });
     document.getElementById('panel-' + tab)?.classList.add('active');
     document.querySelector('[data-tab="' + tab + '"]')?.classList.add('active');
-    var titles = { dashboard: 'Dashboard', inventory: 'Inventory Management', sales: 'Sales History', enquiries: 'Enquiries', knowledge: 'Knowledge Base (RAG)', visits: 'Scheduled Visits' };
+    var titles = { dashboard: 'Dashboard', inventory: 'Inventory Management', sales: 'Sales History', enquiries: 'Enquiries', knowledge: 'Knowledge Base (RAG)', visits: 'Scheduled Visits', settings: 'Settings' };
     document.getElementById('adminPageTitle').textContent = titles[tab] || 'Dashboard';
     if (tab === 'dashboard') renderDashboard();
     if (tab === 'inventory') renderInventoryTable();
@@ -844,6 +844,24 @@ const RhuleAdmin = (() => {
     } catch (e) {}
   }
 
+  async function changePassword(e) {
+    e.preventDefault();
+    var current = document.getElementById('pw-current').value;
+    var next = document.getElementById('pw-new').value;
+    var confirm = document.getElementById('pw-confirm').value;
+    if (next !== confirm) {
+      toast('New passwords do not match', 'error');
+      return;
+    }
+    try {
+      await api('/api/auth/change-password', { method: 'POST', body: JSON.stringify({ currentPassword: current, newPassword: next }) });
+      toast('Password updated successfully', 'success');
+      e.target.reset();
+    } catch (err) {
+      toast(err.message, 'error');
+    }
+  }
+
   // ── INIT CONTINUED ──
 
   document.addEventListener('DOMContentLoaded', init);
@@ -857,6 +875,7 @@ const RhuleAdmin = (() => {
     filterKnowledge: filterKnowledge, openKnowledgeModal: openKnowledgeModal, closeKnowledgeModal: closeKnowledgeModal,
     editKnowledgeEntry: editKnowledgeEntry, saveKnowledgeEntry: saveKnowledgeEntry, deleteKnowledgeEntry: deleteKnowledgeEntry, syncVehicleKnowledge: syncVehicleKnowledge,
     toggleNotifications: toggleNotifications, markNotifsSeen: markNotifsSeen,
-    renderVisits: renderVisits, filterVisits: filterVisits, updateVisitStatus: updateVisitStatus, deleteVisit: deleteVisit
+    renderVisits: renderVisits, filterVisits: filterVisits, updateVisitStatus: updateVisitStatus, deleteVisit: deleteVisit,
+    changePassword: changePassword
   };
 })();
