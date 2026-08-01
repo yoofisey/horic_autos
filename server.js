@@ -360,25 +360,55 @@ app.post('/api/vehicles', requireAuth, async (req, res) => {
 app.put('/api/vehicles/:id', requireAuth, async (req, res) => {
   try {
     const v = req.body;
-    const now = new Date().toISOString();
-    const featuresJson = JSON.stringify(v.features || []);
-    const images = await cloudifyImages(v.images || []);
-    const imagesJson = JSON.stringify(images);
 
-    const [existing] = await sql`SELECT id, make, model, year, status FROM vehicles WHERE id = ${req.params.id}`;
+    const [existing] = await sql`SELECT id, make, model, year, status, price FROM vehicles WHERE id = ${req.params.id}`;
     if (!existing) return res.status(404).json({ error: 'Vehicle not found' });
 
-    const [vehicle] = await sql`UPDATE vehicles SET
-      make = ${v.make}, model = ${v.model}, trim = ${v.trim || ''}, year = ${toInt(v.year)}, price = ${toInt(v.price)},
-      condition = ${v.condition}, status = ${v.status}, body_type = ${v.body_type},
-      fuel = ${v.fuel}, mileage = ${toInt(v.mileage)}, engine = ${v.engine},
-      transmission = ${v.transmission}, color = ${v.color}, description = ${v.description},
-      features = ${featuresJson}::jsonb, images = ${imagesJson}::jsonb,
-      sold_price = ${toInt(v.sold_price)},
-      sold_date = ${v.sold_date || null}, sold_to = ${v.sold_to || null},
-      updated_at = ${now}::timestamptz
-      WHERE id = ${req.params.id}
-      RETURNING *`;
+    // Partial update: only touch fields that were sent, so callers like the
+    // "mark as sold" form (status/sold_*) never null out the other columns.
+    const sets = [];
+    const values = [];
+    const push = (name, value) => { values.push(value); sets.push(name + ' = $' + values.length); };
+
+    const fields = [
+      ['make', v.make],
+      ['model', v.model],
+      ['trim', v.trim],
+      ['year', v.year !== undefined ? toInt(v.year) : undefined],
+      ['price', v.price !== undefined ? toInt(v.price) : undefined],
+      ['condition', v.condition],
+      ['status', v.status],
+      ['body_type', v.body_type],
+      ['fuel', v.fuel],
+      ['mileage', v.mileage !== undefined ? toInt(v.mileage) : undefined],
+      ['engine', v.engine],
+      ['transmission', v.transmission],
+      ['color', v.color],
+      ['description', v.description],
+      ['sold_price', v.sold_price !== undefined ? toInt(v.sold_price) : undefined],
+      ['sold_date', v.sold_date],
+      ['sold_to', v.sold_to]
+    ];
+    for (const [name, value] of fields) {
+      if (value !== undefined) push(name, value);
+    }
+
+    if (v.features !== undefined) {
+      values.push(JSON.stringify(v.features || []));
+      sets.push('features = $' + values.length + '::jsonb');
+    }
+    if (v.images !== undefined) {
+      const images = await cloudifyImages(v.images || []);
+      values.push(JSON.stringify(images));
+      sets.push('images = $' + values.length + '::jsonb');
+    }
+
+    if (sets.length === 0) return res.status(400).json({ error: 'No fields to update' });
+
+    push('updated_at', new Date().toISOString());
+    values.push(req.params.id);
+    const query = 'UPDATE vehicles SET ' + sets.join(', ') + ' WHERE id = $' + values.length + ' RETURNING *';
+    const [vehicle] = await sql(query, values);
 
     if (existing.status !== 'sold' && vehicle.status === 'sold') {
       addNotification('sale', existing.make + ' ' + existing.model + ' (' + existing.year + ') marked as sold', 'Recorded as sold at GHS ' + (vehicle.sold_price ? Number(vehicle.sold_price).toLocaleString() : vehicle.price));
