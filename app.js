@@ -264,10 +264,18 @@ const RhuleApp = (() => {
       '<div class="cost-row"><span class="cost-label">Fuel</span><span class="cost-value">' + RhuleData.formatPrice(costs.fuel) + '</span></div>' +
       '<div class="cost-row"><span class="cost-label">Maintenance</span><span class="cost-value">' + RhuleData.formatPrice(costs.maintenance) + '</span></div>' +
       '<div class="cost-row"><span class="cost-label">Insurance</span><span class="cost-value">' + RhuleData.formatPrice(costs.insurance) + '</span></div>' +
-      '<div class="cost-row cost-total"><span class="cost-label">Total Monthly</span><span class="cost-value">' + RhuleData.formatPrice(costs.total) + '</span></div>';
+      '<div class="cost-row cost-total"><span class="cost-label">Total Monthly</span><span class="cost-value">' + RhuleData.formatPrice(costs.total) + '</span></div>' +
+      '<div class="cost-row cost-finance"><span class="cost-label">Hire Purchase from</span><span class="cost-value">' + RhuleData.formatPrice(RhuleData.monthlyPayment(car.price)) + '/mo</span></div>' +
+      '<button class="btn btn-outline btn-sm" style="width:100%;margin-top:12px;" onclick="RhuleApp.openFinanceCalculator(' + car.price + ')">Estimate my monthly payment</button>';
 
     var waMsg = encodeURIComponent('Hi, I am interested in the ' + car.year + ' ' + car.make + ' ' + car.model + (car.trim ? ' ' + car.trim : '') + ' priced at ' + RhuleData.formatPrice(car.price) + '. Can I get more details?');
     el('modalWhatsApp').href = 'https://wa.me/233538861301?text=' + waMsg;
+
+    var calcEl = document.getElementById('calcPrice');
+    if (calcEl) {
+      calcEl.value = car.price;
+      recalcFinance();
+    }
 
     updateGallery();
     el('carModal').classList.add('active');
@@ -514,6 +522,43 @@ const RhuleApp = (() => {
     document.body.style.overflow = '';
   }
 
+  // ── FINANCE CALCULATOR ──
+  function recalcFinance() {
+    var priceEl = document.getElementById('calcPrice');
+    if (!priceEl) return;
+    var price = parseFloat(String(priceEl.value).replace(/[^0-9.]/g, ''));
+    var depositPct = parseFloat(document.getElementById('calcDeposit').value) || 0;
+    var termMonths = parseInt(document.getElementById('calcTerm').value, 10) || 36;
+    var annualRate = parseFloat(document.getElementById('calcRate').value) || 0;
+
+    var fmt = function(n) { return Number.isFinite(n) && n >= 0 ? RhuleData.formatPrice(Math.round(n)) : '—'; };
+
+    if (!price || price <= 0) {
+      document.getElementById('calcMonthly').textContent = '—';
+      document.getElementById('calcPriceVal').textContent = '—';
+      document.getElementById('calcDepositAmt').textContent = '—';
+      document.getElementById('calcLoanAmt').textContent = '—';
+      document.getElementById('calcInterest').textContent = '—';
+      document.getElementById('calcTotal').textContent = '—';
+      return;
+    }
+
+    var b = RhuleData.hpBreakdown(price, { depositPct: depositPct, termMonths: termMonths, annualRate: annualRate });
+    document.getElementById('calcMonthly').textContent = fmt(b.monthly);
+    document.getElementById('calcPriceVal').textContent = fmt(price);
+    document.getElementById('calcDepositPct').textContent = depositPct;
+    document.getElementById('calcDepositAmt').textContent = fmt(b.deposit);
+    document.getElementById('calcLoanAmt').textContent = fmt(b.principal);
+    document.getElementById('calcInterest').textContent = fmt(b.totalInterest);
+    document.getElementById('calcTotal').textContent = fmt(b.totalRepay);
+
+    var wa = document.getElementById('calcWhatsApp');
+    if (wa) {
+      var msg = encodeURIComponent('Hi Rhule Auto Hub, I\'d like a hire purchase quote for a vehicle priced at ' + RhuleData.formatPrice(price) + ' (' + depositPct + '% deposit, ' + termMonths + ' months). My estimated monthly payment is ' + RhuleData.formatPrice(Math.round(b.monthly)) + '. Can you confirm the exact rate?');
+      wa.href = 'https://wa.me/233538861301?text=' + msg;
+    }
+  }
+
   async function submitSchedule(e) {
     e.preventDefault();
     var btn = e.target.querySelector('button[type="submit"]');
@@ -534,6 +579,7 @@ const RhuleApp = (() => {
         })
       });
       if (!res.ok) throw new Error('Failed to schedule visit');
+      if (window.RhuleAnalytics) window.RhuleAnalytics.track('conversion', 'schedule_visit');
       closeScheduleModal();
       showToast('Visit request submitted! We will confirm your appointment shortly.', 'success');
     } catch (err) {
@@ -541,6 +587,21 @@ const RhuleApp = (() => {
     }
     btn.disabled = false;
     btn.textContent = 'Request Visit';
+  }
+
+  // Scroll to the finance calculator and pre-fill it with a price.
+  function openFinanceCalculator(price) {
+    var section = document.getElementById('finance');
+    var calcEl = document.getElementById('calcPrice');
+    if (calcEl) {
+      calcEl.value = price;
+      recalcFinance();
+    }
+    if (section) {
+      closeModal();
+      section.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      setTimeout(function() { calcEl && calcEl.focus(); }, 600);
+    }
   }
 
   // ── INIT ──
@@ -609,6 +670,8 @@ const RhuleApp = (() => {
     closeCompare: closeCompare,
     openScheduleModal: openScheduleModal,
     closeScheduleModal: closeScheduleModal,
-    submitSchedule: submitSchedule
+    submitSchedule: submitSchedule,
+    recalcFinance: recalcFinance,
+    openFinanceCalculator: openFinanceCalculator
   };
 })();

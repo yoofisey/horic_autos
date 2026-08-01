@@ -874,6 +874,13 @@ app.get('/sitemap.xml', async (req, res) => {
     xml += '  <url><loc>' + BASE + '/</loc><changefreq>weekly</changefreq><priority>1.0</priority></url>\n';
     xml += '  <url><loc>' + BASE + '/inventory.html</loc><changefreq>daily</changefreq><priority>0.9</priority></url>\n';
     xml += '  <url><loc>' + BASE + '/contact.html</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>\n';
+    xml += '  <url><loc>' + BASE + '/terms.html</loc><changefreq>yearly</changefreq><priority>0.3</priority></url>\n';
+    xml += '  <url><loc>' + BASE + '/privacy.html</loc><changefreq>yearly</changefreq><priority>0.3</priority></url>\n';
+    xml += '  <url><loc>' + BASE + '/refund.html</loc><changefreq>yearly</changefreq><priority>0.3</priority></url>\n';
+    xml += '  <url><loc>' + BASE + '/used-suvs-accra.html</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>\n';
+    xml += '  <url><loc>' + BASE + '/used-sedans-accra.html</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>\n';
+    xml += '  <url><loc>' + BASE + '/used-pickups-accra.html</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>\n';
+    xml += '  <url><loc>' + BASE + '/electric-cars-ghana.html</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>\n';
     vehicles.forEach(v => {
       xml += '  <url><loc>' + BASE + '/inventory.html?v=' + v.id + '</loc><lastmod>' + (v.updated_at || '').split('T')[0] + '</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>\n';
     });

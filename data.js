@@ -46,6 +46,42 @@ const RhuleData = (() => {
     };
   }
 
+  const HP_DEFAULTS = Object.freeze({
+    depositPct: 30,
+    termMonths: 36,
+    annualRate: 30
+  });
+
+  // Standard amortisation: fixed monthly payment for a hire-purchase plan.
+  function monthlyPayment(price, opts) {
+    opts = opts || {};
+    const depositPct = (opts.depositPct != null) ? opts.depositPct : HP_DEFAULTS.depositPct;
+    const termMonths = (opts.termMonths != null) ? opts.termMonths : HP_DEFAULTS.termMonths;
+    const annualRate = (opts.annualRate != null) ? opts.annualRate : HP_DEFAULTS.annualRate;
+    const principal = Math.max(0, price - (price * depositPct / 100));
+    if (termMonths <= 0) return 0;
+    const r = annualRate / 100 / 12;
+    if (r === 0) return principal / termMonths;
+    const factor = Math.pow(1 + r, termMonths);
+    return principal * r * factor / (factor - 1);
+  }
+
+  function hpBreakdown(price, opts) {
+    opts = opts || {};
+    const depositPct = (opts.depositPct != null) ? opts.depositPct : HP_DEFAULTS.depositPct;
+    const termMonths = (opts.termMonths != null) ? opts.termMonths : HP_DEFAULTS.termMonths;
+    const annualRate = (opts.annualRate != null) ? opts.annualRate : HP_DEFAULTS.annualRate;
+    const deposit = price * depositPct / 100;
+    const principal = price - deposit;
+    const monthly = monthlyPayment(price, opts);
+    return {
+      depositPct, termMonths, annualRate,
+      deposit, principal, monthly,
+      totalRepay: monthly * termMonths,
+      totalInterest: monthly * termMonths - principal
+    };
+  }
+
   function filterInventory(vehicles, { search = '', make = '', model = '', body_type = '', fuel = '', condition = '', status = '', minPrice = 0, maxPrice = Infinity, minYear = 0, maxYear = Infinity, maxMileage = Infinity, sort = 'newest' } = {}) {
     let results = [...vehicles];
 
@@ -158,7 +194,7 @@ const RhuleData = (() => {
   };
 
   return {
-    COST_ASSUMPTIONS, CAR_MAKES_MODELS,
-    formatPrice, estimateRunningCosts, filterInventory
+    COST_ASSUMPTIONS, CAR_MAKES_MODELS, HP_DEFAULTS,
+    formatPrice, estimateRunningCosts, filterInventory, monthlyPayment, hpBreakdown
   };
 })();
