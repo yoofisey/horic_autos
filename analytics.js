@@ -1,7 +1,7 @@
 // GA4 + conversion tracking for Rhule Auto Hub.
 // Paste your GA4 Measurement ID below (format G-XXXXXXXXXX). Until you do,
 // tracking is disabled and the site behaves normally (no network calls).
-window.GA4_ID = 'G-XXXXXXXXXX';
+window.GA4_ID = 'G-QR9DP6E1G6';
 
 window.RhuleAnalytics = (function () {
   var ID = window.GA4_ID || '';
