@@ -520,6 +520,28 @@ app.post('/api/visits', async (req, res) => {
     if (!v.customer_name || !v.customer_phone || !v.preferred_date) {
       return res.status(400).json({ error: 'Name, phone, and preferred date are required' });
     }
+
+    // Showroom hours: Mon–Sat 09:00–18:00, Sunday by appointment only.
+    const d = new Date(v.preferred_date + 'T12:00:00Z');
+    if (isNaN(d.getTime())) {
+      return res.status(400).json({ error: 'Invalid preferred date' });
+    }
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    if (d < today) {
+      return res.status(400).json({ error: 'Preferred date cannot be in the past' });
+    }
+    if (d.getUTCDay() === 0) {
+      return res.status(400).json({ error: 'We are closed Sundays. Sundays are by appointment only — please contact us on WhatsApp.' });
+    }
+    if (v.preferred_time) {
+      const tp = String(v.preferred_time).split(':');
+      const mins = parseInt(tp[0], 10) * 60 + parseInt(tp[1], 10);
+      if (isNaN(mins) || mins < 9 * 60 || mins > 18 * 60) {
+        return res.status(400).json({ error: 'Showroom hours are 9:00 AM – 6:00 PM (Mon–Sat)' });
+      }
+    }
+
     const id = genVisitId();
     const [visit] = await sql`INSERT INTO visit_schedules (id, customer_name, customer_phone, customer_email, preferred_date, preferred_time, message, vehicle_id, status)
       VALUES (${id}, ${v.customer_name}, ${v.customer_phone}, ${v.customer_email || ''}, ${v.preferred_date}, ${v.preferred_time || ''}, ${v.message || ''}, ${v.vehicle_id || null}, 'pending')

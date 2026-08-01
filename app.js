@@ -497,6 +497,21 @@ const RhuleApp = (() => {
   }
 
   // ── SCHEDULE VISIT ──
+  // Showroom hours: Mon–Sat 09:00–18:00, Sunday by appointment.
+  function isSunday(dateISO) {
+    if (!dateISO) return false;
+    var p = String(dateISO).split('-');
+    var d = new Date(parseInt(p[0], 10), parseInt(p[1], 10) - 1, parseInt(p[2], 10));
+    return d.getDay() === 0;
+  }
+
+  function isOpenTime(timeStr) {
+    if (!timeStr) return true;
+    var p = String(timeStr).split(':');
+    var mins = parseInt(p[0], 10) * 60 + parseInt(p[1], 10);
+    return mins >= 9 * 60 && mins <= 18 * 60;
+  }
+
   function openScheduleModal(vehicleId) {
     var id = vehicleId || (modalCar ? modalCar.id : '');
     document.getElementById('schedVehicleId').value = id;
@@ -507,10 +522,15 @@ const RhuleApp = (() => {
       dateInput.min = min.toISOString().split('T')[0];
       dateInput.value = '';
     }
+    var timeInput = document.getElementById('schedTime');
+    if (timeInput) {
+      timeInput.min = '09:00';
+      timeInput.max = '18:00';
+      timeInput.value = '';
+    }
     document.getElementById('schedName').value = '';
     document.getElementById('schedPhone').value = '';
     document.getElementById('schedEmail').value = '';
-    document.getElementById('schedTime').value = '';
     document.getElementById('schedMessage').value = '';
     document.getElementById('scheduleModal').classList.add('active');
     document.body.style.overflow = 'hidden';
@@ -561,6 +581,18 @@ const RhuleApp = (() => {
 
   async function submitSchedule(e) {
     e.preventDefault();
+    var dateVal = document.getElementById('schedDate').value;
+    var timeVal = document.getElementById('schedTime').value;
+
+    if (isSunday(dateVal)) {
+      showToast('We are closed Sundays. Sundays are by appointment — please WhatsApp us to arrange one.', 'error');
+      return;
+    }
+    if (!isOpenTime(timeVal)) {
+      showToast('Showroom hours are 9:00 AM – 6:00 PM (Mon–Sat). Please pick a time within business hours.', 'error');
+      return;
+    }
+
     var btn = e.target.querySelector('button[type="submit"]');
     btn.disabled = true;
     btn.textContent = 'Submitting...';
@@ -645,6 +677,15 @@ const RhuleApp = (() => {
       scheduleModal.addEventListener('click', function(e) {
         if (e.target.classList.contains('modal-backdrop')) closeScheduleModal();
       });
+      var schedDate = document.getElementById('schedDate');
+      if (schedDate) {
+        schedDate.addEventListener('change', function() {
+          if (isSunday(schedDate.value)) {
+            schedDate.value = '';
+            showToast('We are closed Sundays. Sundays are by appointment — please WhatsApp us to arrange one.', 'error');
+          }
+        });
+      }
     }
   }
 
