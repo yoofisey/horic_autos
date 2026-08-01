@@ -882,7 +882,7 @@ app.get('/sitemap.xml', async (req, res) => {
     xml += '  <url><loc>' + BASE + '/used-pickups-accra.html</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>\n';
     xml += '  <url><loc>' + BASE + '/electric-cars-ghana.html</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>\n';
     vehicles.forEach(v => {
-      xml += '  <url><loc>' + BASE + '/inventory.html?v=' + v.id + '</loc><lastmod>' + (v.updated_at || '').split('T')[0] + '</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>\n';
+      xml += '  <url><loc>' + BASE + '/inventory.html?v=' + v.id + '</loc><lastmod>' + (v.updated_at instanceof Date ? v.updated_at.toISOString().split('T')[0] : String(v.updated_at || '').split('T')[0]) + '</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>\n';
     });
     xml += '</urlset>';
     res.set('Content-Type', 'application/xml');
