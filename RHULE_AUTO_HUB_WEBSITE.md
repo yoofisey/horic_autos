@@ -128,7 +128,6 @@ Rhule Auto Hub is a premium single-dealership website for a Ghanaian car busines
 **Pending / your action:**
 - Custom domain (needs a domain purchase + Railway networking setup)
 - SMTP email (needs a Gmail app password or other SMTP account)
-- Real GA4 Measurement ID (paste into `analytics.js`)
 
 ---
 
@@ -171,12 +170,11 @@ International leaders: **CarMax**, **Autotrader**, **Cars.com**, **Cazoo**. Loca
 
 ### 3.1 Quick wins (low effort, high impact)
 
-1. **Real GA4 Measurement ID** — paste the production `G-` ID into `analytics.js`; conversion events (WhatsApp, Schedule Visit, Send Enquiry, finance submit) then start reporting.
-2. **Trust pages** — ✅ Done (Terms, Privacy, Refund) with footer links and sitemap entries.
-3. **Custom domain + branded email** — e.g. `rhuleautohub.com` and `info@rhuleautohub.com`. Moves the site from a `railway.app` subdomain to a professional presence.
+1. **Google Business Profile** — claim it, add the Nmai Dzorn, Adenta showroom, and link it to GA4/Google Ads for local SEO + call tracking.
+2. **Custom domain + branded email** — e.g. `rhuleautohub.com` and `info@rhuleautohub.com`. Moves the site from a `railway.app` subdomain to a professional presence.
+3. **Real customer reviews** — replace placeholder testimonials with genuine feedback; embed the Google rating widget on the homepage.
 4. **Enable SMTP email** — auto-send: (a) confirmation to the customer when they enquire, (b) alert email to the admin for every enquiry/visit. Keep the in-app bell too.
-5. **Real customer reviews** — replace placeholder testimonials with genuine feedback; add a Google Business Profile and embed the Google rating widget.
-6. **Submit to Google Search Console** — index the sitemap; register Google Business Profile with the Nmai Dzorn, Adenta showroom.
+5. **Submit to Google Search Console** — index the sitemap (already at `/sitemap.xml`); verify the property for `rhuleautohub.com` once the custom domain is live.
 
 ### 3.2 Medium-term (moderate effort, clear ROI)
 
@@ -193,12 +191,12 @@ International leaders: **CarMax**, **Autotrader**, **Cars.com**, **Cazoo**. Loca
 14. **Trade-in valuation tool** — visitors answer a few questions about their current car and get an instant rough offer that feeds a lead to the admin.
 15. **CRM light** — track enquiry → visit → sale as one pipeline in the admin panel (status per lead, follow-up reminders).
 16. **Local SEO landing pages** — ✅ Shipped (SUVs, Sedans, Pickups & Trucks, Electric Cars — Accra/Ghana focused). Expand to more makes/body types as inventory grows.
-17. **Analytics** — ✅ GA4 wrapper + `data-track` conversion events on Call/WhatsApp/Schedule Visit/Send Enquiry/Finance. Only the Measurement ID is pending.
+17. **Analytics** — ✅ GA4 live (`G-QR9DP6E1G6`) + `data-track` conversion events on Call/WhatsApp/Schedule Visit/Send Enquiry/Finance. Retargeting and Google Ads linking are next.
 18. **Testimonial capture** — post-sale, send buyers a WhatsApp/SMS link to leave a 5-star review (feeds Google + the site).
 
 ### 3.4 Prioritised recommendation
 
-> **Do first:** real GA4 Measurement ID, Google Business Profile, custom domain + SMTP email.
+> **Do first:** Google Business Profile, custom domain + SMTP email.
 > **Do next:** saved searches, video walkarounds, review capture, trade-in tool.
 > **Then consider:** deposit/reservation via MoMo, lead pipeline CRM.
 
