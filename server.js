@@ -77,6 +77,15 @@ function genId() {
   return 'v' + Date.now().toString(36) + crypto.randomBytes(3).toString('hex');
 }
 
+// Parse a numeric value from user input, tolerating commas/currency symbols.
+// Returns an integer (or null when blank/invalid) so NaN never reaches the DB.
+function toInt(value) {
+  if (value === null || value === undefined || value === '') return null;
+  const cleaned = String(value).replace(/[^0-9.-]/g, '');
+  const n = Number(cleaned);
+  return Number.isFinite(n) ? Math.round(n) : null;
+}
+
 function genEnqId() {
   return 'e' + Date.now().toString(36) + crypto.randomBytes(3).toString('hex');
 }
@@ -335,7 +344,7 @@ app.post('/api/vehicles', requireAuth, async (req, res) => {
     const imagesJson = JSON.stringify(images);
 
     const [vehicle] = await sql`INSERT INTO vehicles (id, make, model, trim, year, price, condition, status, body_type, fuel, mileage, engine, transmission, color, description, features, images, created_at, updated_at, views, enquiries)
-      VALUES (${id}, ${v.make || ''}, ${v.model || ''}, ${v.trim || ''}, ${Number(v.year) || 2024}, ${Number(v.price) || 0}, ${v.condition || 'new'}, ${v.status || 'in_stock'}, ${v.body_type || 'sedan'}, ${v.fuel || 'petrol'}, ${Number(v.mileage) || 0}, ${v.engine || ''}, ${v.transmission || 'automatic'}, ${v.color || ''}, ${v.description || ''}, ${featuresJson}::jsonb, ${imagesJson}::jsonb, ${now}::timestamptz, ${now}::timestamptz, 0, 0)
+      VALUES (${id}, ${v.make || ''}, ${v.model || ''}, ${v.trim || ''}, ${toInt(v.year) || 2024}, ${toInt(v.price) || 0}, ${v.condition || 'new'}, ${v.status || 'in_stock'}, ${v.body_type || 'sedan'}, ${v.fuel || 'petrol'}, ${toInt(v.mileage) || 0}, ${v.engine || ''}, ${v.transmission || 'automatic'}, ${v.color || ''}, ${v.description || ''}, ${featuresJson}::jsonb, ${imagesJson}::jsonb, ${now}::timestamptz, ${now}::timestamptz, 0, 0)
       RETURNING *`;
 
     // Auto-embed into knowledge base
@@ -360,19 +369,19 @@ app.put('/api/vehicles/:id', requireAuth, async (req, res) => {
     if (!existing) return res.status(404).json({ error: 'Vehicle not found' });
 
     const [vehicle] = await sql`UPDATE vehicles SET
-      make = ${v.make}, model = ${v.model}, trim = ${v.trim || ''}, year = ${Number(v.year)}, price = ${Number(v.price)},
+      make = ${v.make}, model = ${v.model}, trim = ${v.trim || ''}, year = ${toInt(v.year)}, price = ${toInt(v.price)},
       condition = ${v.condition}, status = ${v.status}, body_type = ${v.body_type},
-      fuel = ${v.fuel}, mileage = ${Number(v.mileage)}, engine = ${v.engine},
+      fuel = ${v.fuel}, mileage = ${toInt(v.mileage)}, engine = ${v.engine},
       transmission = ${v.transmission}, color = ${v.color}, description = ${v.description},
       features = ${featuresJson}::jsonb, images = ${imagesJson}::jsonb,
-      sold_price = ${v.sold_price ? Number(v.sold_price) : null},
+      sold_price = ${toInt(v.sold_price)},
       sold_date = ${v.sold_date || null}, sold_to = ${v.sold_to || null},
       updated_at = ${now}::timestamptz
       WHERE id = ${req.params.id}
       RETURNING *`;
 
     if (existing.status !== 'sold' && vehicle.status === 'sold') {
-      addNotification('sale', existing.make + ' ' + existing.model + ' (' + existing.year + ') marked as sold', 'Recorded as sold at GHS ' + (v.sold_price ? Number(v.sold_price).toLocaleString() : vehicle.price));
+      addNotification('sale', existing.make + ' ' + existing.model + ' (' + existing.year + ') marked as sold', 'Recorded as sold at GHS ' + (vehicle.sold_price ? Number(vehicle.sold_price).toLocaleString() : vehicle.price));
     }
 
     // Re-embed updated vehicle

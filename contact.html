@@ -118,6 +118,24 @@
               <p><a href="tel:+233538861301" style="color: var(--green-400);">+233 53 886 1301</a></p>
             </div>
           </div>
+          <div class="location-detail">
+            <div class="location-detail-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
+            </div>
+            <div>
+              <strong>Visit our showroom</strong>
+              <p>Nmai Dzorn, Adenta, Accra — Greater Accra, Ghana</p>
+            </div>
+          </div>
+          <div class="location-detail">
+            <div class="location-detail-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            </div>
+            <div>
+              <strong>Opening hours</strong>
+              <p>Mon – Sat: 9:00 AM – 6:00 PM<br>Sunday: By appointment</p>
+            </div>
+          </div>
         </div>
       </div>
       <form class="contact-form" id="enquiryForm" onsubmit="return handleEnquiry(event)">
@@ -160,6 +178,44 @@
   </div>
 </section>
 
+<section class="section" id="showroom" style="background: var(--white);">
+  <div class="container">
+    <div class="section-header reveal">
+      <div class="section-eyebrow">Visit Us</div>
+      <h2 class="section-title">Our Showroom</h2>
+      <p class="section-subtitle">Come see our vehicles in person. We're located in Nmai Dzorn, Adenta — Accra, and open Monday to Saturday.</p>
+    </div>
+    <div class="showroom-grid">
+      <div class="showroom-map">
+        <iframe
+          src="https://www.google.com/maps?q=5.6732639,-0.1122468&z=16&output=embed"
+          width="100%" height="100%" allowfullscreen loading="lazy"
+          referrerpolicy="no-referrer-when-downgrade"
+          title="Rhule Auto Hub Showroom Location"></iframe>
+      </div>
+      <div class="showroom-info">
+        <h3>Rhule Auto Hub Showroom</h3>
+        <div class="showroom-info-block">
+          <div class="label">Address</div>
+          <div class="value">Nmai Dzorn, Adenta<br>Accra, Greater Accra Region, Ghana</div>
+        </div>
+        <div class="showroom-info-block">
+          <div class="label">Hours</div>
+          <div class="value">Monday – Saturday: 9:00 AM – 6:00 PM<br>Sunday: By appointment</div>
+        </div>
+        <div class="showroom-info-block">
+          <div class="label">Phone / WhatsApp</div>
+          <a href="tel:+233538861301" style="color:var(--green-400); font-weight:600;">+233 53 886 1301</a>
+        </div>
+        <div class="showroom-actions">
+          <a class="btn btn-primary" href="https://www.google.com/maps/dir/?api=1&destination=5.6732639,-0.1122468" target="_blank">Get Directions</a>
+          <button class="btn btn-outline" onclick="RhuleApp.openScheduleModal()">Schedule a Visit</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
 <footer class="site-footer">
   <div class="container">
     <div class="footer-grid">
@@ -192,6 +248,15 @@
           <li><a href="https://wa.me/233538861301">WhatsApp</a></li>
           <li><a href="mailto:info@rhuleautohub.com">Email Us</a></li>
           <li><a href="contact.html">Contact Us</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h4>Visit Us</h4>
+        <ul>
+          <li>Nmai Dzorn, Adenta</li>
+          <li>Accra, Greater Accra, Ghana</li>
+          <li>Mon – Sat: 9am – 6pm</li>
+          <li><a href="https://www.google.com/maps/dir/?api=1&destination=5.6732639,-0.1122468" target="_blank">Get Directions</a></li>
         </ul>
       </div>
     </div>

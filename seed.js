@@ -11,7 +11,7 @@ const KB_ENTRIES = [
     type: "business"
   },
   {
-    content: "Rhule Auto Hub Location & Contact: We are located in Accra, Ghana. WhatsApp us at +233 53 886 1301 for enquiries. You can also reach us via our website live chat. Our working hours are Monday to Saturday, 8:00 AM to 6:00 PM. Sundays by appointment only.",
+    content: "Rhule Auto Hub Showroom Location & Contact: Our showroom is located at Nmai Dzorn, Adenta, Accra — Greater Accra Region, Ghana. You can find us on Google Maps (search 'Rhule Auto Hub') or get directions via this link: https://maps.app.goo.gl/wejmxGyTtvDCp1aj9. WhatsApp us at +233 53 886 1301 for enquiries. Working hours are Monday to Saturday, 9:00 AM to 6:00 PM. Sundays by appointment only. Customers are welcome to visit the showroom to view vehicles in person before purchase.",
     type: "business"
   },
   {

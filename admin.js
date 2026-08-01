@@ -6,6 +6,10 @@ const RhuleAdmin = (() => {
 
   function formatPrice(n) { return n == null ? '—' : 'GHS ' + Number(n).toLocaleString('en-US'); }
 
+  // Keep numbers as sanitized strings so JSON never carries NaN/undefined;
+  // the server parses them with toInt().
+  function numStr(v) { return String(v == null ? '' : v).replace(/[^\d.-]/g, ''); }
+
   async function api(path, opts) {
     opts = opts || {};
     const headers = { 'Content-Type': 'application/json' };
@@ -421,11 +425,11 @@ const RhuleAdmin = (() => {
       make: document.getElementById('vf-make').value,
       model: document.getElementById('vf-model').value,
       trim: document.getElementById('vf-trim').value,
-      year: Number(document.getElementById('vf-year').value),
-      price: Number(document.getElementById('vf-price').value),
+      year: numStr(document.getElementById('vf-year').value),
+      price: numStr(document.getElementById('vf-price').value),
       body_type: document.getElementById('vf-body').value,
       fuel: document.getElementById('vf-fuel').value,
-      mileage: Number(document.getElementById('vf-mileage').value),
+      mileage: numStr(document.getElementById('vf-mileage').value),
       engine: document.getElementById('vf-engine').value,
       transmission: document.getElementById('vf-transmission').value,
       color: document.getElementById('vf-color').value,
@@ -464,7 +468,7 @@ const RhuleAdmin = (() => {
     try {
       await api('/api/vehicles/' + id, { method: 'PUT', body: JSON.stringify({
         status: 'sold',
-        sold_price: Number(price),
+        sold_price: numStr(price),
         sold_date: new Date().toISOString().slice(0, 10),
         sold_to: to
       })});

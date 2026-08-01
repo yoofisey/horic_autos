@@ -1687,7 +1687,18 @@ select.form-control option { background: var(--white); }
 
 .contact-ai-section { padding: 80px 0; }
 
+.showroom-grid { display: grid; grid-template-columns: 1.4fr 1fr; gap: 32px; align-items: stretch; }
+.showroom-map { border-radius: var(--radius-lg); overflow: hidden; border: 1px solid var(--gray-200); min-height: 340px; }
+.showroom-map iframe { display: block; border: 0; width: 100%; height: 100%; min-height: 340px; }
+.showroom-info { background: var(--gray-50); border: 1px solid var(--gray-200); border-radius: var(--radius-lg); padding: 28px; }
+.showroom-info h3 { font-size: 1.1rem; margin-bottom: 16px; color: var(--gray-900); }
+.showroom-info-block { margin-bottom: 14px; }
+.showroom-info-block .label { font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: var(--gray-500); margin-bottom: 4px; }
+.showroom-info-block .value { color: var(--gray-700); font-size: 0.9rem; line-height: 1.5; }
+.showroom-actions { display: flex; gap: 10px; flex-wrap: wrap; }
+
 @media (max-width: 800px) {
+  .showroom-grid { grid-template-columns: 1fr; }
   .contact-cards-grid { grid-template-columns: repeat(2, 1fr); }
   .location-grid { grid-template-columns: 1fr; gap: 40px; }
   .contact-hero { padding: 120px 0 60px; }
