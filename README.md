@@ -9,4 +9,4 @@ Custom car-dealership website for the Ghana market, fully rebranded from the ori
 - **Stack:** Node.js/Express, Neon Postgres, OpenAI (RAG + chat), Cloudinary, vanilla HTML/CSS/JS, Railway (auto-deploy from GitHub)
 - **Admin:** admin.html (login: admin@accelerenmotors.com)
 
-See `RHULE_AUTO_HUB_WEBSITE.md` for the full website documentation and strategic review.
+See `ACCELEREN_MOTORS_WEBSITE.md` for the full website documentation and strategic review.

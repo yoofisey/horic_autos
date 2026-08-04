@@ -20,7 +20,7 @@ Acceleren Motors GH Ltd is a premium single-dealership website for a Ghanaian ca
 |---|---|
 | Business name | Acceleren Motors GH Ltd |
 | Tagline | Ghana's trusted partner for quality vehicles |
-| Logo | Orange/black Acceleren logo (file: `acceleren.jpg`) |
+| Logo | Orange/black Acceleren logo — `acceleren.jpg` (header/footer/OG) + `acceleren.png` (favicon) |
 | Primary colour | Orange `#FF6A00` |
 | Accent | Orange `#FF8A1F` |
 | Amber highlight | `#FFB13B` |
