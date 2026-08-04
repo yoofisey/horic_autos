@@ -56,7 +56,7 @@ function escHtml(s) {
 
 function emailShell(inner) {
   return '<div style="font-family:Arial,sans-serif;max-width:560px;margin:0 auto;color:#1a1a1a;line-height:1.5">'
-    + '<h2 style="font-family:Georgia,serif;color:#C9242B;margin:0 0 16px;">Acceleren Motors GH Ltd</h2>'
+    + '<h2 style="font-family:Georgia,serif;color:#FF6A00;margin:0 0 16px;">Acceleren Motors GH Ltd</h2>'
     + inner
     + '<hr style="border:none;border-top:1px solid #eee;margin:24px 0 12px;">'
     + '<p style="color:#888;font-size:12px;">Mon–Sat 9am–6pm · Sundays by appointment<br>Phone/WhatsApp: +233 53 262 7932 · info@accelerenmotors.com</p>'
@@ -68,8 +68,8 @@ function buildEnquiryConfirmation(e) {
   return emailShell(
     '<p>Hello <strong>' + escHtml(e.customer_name) + '</strong>,</p>'
     + '<p>Thank you for contacting <strong>Acceleren Motors GH Ltd</strong>. We have received your enquiry and a member of our team will get back to you shortly.</p>'
-    + '<p style="border-left:3px solid #C9242B;padding:10px 14px;background:#f9f9f9;color:#555;">' + escHtml(e.message) + '</p>'
-    + '<p>Want a faster answer? Message us on WhatsApp: <a href="https://wa.me/233532627932" style="color:#C9242B;">+233 53 262 7932</a></p>'
+    + '<p style="border-left:3px solid #FF6A00;padding:10px 14px;background:#f9f9f9;color:#555;">' + escHtml(e.message) + '</p>'
+    + '<p>Want a faster answer? Message us on WhatsApp: <a href="https://wa.me/233532627932" style="color:#FF6A00;">+233 53 262 7932</a></p>'
     + '<p style="color:#888;font-size:12px;">This is an automated confirmation. Please reply to the team member who contacts you.</p>'
   );
 }
@@ -78,11 +78,11 @@ function buildEnquiryConfirmation(e) {
 function buildEnquiryAlert(e) {
   return emailShell(
     '<p><strong>New enquiry</strong> received on the website.</p>'
-    + '<p style="border-left:3px solid #C9242B;padding:10px 14px;background:#f9f9f9;color:#555;">' + escHtml(e.message) + '</p>'
+    + '<p style="border-left:3px solid #FF6A00;padding:10px 14px;background:#f9f9f9;color:#555;">' + escHtml(e.message) + '</p>'
     + '<p><strong>Name:</strong> ' + escHtml(e.customer_name) + '<br>'
     + '<strong>Phone:</strong> ' + escHtml(e.customer_phone) + '<br>'
     + '<strong>Email:</strong> ' + escHtml(e.customer_email || '—') + '</p>'
-    + '<p>Reply from the admin panel, or open WhatsApp: <a href="https://wa.me/233532627932" style="color:#C9242B;">+233 53 262 7932</a></p>'
+    + '<p>Reply from the admin panel, or open WhatsApp: <a href="https://wa.me/233532627932" style="color:#FF6A00;">+233 53 262 7932</a></p>'
   );
 }
 
@@ -91,11 +91,11 @@ function buildVisitConfirmation(v, vehicleLabel) {
   return emailShell(
     '<p>Hello <strong>' + escHtml(v.customer_name) + '</strong>,</p>'
     + '<p>Thanks for booking a visit to <strong>Acceleren Motors GH Ltd</strong>. Here is what we have on file:</p>'
-    + '<p style="border-left:3px solid #C9242B;padding:10px 14px;background:#f9f9f9;color:#555;">'
+    + '<p style="border-left:3px solid #FF6A00;padding:10px 14px;background:#f9f9f9;color:#555;">'
     + '<strong>Date:</strong> ' + escHtml(v.preferred_date) + '<br>'
     + '<strong>Time:</strong> ' + escHtml(v.preferred_time || 'during business hours') + '<br>'
     + (vehicleLabel ? '<strong>Vehicle:</strong> ' + escHtml(vehicleLabel) + '<br>' : '')
-    + '<p>Our team will confirm your appointment. If you need to change or cancel, WhatsApp us at <a href="https://wa.me/233532627932" style="color:#C9242B;">+233 53 262 7932</a>.</p>'
+    + '<p>Our team will confirm your appointment. If you need to change or cancel, WhatsApp us at <a href="https://wa.me/233532627932" style="color:#FF6A00;">+233 53 262 7932</a>.</p>'
     + '<p style="color:#888;font-size:12px;">Business hours: Mon–Sat 9am–6pm, Sundays by appointment.</p>'
   );
 }
@@ -104,7 +104,7 @@ function buildVisitConfirmation(v, vehicleLabel) {
 function buildVisitAlert(v, vehicleLabel) {
   return emailShell(
     '<p><strong>New visit request</strong> from the website.</p>'
-    + '<p style="border-left:3px solid #C9242B;padding:10px 14px;background:#f9f9f9;color:#555;">'
+    + '<p style="border-left:3px solid #FF6A00;padding:10px 14px;background:#f9f9f9;color:#555;">'
     + '<strong>Date:</strong> ' + escHtml(v.preferred_date) + '<br>'
     + '<strong>Time:</strong> ' + escHtml(v.preferred_time || '—') + '<br>'
     + (vehicleLabel ? '<strong>Vehicle:</strong> ' + escHtml(vehicleLabel) + '<br>' : '')

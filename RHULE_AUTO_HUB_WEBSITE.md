@@ -1,10 +1,10 @@
-# Rhule Auto Hub — Website Documentation & Strategic Review
+# Acceleren Motors GH Ltd — Website Documentation & Strategic Review
 
-**Version:** 1.1
+**Version:** 1.2
 **Date:** August 2026
 **Live URL:** https://gallant-passion-production-680f.up.railway.app
 **Repository:** https://github.com/yoofisey/horic_autos.git
-**Business:** Car dealership — Accra, Ghana (physical showroom)
+**Business:** Car dealership — Accra, Ghana
 
 ---
 
@@ -12,39 +12,41 @@
 
 ### 1.1 Overview
 
-Rhule Auto Hub is a premium single-dealership website for a Ghanaian car business. It combines a polished public storefront with a full back-office admin panel, an AI car-shopping assistant, and lead-management tooling. The site is live in production and is fully custom-built (no website-builder templates).
+Acceleren Motors GH Ltd is a premium single-dealership website for a Ghanaian car business. It combines a polished public storefront with a full back-office admin panel, an AI car-shopping assistant, and lead-management tooling. The site is live in production and is fully custom-built (no website-builder templates).
 
 ### 1.2 Brand & Visual Identity
 
 | Element | Detail |
 |---|---|
-| Business name | Rhule Auto Hub |
+| Business name | Acceleren Motors GH Ltd |
 | Tagline | Ghana's trusted partner for quality vehicles |
-| Logo | Black / white / crimson logo (file: `horic.png`) |
-| Primary colour | Crimson red `#C9242B` |
-| Dark variant | `#A01D23` |
-| Red scale | `#FEF2F2` → `#400B0E` (50→900) |
+| Logo | Orange/black Acceleren logo (file: `acceleren.jpg`) |
+| Primary colour | Orange `#FF6A00` |
+| Accent | Orange `#FF8A1F` |
+| Amber highlight | `#FFB13B` |
+| Deep orange | `#E65100` |
+| Dark / light | Black `#000000` / White `#FFFFFF` |
 | Dark surfaces | `--dark-900: #121212`, `--dark-800: #1f1f1f` |
 | Fonts | DM Serif Display (headings), system sans (body) |
-| Contact | +233 53 886 1301 (phone / WhatsApp) |
-| Admin login | admin@rhuleautohub.com (password changeable in Settings) |
+| Contact | +233 53 262 7932 (phone / WhatsApp) |
+| Admin login | admin@accelerenmotors.com (password changeable in Settings) |
 
 ### 1.3 Public Website — Pages & Features
 
 | Page | Features |
 |---|---|
-| **Home** (`index.html`) | Hero, Why Rhule Auto Hub, Featured Collection, testimonials, Rhule AI advisor section, schedule-visit modal, WhatsApp float button |
+| **Home** (`index.html`) | Hero, Why Acceleren Motors, Featured Collection, testimonials, Acceleren AI advisor section, schedule-visit modal, WhatsApp float button |
 | **Inventory** (`inventory.html`) | Search, filters (make, model, body type, fuel, price, mileage), sort, favourites (heart), side-by-side vehicle comparison, vehicle detail view with photo gallery, share links, per-vehicle view counters, finance calculator, JSON-LD structured data |
-| **Contact** (`contact.html`) | Enquiry form (name, phone, email, message), phone/WhatsApp links, AI advisor CTA, showroom map + hours + directions |
+| **Contact** (`contact.html`) | Enquiry form (name, phone, email, message), phone/WhatsApp links, AI advisor CTA, WhatsApp / Instagram / Facebook / Snapchat links |
 | **Finance Calculator** | On the inventory page: deposit %, rate, term → monthly payment, total interest, one-tap WhatsApp financing enquiry. Also linked from every vehicle detail modal ("Estimate my monthly payment") |
 | **Trust pages** | `terms.html`, `privacy.html`, `refund.html` (deposits, imports, warranty, hire purchase terms) — linked from the footer |
 | **Local SEO pages** | `used-suvs-accra.html`, `used-sedans-accra.html`, `used-pickups-accra.html`, `electric-cars-ghana.html` — live-filtered inventory, AutoDealer + Breadcrumb JSON-LD, WhatsApp CTA. Listed in the footer, sitemap, and robots.txt |
 | **404** (`404.html`) | Branded not-found page |
 | **Global** | Sticky nav + footer across pages, mobile responsive, lazy-loaded images, loading skeletons, GA4 conversion tracking (`analytics.js`) |
 
-> **Showroom:** Nmai Dzorn, Adenta, Accra — postal `GD-110-6313`, geo `5.6732639, -0.1122468`, open Mon–Sat 09:00–18:00. Displayed on the Contact page with a Google Maps embed and "Get Directions" links in the footer of every page.
+> **Location:** No showroom is published on the site (removed in the rebrand). Contact is by phone / WhatsApp / email; visiting hours Mon–Sat 09:00–18:00, Sunday by appointment.
 
-### 1.4 Rhule AI — AI Car Advisor Chatbot
+### 1.4 Acceleren AI — AI Car Advisor Chatbot
 
 - Floating chat widget available site-wide.
 - **RAG pipeline:** knowledge-base entries (FAQs, policies, vehicle specs) are embedded with OpenAI `text-embedding-3-small` and retrieved by similarity for each question.
@@ -123,11 +125,11 @@ Rhule Auto Hub is a premium single-dealership website for a Ghanaian car busines
 
 ### 1.11 Current Status
 
-**Complete:** branding, public site, inventory, AI advisor, enquiries + replies, visit scheduling, dashboard, notifications, admin accounts, image hosting, rate limiting, finance calculator, trust pages, GA4 conversion tracking, local SEO landing pages, SEO foundation, showroom details + map.
+**Complete:** rebrand to Acceleren Motors GH Ltd, public site, inventory, AI advisor, enquiries + replies, visit scheduling, dashboard, notifications, admin accounts, image hosting, rate limiting, finance calculator, trust pages, GA4 conversion tracking, local SEO landing pages, SEO foundation, WhatsApp-first contact without a published showroom.
 
 **Pending / your action:**
 - Custom domain (needs a domain purchase + Railway networking setup)
-- SMTP email (needs a Gmail app password or other SMTP account)
+- SMTP email (needs an SMTP account for info@accelerenmotors.com; set SMTP_HOST/SMTP_PORT/SMTP_USER/SMTP_PASS/SMTP_NOTIFY_TO on Railway)
 
 ---
 
@@ -139,14 +141,14 @@ International leaders: **CarMax**, **Autotrader**, **Cars.com**, **Cazoo**. Loca
 
 ### 2.2 Feature comparison
 
-| Feature | Top global sites | Rhule Auto Hub | Status |
+| Feature | Top global sites | Acceleren Motors GH Ltd | Status |
 |---|---|---|---|
 | Search + multi-filter inventory | Yes | Yes | ✅ Match |
 | Vehicle detail pages (VDP) with gallery | Yes | Yes | ✅ Match |
 | Transparent pricing | Yes | Yes (price always shown) | ✅ Match |
 | Save favourites / shortlist | Yes | Yes (heart icon) | ✅ Match |
 | Side-by-side compare | Yes | Yes | ✅ Match |
-| AI shopping assistant | Emerging (2026) | Yes (Rhule AI) | 🚀 Ahead |
+| AI shopping assistant | Emerging (2026) | Yes (Acceleren AI) | 🚀 Ahead |
 | Book a test drive online | Yes | Yes (Schedule Visit) | ✅ Match |
 | Live chat / instant contact | Yes | AI chat + WhatsApp float | ✅ Match |
 | WhatsApp lead channel | Rare (US) | Yes | ✅ Local edge |
@@ -155,14 +157,14 @@ International leaders: **CarMax**, **Autotrader**, **Cars.com**, **Cazoo**. Loca
 | Saved searches + email alerts | Yes | No | ❌ Gap |
 | Customer reviews / Google rating widget | Yes | Testimonials only (static) | ⚠️ Partial |
 | Video listings / 360° walkaround | Yes | No | ❌ Gap |
-| Showroom location + hours + map | Yes | Yes (Contact page + footer directions) | ✅ Match |
+| Showroom location + hours + map | Yes | No (deliberately removed in rebrand) | ⚠️ Partial |
 | Trust pages (Terms/Privacy/Returns) | Yes | Yes (Terms, Privacy, Refund) | ✅ Match |
 | Blog / educational content | Yes | Removed | ❌ Gap |
 | Email lead notifications | Yes | In-app only (SMTP not set) | ⚠️ Partial |
 | Local SEO pages (city/area) | Yes | Yes (4 landing pages, live-filtered inventory) | ✅ Match |
-| Analytics / conversion tracking | Yes | GA4 + data-track events (ID pending) | ✅ Match |
+| Analytics / conversion tracking | Yes | GA4 live (`G-QR9DP6E1G6`) + data-track events | ✅ Match |
 
-**Bottom line:** Rhule Auto Hub now outranks most Ghanaian competitors on design, AI assistance, structured inventory, trust content, and local SEO. Remaining gaps are reach items (blog, reviews), conversion aids (trade-in, saved searches), and email automation.
+**Bottom line:** Acceleren Motors GH Ltd now outranks most Ghanaian competitors on design, AI assistance, structured inventory, trust content, and local SEO. Remaining gaps are reach items (blog, reviews), conversion aids (trade-in, saved searches), and email automation.
 
 ---
 
@@ -170,11 +172,11 @@ International leaders: **CarMax**, **Autotrader**, **Cars.com**, **Cazoo**. Loca
 
 ### 3.1 Quick wins (low effort, high impact)
 
-1. **Google Business Profile** — claim it, add the Nmai Dzorn, Adenta showroom, and link it to GA4/Google Ads for local SEO + call tracking.
-2. **Custom domain + branded email** — e.g. `rhuleautohub.com` and `info@rhuleautohub.com`. Moves the site from a `railway.app` subdomain to a professional presence.
+1. **Google Business Profile** — claim it, add the business location, and link it to GA4/Google Ads for local SEO + call tracking.
+2. **Custom domain + branded email** — e.g. `accelerenmotors.com` and `info@accelerenmotors.com`. Moves the site from a `railway.app` subdomain to a professional presence.
 3. **Real customer reviews** — replace placeholder testimonials with genuine feedback; embed the Google rating widget on the homepage.
 4. **Enable SMTP email** — auto-send: (a) confirmation to the customer when they enquire, (b) alert email to the admin for every enquiry/visit. Keep the in-app bell too.
-5. **Submit to Google Search Console** — index the sitemap (already at `/sitemap.xml`); verify the property for `rhuleautohub.com` once the custom domain is live.
+5. **Submit to Google Search Console** — index the sitemap (already at `/sitemap.xml`); verify the property for `accelerenmotors.com` once the custom domain is live.
 
 ### 3.2 Medium-term (moderate effort, clear ROI)
 

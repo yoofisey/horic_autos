@@ -120,7 +120,7 @@ const RhuleAdmin = (() => {
         api('/api/stats/monthly-sold'),
         api('/api/stats/enquiry-trend')
       ]);
-      const colors = ['#C9242B','#A01D23','#2970ff','#f79009','#039855','#9b8afb','#dd2590','#175cd3'];
+      const colors = ['#FF6A00','#E65100','#2970ff','#f79009','#039855','#9b8afb','#dd2590','#175cd3'];
       var bodyCtx = document.getElementById('bodyChart');
       if (bodyCtx) {
         new Chart(bodyCtx, {
@@ -138,7 +138,7 @@ const RhuleAdmin = (() => {
           type: 'bar',
           data: {
             labels: salesData.map(function(d) { return d.month; }),
-            datasets: [{ label: 'Sold', data: salesData.map(function(d) { return d.count; }), backgroundColor: '#C9242B', borderRadius: 4 }]
+            datasets: [{ label: 'Sold', data: salesData.map(function(d) { return d.count; }), backgroundColor: '#FF6A00', borderRadius: 4 }]
           },
           options: { responsive: true, maintainAspectRatio: true, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { stepSize: 1, font: { size: 11 } } }, x: { ticks: { font: { size: 11 } } } } }
         });
