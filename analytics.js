@@ -1,4 +1,4 @@
-// GA4 + conversion tracking for Rhule Auto Hub.
+// GA4 + conversion tracking for Acceleren Motors GH Ltd.
 // Paste your GA4 Measurement ID below (format G-XXXXXXXXXX). Until you do,
 // tracking is disabled and the site behaves normally (no network calls).
 window.GA4_ID = 'G-QR9DP6E1G6';

@@ -27,7 +27,7 @@ const SMTP_HOST = process.env.SMTP_HOST || '';
 const SMTP_PORT = Number(process.env.SMTP_PORT) || 587;
 const SMTP_USER = process.env.SMTP_USER || '';
 const SMTP_PASS = process.env.SMTP_PASS || '';
-const SMTP_FROM = process.env.SMTP_FROM || (SMTP_USER ? SMTP_USER : 'Rhule Auto Hub <no-reply@rhuleautohub.com>');
+const SMTP_FROM = process.env.SMTP_FROM || (SMTP_USER ? SMTP_USER : 'Acceleren Motors GH Ltd <no-reply@accelerenmotors.com>');
 const SMTP_CONFIGURED = !!(SMTP_HOST && SMTP_USER);
 
 async function sendEmail(to, subject, html) {
@@ -45,6 +45,86 @@ async function sendEmail(to, subject, html) {
     console.error('Email error:', err.message);
     return false;
   }
+}
+
+// Admin alerts go to SMTP_NOTIFY_TO (falls back to the sending account).
+const SMTP_NOTIFY_TO = process.env.SMTP_NOTIFY_TO || SMTP_USER;
+
+function escHtml(s) {
+  return String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/\n/g, '<br>');
+}
+
+function emailShell(inner) {
+  return '<div style="font-family:Arial,sans-serif;max-width:560px;margin:0 auto;color:#1a1a1a;line-height:1.5">'
+    + '<h2 style="font-family:Georgia,serif;color:#C9242B;margin:0 0 16px;">Acceleren Motors GH Ltd</h2>'
+    + inner
+    + '<hr style="border:none;border-top:1px solid #eee;margin:24px 0 12px;">'
+    + '<p style="color:#888;font-size:12px;">Mon–Sat 9am–6pm · Sundays by appointment<br>Phone/WhatsApp: +233 53 262 7932 · info@accelerenmotors.com</p>'
+    + '</div>';
+}
+
+// Customer confirmation when a website enquiry is submitted.
+function buildEnquiryConfirmation(e) {
+  return emailShell(
+    '<p>Hello <strong>' + escHtml(e.customer_name) + '</strong>,</p>'
+    + '<p>Thank you for contacting <strong>Acceleren Motors GH Ltd</strong>. We have received your enquiry and a member of our team will get back to you shortly.</p>'
+    + '<p style="border-left:3px solid #C9242B;padding:10px 14px;background:#f9f9f9;color:#555;">' + escHtml(e.message) + '</p>'
+    + '<p>Want a faster answer? Message us on WhatsApp: <a href="https://wa.me/233532627932" style="color:#C9242B;">+233 53 262 7932</a></p>'
+    + '<p style="color:#888;font-size:12px;">This is an automated confirmation. Please reply to the team member who contacts you.</p>'
+  );
+}
+
+// Admin alert when a website enquiry is submitted.
+function buildEnquiryAlert(e) {
+  return emailShell(
+    '<p><strong>New enquiry</strong> received on the website.</p>'
+    + '<p style="border-left:3px solid #C9242B;padding:10px 14px;background:#f9f9f9;color:#555;">' + escHtml(e.message) + '</p>'
+    + '<p><strong>Name:</strong> ' + escHtml(e.customer_name) + '<br>'
+    + '<strong>Phone:</strong> ' + escHtml(e.customer_phone) + '<br>'
+    + '<strong>Email:</strong> ' + escHtml(e.customer_email || '—') + '</p>'
+    + '<p>Reply from the admin panel, or open WhatsApp: <a href="https://wa.me/233532627932" style="color:#C9242B;">+233 53 262 7932</a></p>'
+  );
+}
+
+// Customer confirmation when a visit is booked.
+function buildVisitConfirmation(v, vehicleLabel) {
+  return emailShell(
+    '<p>Hello <strong>' + escHtml(v.customer_name) + '</strong>,</p>'
+    + '<p>Thanks for booking a visit to <strong>Acceleren Motors GH Ltd</strong>. Here is what we have on file:</p>'
+    + '<p style="border-left:3px solid #C9242B;padding:10px 14px;background:#f9f9f9;color:#555;">'
+    + '<strong>Date:</strong> ' + escHtml(v.preferred_date) + '<br>'
+    + '<strong>Time:</strong> ' + escHtml(v.preferred_time || 'during business hours') + '<br>'
+    + (vehicleLabel ? '<strong>Vehicle:</strong> ' + escHtml(vehicleLabel) + '<br>' : '')
+    + '<p>Our team will confirm your appointment. If you need to change or cancel, WhatsApp us at <a href="https://wa.me/233532627932" style="color:#C9242B;">+233 53 262 7932</a>.</p>'
+    + '<p style="color:#888;font-size:12px;">Business hours: Mon–Sat 9am–6pm, Sundays by appointment.</p>'
+  );
+}
+
+// Admin alert when a visit is booked.
+function buildVisitAlert(v, vehicleLabel) {
+  return emailShell(
+    '<p><strong>New visit request</strong> from the website.</p>'
+    + '<p style="border-left:3px solid #C9242B;padding:10px 14px;background:#f9f9f9;color:#555;">'
+    + '<strong>Date:</strong> ' + escHtml(v.preferred_date) + '<br>'
+    + '<strong>Time:</strong> ' + escHtml(v.preferred_time || '—') + '<br>'
+    + (vehicleLabel ? '<strong>Vehicle:</strong> ' + escHtml(vehicleLabel) + '<br>' : '')
+    + '<strong>Message:</strong> ' + escHtml(v.message || '—') + '</p>'
+    + '<p><strong>Name:</strong> ' + escHtml(v.customer_name) + '<br>'
+    + '<strong>Phone:</strong> ' + escHtml(v.customer_phone) + '<br>'
+    + '<strong>Email:</strong> ' + escHtml(v.customer_email || '—') + '</p>'
+    + '<p>Confirm or manage from the admin panel.</p>'
+  );
+}
+
+// Fire customer confirmation + admin alert without blocking the request.
+function sendEnquiryEmails(e) {
+  if (e.customer_email) sendEmail(e.customer_email, 'We received your enquiry — Acceleren Motors GH Ltd', buildEnquiryConfirmation(e));
+  if (SMTP_NOTIFY_TO) sendEmail(SMTP_NOTIFY_TO, 'New enquiry: ' + (e.customer_name || 'Website visitor'), buildEnquiryAlert(e));
+}
+
+function sendVisitEmails(v, vehicleLabel) {
+  if (v.customer_email) sendEmail(v.customer_email, 'Visit request received — Acceleren Motors GH Ltd', buildVisitConfirmation(v, vehicleLabel));
+  if (SMTP_NOTIFY_TO) sendEmail(SMTP_NOTIFY_TO, 'Visit request: ' + (v.customer_name || 'Website visitor') + ' on ' + v.preferred_date, buildVisitAlert(v, vehicleLabel));
 }
 
 // ── RATE LIMITING (DB-backed, survives restarts) ──
@@ -456,7 +536,7 @@ app.post('/api/enquiries', async (req, res) => {
       VALUES (${id}, ${e.vehicle_id || null}, ${e.customer_name || 'Anonymous'}, ${e.customer_phone || ''}, ${e.customer_email || ''}, ${e.message || ''}, 'unread', now())
       RETURNING *`;
     addNotification('enquiry', 'New enquiry from ' + (e.customer_name || 'Anonymous'), (e.message || '').substring(0, 100));
-    // TODO: Send email notification — add SMTP env vars and nodemailer to enable
+    sendEnquiryEmails(enquiry);
     res.json(enquiry);
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -505,7 +585,7 @@ app.post('/api/enquiries/:id/send-email', requireAuth, async (req, res) => {
     if (!enq.customer_email) return res.status(400).json({ error: 'No email address on file for this enquiry' });
 
     const html = '<p>' + String(body || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/\n/g, '<br>') + '</p>';
-    const sent = await sendEmail(enq.customer_email, String(subject || 'Re: Your Rhule Auto Hub Enquiry'), html);
+    const sent = await sendEmail(enq.customer_email, String(subject || 'Re: Your Acceleren Motors GH Ltd Enquiry'), html);
     if (!sent) return res.status(400).json({ error: 'Email sending is not configured. Set the SMTP_* env vars to enable it.' });
     res.json({ ok: true, to: enq.customer_email });
   } catch (err) {
@@ -521,7 +601,7 @@ app.post('/api/visits', async (req, res) => {
       return res.status(400).json({ error: 'Name, phone, and preferred date are required' });
     }
 
-    // Showroom hours: Mon–Sat 09:00–18:00, Sunday by appointment only.
+    // Business hours: Mon–Sat 09:00–18:00, Sunday by appointment only.
     const d = new Date(v.preferred_date + 'T12:00:00Z');
     if (isNaN(d.getTime())) {
       return res.status(400).json({ error: 'Invalid preferred date' });
@@ -538,7 +618,7 @@ app.post('/api/visits', async (req, res) => {
       const tp = String(v.preferred_time).split(':');
       const mins = parseInt(tp[0], 10) * 60 + parseInt(tp[1], 10);
       if (isNaN(mins) || mins < 9 * 60 || mins > 18 * 60) {
-        return res.status(400).json({ error: 'Showroom hours are 9:00 AM – 6:00 PM (Mon–Sat)' });
+        return res.status(400).json({ error: 'Business hours are 9:00 AM – 6:00 PM (Mon–Sat)' });
       }
     }
 
@@ -547,6 +627,12 @@ app.post('/api/visits', async (req, res) => {
       VALUES (${id}, ${v.customer_name}, ${v.customer_phone}, ${v.customer_email || ''}, ${v.preferred_date}, ${v.preferred_time || ''}, ${v.message || ''}, ${v.vehicle_id || null}, 'pending')
       RETURNING *`;
     addNotification('visit', 'Visit scheduled by ' + v.customer_name, (v.customer_name || '') + ' wants to view a vehicle on ' + v.preferred_date + (v.preferred_time ? ' at ' + v.preferred_time : ''));
+    let vehicleLabel = '';
+    if (v.vehicle_id) {
+      const [veh] = await sql`SELECT make, model, year FROM vehicles WHERE id = ${v.vehicle_id}`;
+      if (veh) vehicleLabel = veh.year + ' ' + veh.make + ' ' + veh.model;
+    }
+    sendVisitEmails(visit, vehicleLabel);
     res.json(visit);
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -767,7 +853,7 @@ app.post('/api/knowledge/sync-vehicles', requireAuth, async (req, res) => {
 });
 
 // ── CHATBOT (RAG + Gemini) ──
-const SYSTEM_PROMPT = `You are the AI Car Advisor for Rhule Auto Hub, Ghana's premier car dealership based in Accra.
+const SYSTEM_PROMPT = `You are the AI Car Advisor for Acceleren Motors GH Ltd, Ghana's premier car dealership based in Accra.
 
 ## Your Role
 You help customers find the right vehicle, estimate running costs, compare cars, and answer questions about buying/owning a car in Ghana. Be warm, knowledgeable, and concise.
@@ -966,6 +1052,6 @@ if (require.main === module) {
   )`.catch(e => console.error('Visit schedules table creation warning:', e.message));
 
   app.listen(PORT, () => {
-    console.log('Rhule Auto Hub running at http://localhost:' + PORT);
+    console.log('Acceleren Motors GH Ltd running at http://localhost:' + PORT);
   });
 }

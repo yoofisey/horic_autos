@@ -262,9 +262,9 @@ const RhuleAdmin = (() => {
         var phone = enq.customer_phone || '';
         var email = enq.customer_email || '';
         var waLink = phone ? 'https://wa.me/' + phone.replace(/^0/, '233') : '#';
-        var waMsg = encodeURIComponent('Hello ' + (enq.customer_name || 'there') + ', thank you for your enquiry at Rhule Auto Hub. ' + (enq.message ? 'Re: "' + enq.message.substring(0, 60) + '"' : '') + '\n\nHow can we assist you further?');
-        var mailSubject = encodeURIComponent('Re: Your Rhule Auto Hub Enquiry');
-        var mailBody = encodeURIComponent('Dear ' + (enq.customer_name || 'Customer') + ',\n\nThank you for reaching out to Rhule Auto Hub.\n\n' + (enq.message ? 'Regarding your enquiry: "' + enq.message.substring(0, 100) + '"\n\n' : '') + 'We would be happy to assist you. Please feel free to contact us or visit our showroom.\n\nBest regards,\nRhule Auto Hub\n+233 53 886 1301');
+        var waMsg = encodeURIComponent('Hello ' + (enq.customer_name || 'there') + ', thank you for your enquiry at Acceleren Motors GH Ltd. ' + (enq.message ? 'Re: "' + enq.message.substring(0, 60) + '"' : '') + '\n\nHow can we assist you further?');
+        var mailSubject = encodeURIComponent('Re: Your Acceleren Motors GH Ltd Enquiry');
+        var mailBody = encodeURIComponent('Dear ' + (enq.customer_name || 'Customer') + ',\n\nThank you for reaching out to Acceleren Motors GH Ltd.\n\n' + (enq.message ? 'Regarding your enquiry: "' + enq.message.substring(0, 100) + '"\n\n' : '') + 'We would be happy to assist you. Please feel free to contact us.\n\nBest regards,\nAcceleren Motors GH Ltd\n+233 53 262 7932');
 
         return '<div class="enquiry-card ' + statusClass + '">' +
           '<div class="enquiry-top">' +
@@ -921,8 +921,8 @@ const RhuleAdmin = (() => {
   async function sendEmailReply(id) {
     var enq = enquiriesCache.find(function(e) { return e.id === id; });
     if (!enq || !enq.customer_email) { toast('No email address on file for this enquiry', 'error'); return; }
-    var subject = 'Re: Your Rhule Auto Hub Enquiry';
-    var body = 'Dear ' + (enq.customer_name || 'Customer') + ',\n\nThank you for reaching out to Rhule Auto Hub.\n\n' + (enq.message ? 'Regarding your enquiry: "' + enq.message.substring(0, 100) + '"\n\n' : '') + 'We would be happy to assist you. Please feel free to contact us or visit our showroom.\n\nBest regards,\nRhule Auto Hub\n+233 53 886 1301';
+    var subject = 'Re: Your Acceleren Motors GH Ltd Enquiry';
+    var body = 'Dear ' + (enq.customer_name || 'Customer') + ',\n\nThank you for reaching out to Acceleren Motors GH Ltd.\n\n' + (enq.message ? 'Regarding your enquiry: "' + enq.message.substring(0, 100) + '"\n\n' : '') + 'We would be happy to assist you. Please feel free to contact us.\n\nBest regards,\nAcceleren Motors GH Ltd\n+233 53 262 7932';
     try {
       await api('/api/enquiries/' + id + '/send-email', { method: 'POST', body: JSON.stringify({ subject: subject, body: body }) });
       toast('Email sent to ' + enq.customer_email, 'success');

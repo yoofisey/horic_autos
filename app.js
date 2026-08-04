@@ -166,10 +166,10 @@ const RhuleApp = (() => {
         var textEl = document.getElementById('noResultsText');
         if (make && model && titleEl) {
           titleEl.textContent = 'No ' + make + ' ' + model + ' found';
-          textEl.textContent = 'We don\'t currently have any ' + make + ' ' + model + ' in our inventory. Try browsing other models or let our Rhule AI help.';
+          textEl.textContent = 'We don\'t currently have any ' + make + ' ' + model + ' in our inventory. Try browsing other models or let our Acceleren AI help.';
         } else if (make && titleEl) {
           titleEl.textContent = 'No ' + make + ' vehicles found';
-          textEl.textContent = 'We don\'t currently have any ' + make + ' vehicles in stock. Browse other makes or chat with our Rhule AI for alternatives.';
+          textEl.textContent = 'We don\'t currently have any ' + make + ' vehicles in stock. Browse other makes or chat with our Acceleren AI for alternatives.';
         } else if (search && titleEl) {
           titleEl.textContent = 'No results for "' + search + '"';
           textEl.textContent = 'We couldn\'t find any vehicles matching your search. Try different keywords or reset your filters.';
@@ -269,7 +269,7 @@ const RhuleApp = (() => {
       '<button class="btn btn-outline btn-sm" style="width:100%;margin-top:12px;" onclick="RhuleApp.openFinanceCalculator(' + car.price + ')">Estimate my monthly payment</button>';
 
     var waMsg = encodeURIComponent('Hi, I am interested in the ' + car.year + ' ' + car.make + ' ' + car.model + (car.trim ? ' ' + car.trim : '') + ' priced at ' + RhuleData.formatPrice(car.price) + '. Can I get more details?');
-    el('modalWhatsApp').href = 'https://wa.me/233538861301?text=' + waMsg;
+    el('modalWhatsApp').href = 'https://wa.me/233532627932?text=' + waMsg;
 
     var calcEl = document.getElementById('calcPrice');
     if (calcEl) {
@@ -353,7 +353,7 @@ const RhuleApp = (() => {
   function shareVehicle() {
     if (!modalCar) return;
     var title = modalCar.year + ' ' + modalCar.make + ' ' + modalCar.model + (modalCar.trim ? ' ' + modalCar.trim : '');
-    var text = 'Check out this ' + title + ' at Rhule Auto Hub - ' + RhuleData.formatPrice(modalCar.price);
+    var text = 'Check out this ' + title + ' at Acceleren Motors GH Ltd - ' + RhuleData.formatPrice(modalCar.price);
     var url = window.location.origin + '/inventory.html';
 
     if (navigator.share) {
@@ -497,7 +497,7 @@ const RhuleApp = (() => {
   }
 
   // ── SCHEDULE VISIT ──
-  // Showroom hours: Mon–Sat 09:00–18:00, Sunday by appointment.
+  // Business hours: Mon–Sat 09:00–18:00, Sunday by appointment.
   function isSunday(dateISO) {
     if (!dateISO) return false;
     var p = String(dateISO).split('-');
@@ -574,8 +574,8 @@ const RhuleApp = (() => {
 
     var wa = document.getElementById('calcWhatsApp');
     if (wa) {
-      var msg = encodeURIComponent('Hi Rhule Auto Hub, I\'d like a hire purchase quote for a vehicle priced at ' + RhuleData.formatPrice(price) + ' (' + depositPct + '% deposit, ' + termMonths + ' months). My estimated monthly payment is ' + RhuleData.formatPrice(Math.round(b.monthly)) + '. Can you confirm the exact rate?');
-      wa.href = 'https://wa.me/233538861301?text=' + msg;
+      var msg = encodeURIComponent('Hi Acceleren Motors GH Ltd, I\'d like a hire purchase quote for a vehicle priced at ' + RhuleData.formatPrice(price) + ' (' + depositPct + '% deposit, ' + termMonths + ' months). My estimated monthly payment is ' + RhuleData.formatPrice(Math.round(b.monthly)) + '. Can you confirm the exact rate?');
+      wa.href = 'https://wa.me/233532627932?text=' + msg;
     }
   }
 
@@ -589,7 +589,7 @@ const RhuleApp = (() => {
       return;
     }
     if (!isOpenTime(timeVal)) {
-      showToast('Showroom hours are 9:00 AM – 6:00 PM (Mon–Sat). Please pick a time within business hours.', 'error');
+      showToast('Business hours are 9:00 AM – 6:00 PM (Mon–Sat). Please pick a time within business hours.', 'error');
       return;
     }
 

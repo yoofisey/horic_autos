@@ -578,7 +578,7 @@ img { max-width: 100%; display: block; }
 .contact-strip p { color: rgba(255,255,255,0.5); margin-bottom: 32px; max-width: 480px; margin-left: auto; margin-right: auto; }
 .contact-actions { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
 
-/* ── Horic AI PREVIEW ── */
+/* ── Acceleren AI PREVIEW ── */
 .advisor-preview {
   background: var(--dark-900); border: 1px solid rgba(255,255,255,0.08);
   border-radius: var(--radius-xl); padding: 56px; text-align: center;
@@ -1593,6 +1593,7 @@ select.form-control option { background: var(--white); }
 .contact-card-icon.phone { background: rgba(201,36,43,0.1); color: var(--green-500); }
 .contact-card-icon.instagram { background: rgba(228,64,95,0.08); color: #e4405f; }
 .contact-card-icon.snapchat { background: rgba(255,252,0,0.08); color: #fffc00; }
+.contact-card-icon.facebook { background: rgba(24,119,242,0.08); color: #1877f2; }
 
 .contact-card-content h3 { font-size: 1rem; font-weight: 600; color: var(--gray-900); margin-bottom: 4px; }
 .contact-card-content p { font-size: 0.875rem; color: var(--gray-500); }

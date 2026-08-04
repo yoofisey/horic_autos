@@ -62,12 +62,12 @@
       if (countEl) countEl.textContent = list.length;
 
       if (!list.length) {
-        el.innerHTML = '<div class="no-results" style="grid-column:1/-1;"><div class="no-results-icon">!</div><h3>No vehicles right now</h3><p>Our inventory changes often. Check the full inventory or ask Rhule AI for the latest arrivals.</p><div class="no-results-actions"><a class="btn btn-primary btn-sm" href="inventory.html">Browse Full Inventory</a><button class="btn btn-outline btn-sm" onclick="document.querySelector(\'.chat-toggle\').click()">Ask Rhule AI</button></div></div>';
+        el.innerHTML = '<div class="no-results" style="grid-column:1/-1;"><div class="no-results-icon">!</div><h3>No vehicles right now</h3><p>Our inventory changes often. Check the full inventory or ask Acceleren AI for the latest arrivals.</p><div class="no-results-actions"><a class="btn btn-primary btn-sm" href="inventory.html">Browse Full Inventory</a><button class="btn btn-outline btn-sm" onclick="document.querySelector(\'.chat-toggle\').click()">Ask Acceleren AI</button></div></div>';
         return;
       }
       el.innerHTML = list.map(buildCard).join('');
     } catch (e) {
-      el.innerHTML = '<div class="no-results" style="grid-column:1/-1;"><div class="no-results-icon">!</div><h3>Could not load vehicles</h3><p>Please try again or contact us directly.</p><div class="no-results-actions"><a class="btn btn-primary btn-sm" href="inventory.html">Browse Full Inventory</a><a class="btn btn-outline btn-sm" href="https://wa.me/233538861301">WhatsApp Us</a></div></div>';
+      el.innerHTML = '<div class="no-results" style="grid-column:1/-1;"><div class="no-results-icon">!</div><h3>Could not load vehicles</h3><p>Please try again or contact us directly.</p><div class="no-results-actions"><a class="btn btn-primary btn-sm" href="inventory.html">Browse Full Inventory</a><a class="btn btn-outline btn-sm" href="https://wa.me/233532627932">WhatsApp Us</a></div></div>';
     }
   });
 })();
