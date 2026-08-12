@@ -7,31 +7,31 @@ const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
 const KB_ENTRIES = [
   {
-    content: "Acceleren Motors GH Ltd is a premium auto hub based in Accra, Ghana. We specialize in quality pre-owned and brand-new vehicles imported directly from Japan, UAE, UK, and the USA. We serve customers across all regions of Ghana with transparent pricing and no hidden fees.",
+    content: "Dealership Name is a premium auto hub based in Accra, Ghana. We specialize in quality pre-owned and brand-new vehicles imported directly from Japan, UAE, UK, and the USA. We serve customers across all regions of Ghana with transparent pricing and no hidden fees.",
     type: "business"
   },
   {
-    content: "Acceleren Motors GH Ltd Contact & Service Hours: We serve customers across all regions of Ghana with transparent pricing and no hidden fees. WhatsApp us at +233 53 262 7932 for enquiries, test-drive requests, or delivery arrangements. Our team is available Monday to Saturday, 9:00 AM to 6:00 PM. Sundays by appointment only.",
+    content: "Dealership Name Contact & Service Hours: We serve customers across all regions of Ghana with transparent pricing and no hidden fees. WhatsApp us at +233 00 000 0000 for enquiries, test-drive requests, or delivery arrangements. Our team is available Monday to Saturday, 9:00 AM to 6:00 PM. Sundays by appointment only.",
     type: "business"
   },
   {
-    content: "Acceleren Motors GH Ltd Pricing Policy: All prices are in Ghana Cedis (GHS). Our listed prices are competitive and include basic documentation. Prices are negotiable for serious buyers. We offer both cash and hire purchase (HP) payment options. There are no hidden charges — what you see is what you pay.",
+    content: "Dealership Name Pricing Policy: All prices are in Ghana Cedis (GHS). Our listed prices are competitive and include basic documentation. Prices are negotiable for serious buyers. We offer both cash and hire purchase (HP) payment options. There are no hidden charges — what you see is what you pay.",
     type: "business"
   },
   {
-    content: "Acceleren Motors GH Ltd Hire Purchase Terms: We offer flexible hire purchase plans. Typical terms: 25-30% down payment required, interest rates between 28-34% per annum, repayment period of up to 36 months. Monthly installments are fixed. Early settlement discounts may be available. Contact us for a personalized quote.",
+    content: "Dealership Name Hire Purchase Terms: We offer flexible hire purchase plans. Typical terms: 25-30% down payment required, interest rates between 28-34% per annum, repayment period of up to 36 months. Monthly installments are fixed. Early settlement discounts may be available. Contact us for a personalized quote.",
     type: "business"
   },
   {
-    content: "Acceleren Motors GH Ltd Vehicle Guarantee: All vehicles undergo a thorough multi-point inspection before listing. We check engine health, transmission, electrical systems, body condition, and more. Every vehicle comes with a basic 3-month mechanical warranty. Extended warranty packages are available at additional cost.",
+    content: "Dealership Name Vehicle Guarantee: All vehicles undergo a thorough multi-point inspection before listing. We check engine health, transmission, electrical systems, body condition, and more. Every vehicle comes with a basic 3-month mechanical warranty. Extended warranty packages are available at additional cost.",
     type: "business"
   },
   {
-    content: "Acceleren Motors GH Ltd Import Process: We import vehicles directly from Japan (Tokyo/Yokohama ports), UAE (Dubai), UK, and USA. Import timeline is typically 6-8 weeks from order. We handle all customs clearance, DVLA registration, and roadworthy certification. Customers can also request specific vehicles for import.",
+    content: "Dealership Name Import Process: We import vehicles directly from Japan (Tokyo/Yokohama ports), UAE (Dubai), UK, and USA. Import timeline is typically 6-8 weeks from order. We handle all customs clearance, DVLA registration, and roadworthy certification. Customers can also request specific vehicles for import.",
     type: "business"
   },
   {
-    content: "Acceleren Motors GH Ltd Popular Car Brands: We stock a wide range of brands including Toyota (Camry, Corolla, RAV4, Land Cruiser, Hilux), Honda (Civic, CR-V), Mercedes-Benz (C-Class, E-Class, GLC), BMW (3 Series, 5 Series, X3, X5), Hyundai (Tucson, Sonata), Kia (Sportage, Sorento), Nissan (X-Trail, Altima), Mitsubishi (Outlander, Pajero), and more.",
+    content: "Dealership Name Popular Car Brands: We stock a wide range of brands including Toyota (Camry, Corolla, RAV4, Land Cruiser, Hilux), Honda (Civic, CR-V), Mercedes-Benz (C-Class, E-Class, GLC), BMW (3 Series, 5 Series, X3, X5), Hyundai (Tucson, Sonata), Kia (Sportage, Sorento), Nissan (X-Trail, Altima), Mitsubishi (Outlander, Pajero), and more.",
     type: "faq"
   },
   {
@@ -39,7 +39,7 @@ const KB_ENTRIES = [
     type: "faq"
   },
   {
-    content: "Ghana Car Registration Requirements: To register a car in Ghana you need: Valid national ID (passport or voter's ID), Proof of residence, Insurance certificate (third-party minimum), Roadworthy certificate, Customs import duty receipt (for imported vehicles). DVLA registration fee is approximately GHS 250/year for roadworthy + GHS 180/year for renewal. Acceleren Motors GH Ltd handles all registration paperwork for you.",
+    content: "Ghana Car Registration Requirements: To register a car in Ghana you need: Valid national ID (passport or voter's ID), Proof of residence, Insurance certificate (third-party minimum), Roadworthy certificate, Customs import duty receipt (for imported vehicles). DVLA registration fee is approximately GHS 250/year for roadworthy + GHS 180/year for renewal. Dealership Name handles all registration paperwork for you.",
     type: "faq"
   },
   {
@@ -47,7 +47,7 @@ const KB_ENTRIES = [
     type: "faq"
   },
   {
-    content: "Ghana Insurance Costs (2026): Third-party insurance (mandatory): GHS 557/year for all private vehicles (flat rate as of Feb 2026). Comprehensive insurance (recommended): Approximately 5-7% of the vehicle's value per year. For a GHS 200,000 car, comprehensive would be ~GHS 10,000-14,000/year. All vehicles must have minimum third-party insurance to be road-legal in Ghana. Acceleren Motors GH Ltd can help arrange insurance.",
+    content: "Ghana Insurance Costs (2026): Third-party insurance (mandatory): GHS 557/year for all private vehicles (flat rate as of Feb 2026). Comprehensive insurance (recommended): Approximately 5-7% of the vehicle's value per year. For a GHS 200,000 car, comprehensive would be ~GHS 10,000-14,000/year. All vehicles must have minimum third-party insurance to be road-legal in Ghana. Dealership Name can help arrange insurance.",
     type: "faq"
   },
   {
@@ -55,11 +55,11 @@ const KB_ENTRIES = [
     type: "faq"
   },
   {
-    content: "Buying Tips from Acceleren Motors GH Ltd: 1) Always check the mileage vs year — average is 15,000-20,000km per year. 2) Ask for service history records. 3) Test drive on both smooth and rough roads. 4) Check for accident damage by looking at panel gaps and paint consistency. 5) Verify the chassis number matches the import documents. 6) Consider total cost of ownership, not just purchase price. Acceleren Motors GH Ltd provides full transparency on every vehicle.",
+    content: "Buying Tips from Dealership Name: 1) Always check the mileage vs year — average is 15,000-20,000km per year. 2) Ask for service history records. 3) Test drive on both smooth and rough roads. 4) Check for accident damage by looking at panel gaps and paint consistency. 5) Verify the chassis number matches the import documents. 6) Consider total cost of ownership, not just purchase price. Dealership Name provides full transparency on every vehicle.",
     type: "faq"
   },
   {
-    content: "Acceleren Motors GH Ltd Specialization: We are particularly known for our curated collection of Mercedes-Benz C63 AMG models and other high-performance vehicles. Our signature green C63S is a fan favorite. We also stock practical family cars, fuel-efficient hybrids, and rugged SUVs perfect for Ghanaian roads.",
+    content: "Dealership Name Specialization: We are particularly known for our curated collection of Mercedes-Benz C63 AMG models and other high-performance vehicles. Our signature green C63S is a fan favorite. We also stock practical family cars, fuel-efficient hybrids, and rugged SUVs perfect for Ghanaian roads.",
     type: "business"
   },
   {
@@ -83,17 +83,22 @@ async function main() {
   console.log('Adding trim column...');
   await sql`ALTER TABLE vehicles ADD COLUMN IF NOT EXISTS trim text default ''`;
   console.log('✓ trim column ready');
+
+  // 1b. Add quantity column
+  console.log('Adding quantity column...');
+  await sql`ALTER TABLE vehicles ADD COLUMN IF NOT EXISTS quantity int NOT NULL DEFAULT 1`;
+  console.log('✓ quantity column ready');
   
   // 2. Count existing KB entries
   const [count] = await sql`SELECT count(*)::int as count FROM knowledge_base`;
   console.log(`Knowledge base has ${count.count} entries`);
   
   // 2b. Remove stale pre-rebrand knowledge base entries
-  const cleaned = await sql`DELETE FROM knowledge_base WHERE content ILIKE '%rhule%' OR content ILIKE '%adenta%' OR content ILIKE '%nmai%' OR content ILIKE '%showroom%' RETURNING id`;
+  const cleaned = await sql`DELETE FROM knowledge_base WHERE content ILIKE '%rhule%' OR content ILIKE '%adenta%' OR content ILIKE '%nmai%' OR content ILIKE '%showroom%' OR content ILIKE '%acceleren%' RETURNING id`;
   console.log(`Cleaned ${cleaned.length} stale knowledge base entries`);
   
   // 3. Seed knowledge base
-  console.log('Seeding knowledge base with Acceleren Motors GH Ltd info...');
+  console.log('Seeding knowledge base with Dealership Name info...');
   let seeded = 0;
   
   for (const entry of KB_ENTRIES) {

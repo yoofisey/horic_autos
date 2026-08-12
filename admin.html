@@ -3,8 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Admin Dashboard | Acceleren Motors GH Ltd</title>
-  <link rel="icon" type="image/png" href="acceleren.png">
+  <title>Admin Dashboard | Dealership Name</title>
   <link rel="stylesheet" href="style.css">
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
 </head>
@@ -13,15 +12,13 @@
 <!-- LOGIN OVERLAY -->
 <div class="login-overlay" id="loginOverlay">
   <div class="login-card">
-    <div class="login-logo">
-      <img src="acceleren.jpg" alt="Acceleren Motors GH Ltd">
-      <h1>Admin Dashboard</h1>
+    <div class="login-logo"><h1>Admin Dashboard</h1>
       <p>Sign in to manage your inventory</p>
     </div>
     <form class="login-form" id="loginForm">
       <div class="form-group">
         <label for="loginEmail">Email</label>
-        <input type="email" id="loginEmail" placeholder="admin@accelerenmotors.com" required>
+        <input type="email" id="loginEmail" placeholder="admin@yourdealership.com" required>
       </div>
       <div class="form-group">
         <label for="loginPassword">Password</label>
@@ -37,7 +34,7 @@
 <div class="admin-layout" id="adminLayout" style="display:none;">
   <aside class="admin-sidebar" id="adminSidebar">
     <div class="sidebar-brand">
-      <h2>Acceleren Motors<span class="green">.</span></h2>
+      <h2>Dealership Name<span class="green">.</span></h2>
       <p>Admin Dashboard</p>
     </div>
     <nav class="sidebar-nav">
@@ -76,7 +73,7 @@
         View Site
       </button>
     </nav>
-    <div class="sidebar-footer">Acceleren Admin </div>
+    <div class="sidebar-footer">Dealership Admin </div>
   </aside>
 
   <main class="admin-main">
@@ -414,6 +411,10 @@
           <div class="form-group">
             <label>Price (GHS) *</label>
             <input type="number" class="form-control" id="vf-price" required placeholder="e.g. 195000">
+          </div>
+          <div class="form-group">
+            <label>Quantity</label>
+            <input type="number" class="form-control" id="vf-quantity" value="1" min="1" placeholder="e.g. 3 identical units">
           </div>
           <div class="form-group">
             <label>Body Type</label>

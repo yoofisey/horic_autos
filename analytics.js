@@ -1,7 +1,7 @@
-// GA4 + conversion tracking for Acceleren Motors GH Ltd.
+// GA4 + conversion tracking for Dealership Name.
 // Paste your GA4 Measurement ID below (format G-XXXXXXXXXX). Until you do,
 // tracking is disabled and the site behaves normally (no network calls).
-window.GA4_ID = 'G-QR9DP6E1G6';
+window.GA4_ID = '';
 
 window.RhuleAnalytics = (function () {
   var ID = window.GA4_ID || '';

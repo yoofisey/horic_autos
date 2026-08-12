@@ -192,13 +192,14 @@ const RhuleAdmin = (() => {
       tbody.innerHTML = cars.map(function(car) {
         return '<tr>' +
           '<td><div class="table-car-info"><div class="table-car-thumb">' + CAR_SVG + '</div>' +
-          '<div><div class="table-car-name">' + car.make + ' ' + car.model + (car.trim ? ' ' + car.trim : '') + '</div><div class="table-car-sub">' + car.year + ' | ' + car.fuel + '</div></div></div></td>' +
+          '<div><div class="table-car-name">' + car.make + ' ' + car.model + (car.trim ? ' ' + car.trim : '') + '</div><div class="table-car-sub">' + car.year + ' | ' + car.fuel + (car.quantity > 1 ? ' | x' + car.quantity : '') + '</div></div></div></td>' +
           '<td><span class="table-status status-' + car.status + '">' + car.status.replace('_', ' ') + '</span></td>' +
           '<td>' + formatPrice(car.price) + '</td>' +
           '<td>' + car.year + '</td>' +
           '<td>' + (car.mileage > 0 ? car.mileage.toLocaleString() + ' km' : '—') + '</td>' +
           '<td><div class="table-actions">' +
           '<button title="Edit" onclick="RhuleAdmin.editVehicle(\'' + car.id + '\')">&#9998;</button>' +
+          '<button title="Clone" onclick="RhuleAdmin.cloneVehicle(\'' + car.id + '\')">&#10825;</button>' +
           (car.status !== 'sold' ? '<button title="Mark Sold" onclick="RhuleAdmin.openSoldModal(\'' + car.id + '\')">$</button>' : '') +
           '<button title="Delete" class="danger" onclick="RhuleAdmin.openDeleteModal(\'' + car.id + '\')">&#10005;</button>' +
           '</div></td></tr>';
@@ -262,9 +263,9 @@ const RhuleAdmin = (() => {
         var phone = enq.customer_phone || '';
         var email = enq.customer_email || '';
         var waLink = phone ? 'https://wa.me/' + phone.replace(/^0/, '233') : '#';
-        var waMsg = encodeURIComponent('Hello ' + (enq.customer_name || 'there') + ', thank you for your enquiry at Acceleren Motors GH Ltd. ' + (enq.message ? 'Re: "' + enq.message.substring(0, 60) + '"' : '') + '\n\nHow can we assist you further?');
-        var mailSubject = encodeURIComponent('Re: Your Acceleren Motors GH Ltd Enquiry');
-        var mailBody = encodeURIComponent('Dear ' + (enq.customer_name || 'Customer') + ',\n\nThank you for reaching out to Acceleren Motors GH Ltd.\n\n' + (enq.message ? 'Regarding your enquiry: "' + enq.message.substring(0, 100) + '"\n\n' : '') + 'We would be happy to assist you. Please feel free to contact us.\n\nBest regards,\nAcceleren Motors GH Ltd\n+233 53 262 7932');
+        var waMsg = encodeURIComponent('Hello ' + (enq.customer_name || 'there') + ', thank you for your enquiry at Dealership Name. ' + (enq.message ? 'Re: "' + enq.message.substring(0, 60) + '"' : '') + '\n\nHow can we assist you further?');
+        var mailSubject = encodeURIComponent('Re: Your Dealership Name Enquiry');
+        var mailBody = encodeURIComponent('Dear ' + (enq.customer_name || 'Customer') + ',\n\nThank you for reaching out to Dealership Name.\n\n' + (enq.message ? 'Regarding your enquiry: "' + enq.message.substring(0, 100) + '"\n\n' : '') + 'We would be happy to assist you. Please feel free to contact us.\n\nBest regards,\nDealership Name\n+233 00 000 0000');
 
         return '<div class="enquiry-card ' + statusClass + '">' +
           '<div class="enquiry-top">' +
@@ -370,6 +371,7 @@ const RhuleAdmin = (() => {
     document.getElementById('vf-trim').value = '';
     document.getElementById('vf-year').value = new Date().getFullYear();
     document.getElementById('vf-price').value = '';
+    document.getElementById('vf-quantity').value = '1';
     document.getElementById('vf-body').value = 'suv';
     document.getElementById('vf-fuel').value = 'petrol';
     document.getElementById('vf-mileage').value = '0';
@@ -400,6 +402,7 @@ const RhuleAdmin = (() => {
       document.getElementById('vf-trim').value = car.trim || '';
       document.getElementById('vf-year').value = car.year;
       document.getElementById('vf-price').value = car.price;
+      document.getElementById('vf-quantity').value = car.quantity || 1;
       document.getElementById('vf-body').value = car.body_type;
       document.getElementById('vf-fuel').value = car.fuel;
       document.getElementById('vf-mileage').value = car.mileage;
@@ -427,6 +430,7 @@ const RhuleAdmin = (() => {
       trim: document.getElementById('vf-trim').value,
       year: numStr(document.getElementById('vf-year').value),
       price: numStr(document.getElementById('vf-price').value),
+      quantity: numStr(document.getElementById('vf-quantity').value) || 1,
       body_type: document.getElementById('vf-body').value,
       fuel: document.getElementById('vf-fuel').value,
       mileage: numStr(document.getElementById('vf-mileage').value),
@@ -474,6 +478,15 @@ const RhuleAdmin = (() => {
       })});
       document.getElementById('soldModal').classList.remove('active');
       toast('Vehicle marked as sold', 'success');
+      renderInventoryTable();
+    } catch (e) { toast(e.message, 'error'); }
+  }
+
+  // ── CLONE ──
+  async function cloneVehicle(id) {
+    try {
+      await api('/api/vehicles/' + id + '/clone', { method: 'POST' });
+      toast('Vehicle cloned — edit the copy as needed', 'success');
       renderInventoryTable();
     } catch (e) { toast(e.message, 'error'); }
   }
@@ -921,8 +934,8 @@ const RhuleAdmin = (() => {
   async function sendEmailReply(id) {
     var enq = enquiriesCache.find(function(e) { return e.id === id; });
     if (!enq || !enq.customer_email) { toast('No email address on file for this enquiry', 'error'); return; }
-    var subject = 'Re: Your Acceleren Motors GH Ltd Enquiry';
-    var body = 'Dear ' + (enq.customer_name || 'Customer') + ',\n\nThank you for reaching out to Acceleren Motors GH Ltd.\n\n' + (enq.message ? 'Regarding your enquiry: "' + enq.message.substring(0, 100) + '"\n\n' : '') + 'We would be happy to assist you. Please feel free to contact us.\n\nBest regards,\nAcceleren Motors GH Ltd\n+233 53 262 7932';
+    var subject = 'Re: Your Dealership Name Enquiry';
+    var body = 'Dear ' + (enq.customer_name || 'Customer') + ',\n\nThank you for reaching out to Dealership Name.\n\n' + (enq.message ? 'Regarding your enquiry: "' + enq.message.substring(0, 100) + '"\n\n' : '') + 'We would be happy to assist you. Please feel free to contact us.\n\nBest regards,\nDealership Name\n+233 00 000 0000';
     try {
       await api('/api/enquiries/' + id + '/send-email', { method: 'POST', body: JSON.stringify({ subject: subject, body: body }) });
       toast('Email sent to ' + enq.customer_email, 'success');

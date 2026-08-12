@@ -325,6 +325,7 @@ img { max-width: 100%; display: block; }
 .badge-used { background: var(--blue-50); color: #175cd3; border: 1px solid #b2ccff; }
 .badge-sold { background: var(--red-50); color: var(--red-600); border: 1px solid #ffb38a; }
 .badge-coming { background: var(--amber-50); color: #b54708; border: 1px solid #fecd51; }
+.badge-qty { background: var(--red-500); color: var(--white); border: 1px solid var(--red-500); }
 
 .car-card-body {
   padding: 16px 20px 20px; position: relative; z-index: 1;
@@ -578,7 +579,7 @@ img { max-width: 100%; display: block; }
 .contact-strip p { color: rgba(255,255,255,0.5); margin-bottom: 32px; max-width: 480px; margin-left: auto; margin-right: auto; }
 .contact-actions { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
 
-/* ── Acceleren AI PREVIEW ── */
+/* ── AI Assistant PREVIEW ── */
 .advisor-preview {
   background: var(--dark-900); border: 1px solid rgba(255,255,255,0.08);
   border-radius: var(--radius-xl); padding: 56px; text-align: center;

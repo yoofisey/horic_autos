@@ -43,6 +43,10 @@ const RhuleApp = (() => {
     return cond === 'new' ? '<span class="badge badge-new">New</span>' : '<span class="badge badge-used">Pre-Owned</span>';
   }
 
+  function quantityBadge(car) {
+    return (car.quantity > 1 && car.status === 'in_stock') ? '<span class="badge badge-qty">x' + car.quantity + '</span>' : '';
+  }
+
   var CAR_SVG = '<svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="1.2"><path d="M5 17h14M5 17a2 2 0 01-2-2V9a2 2 0 012-2h1l2-3h8l2 3h1a2 2 0 012 2v6a2 2 0 01-2 2M5 17l-1 2h1m14-2l1 2h-1"/><circle cx="7.5" cy="17" r="1" /><circle cx="16.5" cy="17" r="1" /></svg>';
 
   var HEART_SVG = '<svg viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>';
@@ -74,7 +78,7 @@ const RhuleApp = (() => {
 
     return '<div class="car-card reveal" onclick="RhuleApp.openModal(\'' + car.id + '\')">' +
       '<div class="car-card-image">' + controls + imgHtml +
-      '<div class="car-card-badges">' + conditionBadge(car.condition) + statusBadge(car.status) + '</div></div>' +
+      '<div class="car-card-badges">' + conditionBadge(car.condition) + statusBadge(car.status) + quantityBadge(car) + '</div></div>' +
       '<div class="car-card-body">' +
       '<div class="car-card-year">' + car.year + '</div>' +
       '<div class="car-card-name">' + car.make + ' ' + car.model + (car.trim ? ' ' + car.trim : '') + '</div>' +
@@ -166,10 +170,10 @@ const RhuleApp = (() => {
         var textEl = document.getElementById('noResultsText');
         if (make && model && titleEl) {
           titleEl.textContent = 'No ' + make + ' ' + model + ' found';
-          textEl.textContent = 'We don\'t currently have any ' + make + ' ' + model + ' in our inventory. Try browsing other models or let our Acceleren AI help.';
+          textEl.textContent = 'We don\'t currently have any ' + make + ' ' + model + ' in our inventory. Try browsing other models or let our AI Assistant help.';
         } else if (make && titleEl) {
           titleEl.textContent = 'No ' + make + ' vehicles found';
-          textEl.textContent = 'We don\'t currently have any ' + make + ' vehicles in stock. Browse other makes or chat with our Acceleren AI for alternatives.';
+          textEl.textContent = 'We don\'t currently have any ' + make + ' vehicles in stock. Browse other makes or chat with our AI Assistant for alternatives.';
         } else if (search && titleEl) {
           titleEl.textContent = 'No results for "' + search + '"';
           textEl.textContent = 'We couldn\'t find any vehicles matching your search. Try different keywords or reset your filters.';
@@ -243,7 +247,9 @@ const RhuleApp = (() => {
 
     var el = function(eid) { return document.getElementById(eid); };
     el('modalTitle').textContent = car.make + ' ' + car.model + (car.trim ? ' ' + car.trim : '');
-    el('modalYear').textContent = car.year + '  ·  ' + (car.condition === 'new' ? 'New' : 'Pre-Owned') + '  ·  ' + (car.status === 'in_stock' ? 'In Stock' : car.status === 'sold' ? 'Sold' : 'Coming Soon');
+    var statusLabel = car.status === 'in_stock' ? 'In Stock' : car.status === 'sold' ? 'Sold' : 'Coming Soon';
+    var qtyLabel = (car.quantity > 1 && car.status === 'in_stock') ? '  ·  ' + car.quantity + ' available' : '';
+    el('modalYear').textContent = car.year + '  ·  ' + (car.condition === 'new' ? 'New' : 'Pre-Owned') + '  ·  ' + statusLabel + qtyLabel;
     el('modalPrice').textContent = RhuleData.formatPrice(car.price);
     el('modalDesc').textContent = car.description || '';
 
@@ -269,7 +275,7 @@ const RhuleApp = (() => {
       '<button class="btn btn-outline btn-sm" style="width:100%;margin-top:12px;" onclick="RhuleApp.openFinanceCalculator(' + car.price + ')">Estimate my monthly payment</button>';
 
     var waMsg = encodeURIComponent('Hi, I am interested in the ' + car.year + ' ' + car.make + ' ' + car.model + (car.trim ? ' ' + car.trim : '') + ' priced at ' + RhuleData.formatPrice(car.price) + '. Can I get more details?');
-    el('modalWhatsApp').href = 'https://wa.me/233532627932?text=' + waMsg;
+    el('modalWhatsApp').href = 'https://wa.me/233000000000?text=' + waMsg;
 
     var calcEl = document.getElementById('calcPrice');
     if (calcEl) {
@@ -353,7 +359,7 @@ const RhuleApp = (() => {
   function shareVehicle() {
     if (!modalCar) return;
     var title = modalCar.year + ' ' + modalCar.make + ' ' + modalCar.model + (modalCar.trim ? ' ' + modalCar.trim : '');
-    var text = 'Check out this ' + title + ' at Acceleren Motors GH Ltd - ' + RhuleData.formatPrice(modalCar.price);
+    var text = 'Check out this ' + title + ' at Dealership Name - ' + RhuleData.formatPrice(modalCar.price);
     var url = window.location.origin + '/inventory.html';
 
     if (navigator.share) {
@@ -574,8 +580,8 @@ const RhuleApp = (() => {
 
     var wa = document.getElementById('calcWhatsApp');
     if (wa) {
-      var msg = encodeURIComponent('Hi Acceleren Motors GH Ltd, I\'d like a hire purchase quote for a vehicle priced at ' + RhuleData.formatPrice(price) + ' (' + depositPct + '% deposit, ' + termMonths + ' months). My estimated monthly payment is ' + RhuleData.formatPrice(Math.round(b.monthly)) + '. Can you confirm the exact rate?');
-      wa.href = 'https://wa.me/233532627932?text=' + msg;
+      var msg = encodeURIComponent('Hi Dealership Name, I\'d like a hire purchase quote for a vehicle priced at ' + RhuleData.formatPrice(price) + ' (' + depositPct + '% deposit, ' + termMonths + ' months). My estimated monthly payment is ' + RhuleData.formatPrice(Math.round(b.monthly)) + '. Can you confirm the exact rate?');
+      wa.href = 'https://wa.me/233000000000?text=' + msg;
     }
   }
 

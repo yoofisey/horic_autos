@@ -27,7 +27,7 @@ const SMTP_HOST = process.env.SMTP_HOST || '';
 const SMTP_PORT = Number(process.env.SMTP_PORT) || 587;
 const SMTP_USER = process.env.SMTP_USER || '';
 const SMTP_PASS = process.env.SMTP_PASS || '';
-const SMTP_FROM = process.env.SMTP_FROM || (SMTP_USER ? SMTP_USER : 'Acceleren Motors GH Ltd <no-reply@accelerenmotors.com>');
+const SMTP_FROM = process.env.SMTP_FROM || (SMTP_USER ? SMTP_USER : 'Dealership Name <no-reply@yourdealership.com>');
 const SMTP_CONFIGURED = !!(SMTP_HOST && SMTP_USER);
 
 async function sendEmail(to, subject, html) {
@@ -56,10 +56,10 @@ function escHtml(s) {
 
 function emailShell(inner) {
   return '<div style="font-family:Arial,sans-serif;max-width:560px;margin:0 auto;color:#1a1a1a;line-height:1.5">'
-    + '<h2 style="font-family:Georgia,serif;color:#FF6A00;margin:0 0 16px;">Acceleren Motors GH Ltd</h2>'
+    + '<h2 style="font-family:Georgia,serif;color:#FF6A00;margin:0 0 16px;">Dealership Name</h2>'
     + inner
     + '<hr style="border:none;border-top:1px solid #eee;margin:24px 0 12px;">'
-    + '<p style="color:#888;font-size:12px;">Mon–Sat 9am–6pm · Sundays by appointment<br>Phone/WhatsApp: +233 53 262 7932 · info@accelerenmotors.com</p>'
+    + '<p style="color:#888;font-size:12px;">Mon–Sat 9am–6pm · Sundays by appointment<br>Phone/WhatsApp: +233 00 000 0000 · info@yourdealership.com</p>'
     + '</div>';
 }
 
@@ -67,9 +67,9 @@ function emailShell(inner) {
 function buildEnquiryConfirmation(e) {
   return emailShell(
     '<p>Hello <strong>' + escHtml(e.customer_name) + '</strong>,</p>'
-    + '<p>Thank you for contacting <strong>Acceleren Motors GH Ltd</strong>. We have received your enquiry and a member of our team will get back to you shortly.</p>'
+    + '<p>Thank you for contacting <strong>Dealership Name</strong>. We have received your enquiry and a member of our team will get back to you shortly.</p>'
     + '<p style="border-left:3px solid #FF6A00;padding:10px 14px;background:#f9f9f9;color:#555;">' + escHtml(e.message) + '</p>'
-    + '<p>Want a faster answer? Message us on WhatsApp: <a href="https://wa.me/233532627932" style="color:#FF6A00;">+233 53 262 7932</a></p>'
+    + '<p>Want a faster answer? Message us on WhatsApp: <a href="https://wa.me/233000000000" style="color:#FF6A00;">+233 00 000 0000</a></p>'
     + '<p style="color:#888;font-size:12px;">This is an automated confirmation. Please reply to the team member who contacts you.</p>'
   );
 }
@@ -82,7 +82,7 @@ function buildEnquiryAlert(e) {
     + '<p><strong>Name:</strong> ' + escHtml(e.customer_name) + '<br>'
     + '<strong>Phone:</strong> ' + escHtml(e.customer_phone) + '<br>'
     + '<strong>Email:</strong> ' + escHtml(e.customer_email || '—') + '</p>'
-    + '<p>Reply from the admin panel, or open WhatsApp: <a href="https://wa.me/233532627932" style="color:#FF6A00;">+233 53 262 7932</a></p>'
+    + '<p>Reply from the admin panel, or open WhatsApp: <a href="https://wa.me/233000000000" style="color:#FF6A00;">+233 00 000 0000</a></p>'
   );
 }
 
@@ -90,12 +90,12 @@ function buildEnquiryAlert(e) {
 function buildVisitConfirmation(v, vehicleLabel) {
   return emailShell(
     '<p>Hello <strong>' + escHtml(v.customer_name) + '</strong>,</p>'
-    + '<p>Thanks for booking a visit to <strong>Acceleren Motors GH Ltd</strong>. Here is what we have on file:</p>'
+    + '<p>Thanks for booking a visit to <strong>Dealership Name</strong>. Here is what we have on file:</p>'
     + '<p style="border-left:3px solid #FF6A00;padding:10px 14px;background:#f9f9f9;color:#555;">'
     + '<strong>Date:</strong> ' + escHtml(v.preferred_date) + '<br>'
     + '<strong>Time:</strong> ' + escHtml(v.preferred_time || 'during business hours') + '<br>'
     + (vehicleLabel ? '<strong>Vehicle:</strong> ' + escHtml(vehicleLabel) + '<br>' : '')
-    + '<p>Our team will confirm your appointment. If you need to change or cancel, WhatsApp us at <a href="https://wa.me/233532627932" style="color:#FF6A00;">+233 53 262 7932</a>.</p>'
+    + '<p>Our team will confirm your appointment. If you need to change or cancel, WhatsApp us at <a href="https://wa.me/233000000000" style="color:#FF6A00;">+233 00 000 0000</a>.</p>'
     + '<p style="color:#888;font-size:12px;">Business hours: Mon–Sat 9am–6pm, Sundays by appointment.</p>'
   );
 }
@@ -118,12 +118,12 @@ function buildVisitAlert(v, vehicleLabel) {
 
 // Fire customer confirmation + admin alert without blocking the request.
 function sendEnquiryEmails(e) {
-  if (e.customer_email) sendEmail(e.customer_email, 'We received your enquiry — Acceleren Motors GH Ltd', buildEnquiryConfirmation(e));
+  if (e.customer_email) sendEmail(e.customer_email, 'We received your enquiry — Dealership Name', buildEnquiryConfirmation(e));
   if (SMTP_NOTIFY_TO) sendEmail(SMTP_NOTIFY_TO, 'New enquiry: ' + (e.customer_name || 'Website visitor'), buildEnquiryAlert(e));
 }
 
 function sendVisitEmails(v, vehicleLabel) {
-  if (v.customer_email) sendEmail(v.customer_email, 'Visit request received — Acceleren Motors GH Ltd', buildVisitConfirmation(v, vehicleLabel));
+  if (v.customer_email) sendEmail(v.customer_email, 'Visit request received — Dealership Name', buildVisitConfirmation(v, vehicleLabel));
   if (SMTP_NOTIFY_TO) sendEmail(SMTP_NOTIFY_TO, 'Visit request: ' + (v.customer_name || 'Website visitor') + ' on ' + v.preferred_date, buildVisitAlert(v, vehicleLabel));
 }
 
@@ -333,6 +333,7 @@ function vehicleToKnowledge(vehicle) {
   return `Vehicle: ${vehicle.year} ${vehicle.make} ${vehicle.model}${trimStr}
 Price: GHS ${Number(vehicle.price).toLocaleString()}
 Condition: ${condition} | Status: ${status}
+Availability: ${(vehicle.quantity || 1) > 1 ? vehicle.quantity + ' units available' : 'Single unit available'}
 Body Type: ${vehicle.body_type} | Fuel: ${vehicle.fuel} | Transmission: ${vehicle.transmission}
 Engine: ${vehicle.engine || 'N/A'} | Color: ${vehicle.color || 'N/A'}
 Mileage: ${vehicle.mileage > 0 ? vehicle.mileage.toLocaleString() + ' km' : 'Brand New'}
@@ -423,8 +424,8 @@ app.post('/api/vehicles', requireAuth, async (req, res) => {
     const images = await cloudifyImages(v.images || []);
     const imagesJson = JSON.stringify(images);
 
-    const [vehicle] = await sql`INSERT INTO vehicles (id, make, model, trim, year, price, condition, status, body_type, fuel, mileage, engine, transmission, color, description, features, images, created_at, updated_at, views, enquiries)
-      VALUES (${id}, ${v.make || ''}, ${v.model || ''}, ${v.trim || ''}, ${toInt(v.year) || 2024}, ${toInt(v.price) || 0}, ${v.condition || 'new'}, ${v.status || 'in_stock'}, ${v.body_type || 'sedan'}, ${v.fuel || 'petrol'}, ${toInt(v.mileage) || 0}, ${v.engine || ''}, ${v.transmission || 'automatic'}, ${v.color || ''}, ${v.description || ''}, ${featuresJson}::jsonb, ${imagesJson}::jsonb, ${now}::timestamptz, ${now}::timestamptz, 0, 0)
+    const [vehicle] = await sql`INSERT INTO vehicles (id, make, model, trim, year, price, condition, status, body_type, fuel, mileage, engine, transmission, color, description, features, images, quantity, created_at, updated_at, views, enquiries)
+      VALUES (${id}, ${v.make || ''}, ${v.model || ''}, ${v.trim || ''}, ${toInt(v.year) || 2024}, ${toInt(v.price) || 0}, ${v.condition || 'new'}, ${v.status || 'in_stock'}, ${v.body_type || 'sedan'}, ${v.fuel || 'petrol'}, ${toInt(v.mileage) || 0}, ${v.engine || ''}, ${v.transmission || 'automatic'}, ${v.color || ''}, ${v.description || ''}, ${featuresJson}::jsonb, ${imagesJson}::jsonb, ${toInt(v.quantity) > 0 ? toInt(v.quantity) : 1}, ${now}::timestamptz, ${now}::timestamptz, 0, 0)
       RETURNING *`;
 
     // Auto-embed into knowledge base
@@ -456,6 +457,7 @@ app.put('/api/vehicles/:id', requireAuth, async (req, res) => {
       ['trim', v.trim],
       ['year', v.year !== undefined ? toInt(v.year) : undefined],
       ['price', v.price !== undefined ? toInt(v.price) : undefined],
+      ['quantity', v.quantity !== undefined ? (toInt(v.quantity) > 0 ? toInt(v.quantity) : 1) : undefined],
       ['condition', v.condition],
       ['status', v.status],
       ['body_type', v.body_type],
@@ -499,6 +501,25 @@ app.put('/api/vehicles/:id', requireAuth, async (req, res) => {
     // Delete old knowledge entry
     await sql`DELETE FROM knowledge_base WHERE content_type = 'vehicle' AND metadata->>'vehicle_id' = ${req.params.id}`;
     // Insert new
+    await embedAndStore(kbText, 'vehicle', { vehicle_id: vehicle.id, make: vehicle.make, model: vehicle.model, year: vehicle.year, price: vehicle.price, status: vehicle.status });
+
+    res.json(vehicle);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.post('/api/vehicles/:id/clone', requireAuth, async (req, res) => {
+  try {
+    const [source] = await sql`SELECT * FROM vehicles WHERE id = ${req.params.id}`;
+    if (!source) return res.status(404).json({ error: 'Vehicle not found' });
+    const id = genId();
+    const now = new Date().toISOString();
+    const [vehicle] = await sql`INSERT INTO vehicles (id, make, model, trim, year, price, condition, status, body_type, fuel, mileage, engine, transmission, color, description, features, images, quantity, created_at, updated_at, views, enquiries)
+      VALUES (${id}, ${source.make}, ${source.model}, ${source.trim}, ${source.year}, ${source.price}, ${source.condition}, 'in_stock', ${source.body_type}, ${source.fuel}, ${source.mileage}, ${source.engine}, ${source.transmission}, ${source.color}, ${source.description}, ${JSON.stringify(source.features)}::jsonb, ${JSON.stringify(source.images)}::jsonb, 1, ${now}::timestamptz, ${now}::timestamptz, 0, 0)
+      RETURNING *`;
+
+    const kbText = vehicleToKnowledge(vehicle);
     await embedAndStore(kbText, 'vehicle', { vehicle_id: vehicle.id, make: vehicle.make, model: vehicle.model, year: vehicle.year, price: vehicle.price, status: vehicle.status });
 
     res.json(vehicle);
@@ -585,7 +606,7 @@ app.post('/api/enquiries/:id/send-email', requireAuth, async (req, res) => {
     if (!enq.customer_email) return res.status(400).json({ error: 'No email address on file for this enquiry' });
 
     const html = '<p>' + String(body || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/\n/g, '<br>') + '</p>';
-    const sent = await sendEmail(enq.customer_email, String(subject || 'Re: Your Acceleren Motors GH Ltd Enquiry'), html);
+    const sent = await sendEmail(enq.customer_email, String(subject || 'Re: Your Dealership Name Enquiry'), html);
     if (!sent) return res.status(400).json({ error: 'Email sending is not configured. Set the SMTP_* env vars to enable it.' });
     res.json({ ok: true, to: enq.customer_email });
   } catch (err) {
@@ -853,7 +874,7 @@ app.post('/api/knowledge/sync-vehicles', requireAuth, async (req, res) => {
 });
 
 // ── CHATBOT (RAG + Gemini) ──
-const SYSTEM_PROMPT = `You are the AI Car Advisor for Acceleren Motors GH Ltd, Ghana's premier car dealership based in Accra.
+const SYSTEM_PROMPT = `You are the AI Car Advisor for Dealership Name, Ghana's premier car dealership based in Accra.
 
 ## Your Role
 You help customers find the right vehicle, estimate running costs, compare cars, and answer questions about buying/owning a car in Ghana. Be warm, knowledgeable, and concise.
@@ -1052,6 +1073,6 @@ if (require.main === module) {
   )`.catch(e => console.error('Visit schedules table creation warning:', e.message));
 
   app.listen(PORT, () => {
-    console.log('Acceleren Motors GH Ltd running at http://localhost:' + PORT);
+    console.log('Dealership Name running at http://localhost:' + PORT);
   });
 }
