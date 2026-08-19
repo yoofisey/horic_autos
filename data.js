@@ -20,13 +20,14 @@ const RhuleData = (() => {
     const fuel = (car.fuel || 'petrol').toLowerCase();
     const isSuv = body === 'suv' || body === 'truck';
     const catKey = isSuv ? (fuel === 'diesel' ? 'suv_diesel' : 'suv_petrol') : (fuel === 'diesel' ? 'saloon_diesel' : 'saloon_petrol');
+    let fuelCost;
     if (fuel === 'electric') {
-      var fuelCost = (COST_ASSUMPTIONS.monthlyKm / 100) * COST_ASSUMPTIONS.consumption.electric_kwh * COST_ASSUMPTIONS.fuelPrice.electric;
+      fuelCost = (COST_ASSUMPTIONS.monthlyKm / 100) * COST_ASSUMPTIONS.consumption.electric_kwh * COST_ASSUMPTIONS.fuelPrice.electric;
     } else if (fuel === 'hybrid') {
-      var fuelCost = (COST_ASSUMPTIONS.monthlyKm / 100) * COST_ASSUMPTIONS.consumption.hybrid * COST_ASSUMPTIONS.fuelPrice.hybrid;
+      fuelCost = (COST_ASSUMPTIONS.monthlyKm / 100) * COST_ASSUMPTIONS.consumption.hybrid * COST_ASSUMPTIONS.fuelPrice.hybrid;
     } else {
-      var cons = COST_ASSUMPTIONS.consumption[catKey] || 10;
-      var fuelCost = (COST_ASSUMPTIONS.monthlyKm / 100) * cons * (COST_ASSUMPTIONS.fuelPrice[fuel] || 16.5);
+      const cons = COST_ASSUMPTIONS.consumption[catKey] || 10;
+      fuelCost = (COST_ASSUMPTIONS.monthlyKm / 100) * cons * (COST_ASSUMPTIONS.fuelPrice[fuel] || 16.5);
     }
 
     let maintMul = 1;

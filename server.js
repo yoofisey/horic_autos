@@ -11,10 +11,22 @@ const nodemailer = require('nodemailer');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
-const JWT_SECRET = process.env.JWT_SECRET || crypto.randomBytes(32).toString('hex');
+
+if (!process.env.JWT_SECRET) throw new Error('JWT_SECRET environment variable is required');
+const JWT_SECRET = process.env.JWT_SECRET;
+
+const SITE_NAME = process.env.SITE_NAME || 'Dealership Name';
+const SITE_PHONE = process.env.SITE_PHONE || '+233 00 000 0000';
+const SITE_EMAIL = process.env.SITE_EMAIL || 'info@yourdealership.com';
 
 app.use(express.json({ limit: '5mb' }));
-app.use(express.static(path.join(__dirname)));
+app.use(express.static(__dirname));
+app.use((req, res, next) => {
+  if (/\.(sql|bak)$/.test(req.path) || /^\/(seed|migrate-images|package)/.test(req.path) || /^\/supabase\//.test(req.path)) {
+    return res.status(404).end();
+  }
+  next();
+});
 
 // ── DATABASE ──
 const sql = neon(process.env.DATABASE_URL);
@@ -27,18 +39,20 @@ const SMTP_HOST = process.env.SMTP_HOST || '';
 const SMTP_PORT = Number(process.env.SMTP_PORT) || 587;
 const SMTP_USER = process.env.SMTP_USER || '';
 const SMTP_PASS = process.env.SMTP_PASS || '';
-const SMTP_FROM = process.env.SMTP_FROM || (SMTP_USER ? SMTP_USER : 'Dealership Name <no-reply@yourdealership.com>');
+const SMTP_FROM = process.env.SMTP_FROM || (SMTP_USER ? SMTP_USER : SITE_NAME + ' <no-reply@yourdealership.com>');
 const SMTP_CONFIGURED = !!(SMTP_HOST && SMTP_USER);
+const SMTP_NOTIFY_TO = process.env.SMTP_NOTIFY_TO || SMTP_USER;
+
+const transporter = SMTP_CONFIGURED ? nodemailer.createTransport({
+  host: SMTP_HOST,
+  port: SMTP_PORT,
+  secure: SMTP_PORT === 465,
+  auth: { user: SMTP_USER, pass: SMTP_PASS }
+}) : null;
 
 async function sendEmail(to, subject, html) {
-  if (!SMTP_CONFIGURED || !to) return false;
+  if (!transporter || !to) return false;
   try {
-    const transporter = nodemailer.createTransport({
-      host: SMTP_HOST,
-      port: SMTP_PORT,
-      secure: SMTP_PORT === 465,
-      auth: { user: SMTP_USER, pass: SMTP_PASS }
-    });
     await transporter.sendMail({ from: SMTP_FROM, to, subject, html });
     return true;
   } catch (err) {
@@ -47,34 +61,30 @@ async function sendEmail(to, subject, html) {
   }
 }
 
-// Admin alerts go to SMTP_NOTIFY_TO (falls back to the sending account).
-const SMTP_NOTIFY_TO = process.env.SMTP_NOTIFY_TO || SMTP_USER;
-
 function escHtml(s) {
-  return String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/\n/g, '<br>');
+  return String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;').replace(/'/g, '&#39;').replace(/\n/g, '<br>');
 }
 
 function emailShell(inner) {
   return '<div style="font-family:Arial,sans-serif;max-width:560px;margin:0 auto;color:#1a1a1a;line-height:1.5">'
-    + '<h2 style="font-family:Georgia,serif;color:#FF6A00;margin:0 0 16px;">Dealership Name</h2>'
+    + '<h2 style="font-family:Georgia,serif;color:#FF6A00;margin:0 0 16px;">' + SITE_NAME + '</h2>'
     + inner
     + '<hr style="border:none;border-top:1px solid #eee;margin:24px 0 12px;">'
-    + '<p style="color:#888;font-size:12px;">Mon–Sat 9am–6pm · Sundays by appointment<br>Phone/WhatsApp: +233 00 000 0000 · info@yourdealership.com</p>'
+    + '<p style="color:#888;font-size:12px;">Mon–Sat 9am–6pm · Sundays by appointment<br>Phone/WhatsApp: ' + SITE_PHONE + ' · ' + SITE_EMAIL + '</p>'
     + '</div>';
 }
 
-// Customer confirmation when a website enquiry is submitted.
 function buildEnquiryConfirmation(e) {
   return emailShell(
     '<p>Hello <strong>' + escHtml(e.customer_name) + '</strong>,</p>'
-    + '<p>Thank you for contacting <strong>Dealership Name</strong>. We have received your enquiry and a member of our team will get back to you shortly.</p>'
+    + '<p>Thank you for contacting <strong>' + SITE_NAME + '</strong>. We have received your enquiry and a member of our team will get back to you shortly.</p>'
     + '<p style="border-left:3px solid #FF6A00;padding:10px 14px;background:#f9f9f9;color:#555;">' + escHtml(e.message) + '</p>'
-    + '<p>Want a faster answer? Message us on WhatsApp: <a href="https://wa.me/233000000000" style="color:#FF6A00;">+233 00 000 0000</a></p>'
+    + '<p>Want a faster answer? Message us on WhatsApp: <a href="https://wa.me/233000000000" style="color:#FF6A00;">' + SITE_PHONE + '</a></p>'
     + '<p style="color:#888;font-size:12px;">This is an automated confirmation. Please reply to the team member who contacts you.</p>'
   );
 }
 
-// Admin alert when a website enquiry is submitted.
 function buildEnquiryAlert(e) {
   return emailShell(
     '<p><strong>New enquiry</strong> received on the website.</p>'
@@ -82,25 +92,23 @@ function buildEnquiryAlert(e) {
     + '<p><strong>Name:</strong> ' + escHtml(e.customer_name) + '<br>'
     + '<strong>Phone:</strong> ' + escHtml(e.customer_phone) + '<br>'
     + '<strong>Email:</strong> ' + escHtml(e.customer_email || '—') + '</p>'
-    + '<p>Reply from the admin panel, or open WhatsApp: <a href="https://wa.me/233000000000" style="color:#FF6A00;">+233 00 000 0000</a></p>'
+    + '<p>Reply from the admin panel, or open WhatsApp: <a href="https://wa.me/233000000000" style="color:#FF6A00;">' + SITE_PHONE + '</a></p>'
   );
 }
 
-// Customer confirmation when a visit is booked.
 function buildVisitConfirmation(v, vehicleLabel) {
   return emailShell(
     '<p>Hello <strong>' + escHtml(v.customer_name) + '</strong>,</p>'
-    + '<p>Thanks for booking a visit to <strong>Dealership Name</strong>. Here is what we have on file:</p>'
+    + '<p>Thanks for booking a visit to <strong>' + SITE_NAME + '</strong>. Here is what we have on file:</p>'
     + '<p style="border-left:3px solid #FF6A00;padding:10px 14px;background:#f9f9f9;color:#555;">'
     + '<strong>Date:</strong> ' + escHtml(v.preferred_date) + '<br>'
     + '<strong>Time:</strong> ' + escHtml(v.preferred_time || 'during business hours') + '<br>'
     + (vehicleLabel ? '<strong>Vehicle:</strong> ' + escHtml(vehicleLabel) + '<br>' : '')
-    + '<p>Our team will confirm your appointment. If you need to change or cancel, WhatsApp us at <a href="https://wa.me/233000000000" style="color:#FF6A00;">+233 00 000 0000</a>.</p>'
+    + '</p><p>Our team will confirm your appointment. If you need to change or cancel, WhatsApp us at <a href="https://wa.me/233000000000" style="color:#FF6A00;">' + SITE_PHONE + '</a>.</p>'
     + '<p style="color:#888;font-size:12px;">Business hours: Mon–Sat 9am–6pm, Sundays by appointment.</p>'
   );
 }
 
-// Admin alert when a visit is booked.
 function buildVisitAlert(v, vehicleLabel) {
   return emailShell(
     '<p><strong>New visit request</strong> from the website.</p>'
@@ -116,16 +124,23 @@ function buildVisitAlert(v, vehicleLabel) {
   );
 }
 
-// Fire customer confirmation + admin alert without blocking the request.
 function sendEnquiryEmails(e) {
-  if (e.customer_email) sendEmail(e.customer_email, 'We received your enquiry — Dealership Name', buildEnquiryConfirmation(e));
-  if (SMTP_NOTIFY_TO) sendEmail(SMTP_NOTIFY_TO, 'New enquiry: ' + (e.customer_name || 'Website visitor'), buildEnquiryAlert(e));
+  if (e.customer_email) sendEmail(e.customer_email, 'We received your enquiry — ' + SITE_NAME, buildEnquiryConfirmation(e)).catch(() => {});
+  if (SMTP_NOTIFY_TO) sendEmail(SMTP_NOTIFY_TO, 'New enquiry: ' + (e.customer_name || 'Website visitor'), buildEnquiryAlert(e)).catch(() => {});
 }
 
 function sendVisitEmails(v, vehicleLabel) {
-  if (v.customer_email) sendEmail(v.customer_email, 'Visit request received — Dealership Name', buildVisitConfirmation(v, vehicleLabel));
-  if (SMTP_NOTIFY_TO) sendEmail(SMTP_NOTIFY_TO, 'Visit request: ' + (v.customer_name || 'Website visitor') + ' on ' + v.preferred_date, buildVisitAlert(v, vehicleLabel));
+  if (v.customer_email) sendEmail(v.customer_email, 'Visit request received — ' + SITE_NAME, buildVisitConfirmation(v, vehicleLabel)).catch(() => {});
+  if (SMTP_NOTIFY_TO) sendEmail(SMTP_NOTIFY_TO, 'Visit request: ' + (v.customer_name || 'Website visitor') + ' on ' + v.preferred_date, buildVisitAlert(v, vehicleLabel)).catch(() => {});
 }
+
+// ── VALID ENUMS ──
+const VALID_STATUSES = ['in_stock', 'sold', 'coming_soon'];
+const VALID_CONDITIONS = ['new', 'used'];
+const VALID_BODY_TYPES = ['sedan', 'suv', 'hatchback', 'pickup', 'coupe', 'convertible', 'minivan', 'truck', 'van', 'wagon'];
+const VALID_FUELS = ['petrol', 'diesel', 'electric', 'hybrid', 'cng'];
+const VALID_TRANSMISSIONS = ['automatic', 'manual'];
+const VALID_VISIT_STATUSES = ['pending', 'confirmed', 'completed', 'cancelled'];
 
 // ── RATE LIMITING (DB-backed, survives restarts) ──
 function rateLimit(maxReqs, windowMs) {
@@ -139,6 +154,9 @@ function rateLimit(maxReqs, windowMs) {
       if (row.count > maxReqs) {
         return res.status(429).json({ error: 'Too many requests. Please wait a moment.' });
       }
+      if (Math.random() < 0.02) {
+        sql`DELETE FROM rate_limits WHERE ts < now() - interval '1 hour'`.catch(() => {});
+      }
     } catch (e) {
       // Fail open if the rate-limit table is unavailable
     }
@@ -146,19 +164,15 @@ function rateLimit(maxReqs, windowMs) {
   };
 }
 
-// Clean up stale rate-limit rows every 10 minutes
-setInterval(function() {
-  sql`DELETE FROM rate_limits WHERE ts < now() - interval '1 hour'`.catch(function() {});
-}, 600000);
+// ── OPENAI (guarded) ──
+const OPENAI_CONFIGURED = !!process.env.OPENAI_API_KEY;
+const openai = OPENAI_CONFIGURED ? new OpenAI({ apiKey: process.env.OPENAI_API_KEY }) : null;
 
-const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
-
-function genId() {
-  return 'v' + Date.now().toString(36) + crypto.randomBytes(3).toString('hex');
-}
+function genId() { return 'v_' + crypto.randomUUID(); }
+function genEnqId() { return 'e_' + crypto.randomUUID(); }
+function genVisitId() { return 'vs_' + crypto.randomUUID(); }
 
 // Parse a numeric value from user input, tolerating commas/currency symbols.
-// Returns an integer (or null when blank/invalid) so NaN never reaches the DB.
 function toInt(value) {
   if (value === null || value === undefined || value === '') return null;
   const cleaned = String(value).replace(/[^0-9.-]/g, '');
@@ -166,20 +180,10 @@ function toInt(value) {
   return Number.isFinite(n) ? Math.round(n) : null;
 }
 
-function genEnqId() {
-  return 'e' + Date.now().toString(36) + crypto.randomBytes(3).toString('hex');
-}
-
-function genVisitId() {
-  return 'vs_' + Date.now().toString(36) + crypto.randomBytes(3).toString('hex');
-}
-
 function generateToken(admin) {
-  return jwt.sign({ id: admin.id, email: admin.email }, JWT_SECRET, { expiresIn: '7d' });
+  return jwt.sign({ id: admin.id, email: admin.email, v: admin.token_version || 0 }, JWT_SECRET, { expiresIn: '7d' });
 }
 
-// Upload base64 data-URL images to Cloudinary; returns hosted URLs.
-// Falls back to the original URL when Cloudinary is not configured or upload fails.
 async function cloudifyImages(images) {
   if (!Array.isArray(images) || images.length === 0) return images || [];
   const out = [];
@@ -214,14 +218,21 @@ function requireAuth(req, res, next) {
   try {
     const decoded = jwt.verify(token, JWT_SECRET);
     req.user = decoded;
-    next();
+    sql`SELECT token_version FROM admins WHERE id = ${decoded.id}`.then(([row]) => {
+      if (!row || (row.token_version || 0) !== (decoded.v || 0)) {
+        return res.status(401).json({ error: 'Token revoked. Please log in again.' });
+      }
+      next();
+    }).catch(() => {
+      res.status(500).json({ error: 'Internal server error' });
+    });
   } catch (err) {
     return res.status(401).json({ error: 'Invalid or expired token' });
   }
 }
 
 // ── AUTH ROUTES ──
-app.post('/api/auth/login', async (req, res) => {
+app.post('/api/auth/login', rateLimit(5, 300000), async (req, res) => {
   try {
     const { email, password } = req.body;
     if (!email || !password) return res.status(400).json({ error: 'Email and password required' });
@@ -235,7 +246,8 @@ app.post('/api/auth/login', async (req, res) => {
     const token = generateToken(admin);
     res.json({ token, user: { id: admin.id, email: admin.email } });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error('Login error:', err);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
@@ -243,13 +255,16 @@ app.post('/api/auth/signup', requireAuth, async (req, res) => {
   try {
     const { email, password } = req.body;
     if (!email || !password) return res.status(400).json({ error: 'Email and password required' });
+    if (String(password).length < 8) return res.status(400).json({ error: 'Password must be at least 8 characters' });
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return res.status(400).json({ error: 'Invalid email format' });
 
     const hash = await bcrypt.hash(password, 10);
     const [admin] = await sql`INSERT INTO admins (email, password_hash) VALUES (${email}, ${hash}) RETURNING id, email`;
     res.json({ user: admin });
   } catch (err) {
     if (err.code === '23505') return res.status(400).json({ error: 'Email already exists' });
-    res.status(500).json({ error: err.message });
+    console.error('Signup error:', err);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
@@ -266,10 +281,11 @@ app.post('/api/auth/change-password', requireAuth, async (req, res) => {
     if (!valid) return res.status(401).json({ error: 'Current password is incorrect' });
 
     const hash = await bcrypt.hash(String(newPassword), 10);
-    await sql`UPDATE admins SET password_hash = ${hash} WHERE id = ${admin.id}`;
+    await sql`UPDATE admins SET password_hash = ${hash}, token_version = token_version + 1 WHERE id = ${admin.id}`;
     res.json({ ok: true });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error('Change password error:', err);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
@@ -279,7 +295,8 @@ app.get('/api/admins', requireAuth, async (req, res) => {
     const rows = await sql`SELECT id, email, created_at FROM admins ORDER BY created_at ASC`;
     res.json(rows);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error('List admins error:', err);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
@@ -293,25 +310,31 @@ app.delete('/api/admins/:id', requireAuth, async (req, res) => {
     await sql`DELETE FROM admins WHERE id = ${req.params.id}`;
     res.json({ ok: true });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error('Delete admin error:', err);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
 app.post('/api/admins/:id/reset-password', requireAuth, async (req, res) => {
   try {
+    if (req.params.id !== req.user.id) {
+      return res.status(403).json({ error: 'You can only reset your own password' });
+    }
     const [target] = await sql`SELECT id FROM admins WHERE id = ${req.params.id}`;
     if (!target) return res.status(404).json({ error: 'Admin not found' });
     const tempPassword = crypto.randomBytes(4).toString('hex') + Math.floor(100 + Math.random() * 900);
     const hash = await bcrypt.hash(tempPassword, 10);
-    await sql`UPDATE admins SET password_hash = ${hash} WHERE id = ${req.params.id}`;
+    await sql`UPDATE admins SET password_hash = ${hash}, token_version = token_version + 1 WHERE id = ${req.params.id}`;
     res.json({ ok: true, tempPassword });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error('Reset password error:', err);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
 // ── EMBEDDING GENERATION ──
 async function generateEmbedding(text) {
+  if (!openai) return null;
   try {
     const response = await openai.embeddings.create({
       model: 'text-embedding-3-small',
@@ -358,6 +381,7 @@ async function embedAndStore(text, contentType, metadata) {
 
 // ── RAG SEARCH ──
 async function ragSearch(query, matchCount = 5, filterType = null) {
+  if (!openai) return [];
   const queryEmbedding = await generateEmbedding(query);
   if (!queryEmbedding) return [];
 
@@ -391,7 +415,8 @@ app.get('/api/vehicles', async (req, res) => {
     const vehicles = await sql`SELECT * FROM vehicles ORDER BY created_at DESC`;
     res.json(vehicles);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error('List vehicles error:', err);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
@@ -401,16 +426,18 @@ app.get('/api/vehicles/:id', async (req, res) => {
     if (!vehicle) return res.status(404).json({ error: 'Vehicle not found' });
     res.json(vehicle);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error('Get vehicle error:', err);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
-app.post('/api/vehicles/:id/view', async (req, res) => {
+app.post('/api/vehicles/:id/view', rateLimit(20, 60000), async (req, res) => {
   try {
     await sql`UPDATE vehicles SET views = views + 1 WHERE id = ${req.params.id}`;
     res.json({ ok: true });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error('View increment error:', err);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
@@ -420,6 +447,13 @@ app.post('/api/vehicles', requireAuth, async (req, res) => {
     const id = genId();
     const now = new Date().toISOString();
     const v = req.body;
+
+    if (v.status && !VALID_STATUSES.includes(v.status)) return res.status(400).json({ error: 'Invalid status' });
+    if (v.condition && !VALID_CONDITIONS.includes(v.condition)) return res.status(400).json({ error: 'Invalid condition' });
+    if (v.body_type && !VALID_BODY_TYPES.includes(v.body_type)) return res.status(400).json({ error: 'Invalid body_type' });
+    if (v.fuel && !VALID_FUELS.includes(v.fuel)) return res.status(400).json({ error: 'Invalid fuel type' });
+    if (v.transmission && !VALID_TRANSMISSIONS.includes(v.transmission)) return res.status(400).json({ error: 'Invalid transmission' });
+
     const featuresJson = JSON.stringify(v.features || []);
     const images = await cloudifyImages(v.images || []);
     const imagesJson = JSON.stringify(images);
@@ -428,13 +462,13 @@ app.post('/api/vehicles', requireAuth, async (req, res) => {
       VALUES (${id}, ${v.make || ''}, ${v.model || ''}, ${v.trim || ''}, ${toInt(v.year) || 2024}, ${toInt(v.price) || 0}, ${v.condition || 'new'}, ${v.status || 'in_stock'}, ${v.body_type || 'sedan'}, ${v.fuel || 'petrol'}, ${toInt(v.mileage) || 0}, ${v.engine || ''}, ${v.transmission || 'automatic'}, ${v.color || ''}, ${v.description || ''}, ${featuresJson}::jsonb, ${imagesJson}::jsonb, ${toInt(v.quantity) > 0 ? toInt(v.quantity) : 1}, ${now}::timestamptz, ${now}::timestamptz, 0, 0)
       RETURNING *`;
 
-    // Auto-embed into knowledge base
     const kbText = vehicleToKnowledge(vehicle);
     await embedAndStore(kbText, 'vehicle', { vehicle_id: vehicle.id, make: vehicle.make, model: vehicle.model, year: vehicle.year, price: vehicle.price, status: vehicle.status });
 
     res.json(vehicle);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error('Create vehicle error:', err);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
@@ -445,8 +479,12 @@ app.put('/api/vehicles/:id', requireAuth, async (req, res) => {
     const [existing] = await sql`SELECT id, make, model, year, status, price FROM vehicles WHERE id = ${req.params.id}`;
     if (!existing) return res.status(404).json({ error: 'Vehicle not found' });
 
-    // Partial update: only touch fields that were sent, so callers like the
-    // "mark as sold" form (status/sold_*) never null out the other columns.
+    if (v.status && !VALID_STATUSES.includes(v.status)) return res.status(400).json({ error: 'Invalid status' });
+    if (v.condition && !VALID_CONDITIONS.includes(v.condition)) return res.status(400).json({ error: 'Invalid condition' });
+    if (v.body_type && !VALID_BODY_TYPES.includes(v.body_type)) return res.status(400).json({ error: 'Invalid body_type' });
+    if (v.fuel && !VALID_FUELS.includes(v.fuel)) return res.status(400).json({ error: 'Invalid fuel type' });
+    if (v.transmission && !VALID_TRANSMISSIONS.includes(v.transmission)) return res.status(400).json({ error: 'Invalid transmission' });
+
     const sets = [];
     const values = [];
     const push = (name, value) => { values.push(value); sets.push(name + ' = $' + values.length); };
@@ -496,16 +534,14 @@ app.put('/api/vehicles/:id', requireAuth, async (req, res) => {
       addNotification('sale', existing.make + ' ' + existing.model + ' (' + existing.year + ') marked as sold', 'Recorded as sold at GHS ' + (vehicle.sold_price ? Number(vehicle.sold_price).toLocaleString() : vehicle.price));
     }
 
-    // Re-embed updated vehicle
     const kbText = vehicleToKnowledge(vehicle);
-    // Delete old knowledge entry
     await sql`DELETE FROM knowledge_base WHERE content_type = 'vehicle' AND metadata->>'vehicle_id' = ${req.params.id}`;
-    // Insert new
     await embedAndStore(kbText, 'vehicle', { vehicle_id: vehicle.id, make: vehicle.make, model: vehicle.model, year: vehicle.year, price: vehicle.price, status: vehicle.status });
 
     res.json(vehicle);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error('Update vehicle error:', err);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
@@ -524,18 +560,20 @@ app.post('/api/vehicles/:id/clone', requireAuth, async (req, res) => {
 
     res.json(vehicle);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error('Clone vehicle error:', err);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
 app.delete('/api/vehicles/:id', requireAuth, async (req, res) => {
   try {
-    // Remove from knowledge base
     await sql`DELETE FROM knowledge_base WHERE content_type = 'vehicle' AND metadata->>'vehicle_id' = ${req.params.id}`;
-    await sql`DELETE FROM vehicles WHERE id = ${req.params.id}`;
+    const [deleted] = await sql`DELETE FROM vehicles WHERE id = ${req.params.id} RETURNING id`;
+    if (!deleted) return res.status(404).json({ error: 'Vehicle not found' });
     res.json({ ok: true });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error('Delete vehicle error:', err);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
@@ -545,11 +583,12 @@ app.get('/api/enquiries', requireAuth, async (req, res) => {
     const enquiries = await sql`SELECT * FROM enquiries ORDER BY created_at DESC`;
     res.json(enquiries);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error('List enquiries error:', err);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
-app.post('/api/enquiries', async (req, res) => {
+app.post('/api/enquiries', rateLimit(10, 60000), async (req, res) => {
   try {
     const id = genEnqId();
     const e = req.body;
@@ -560,7 +599,8 @@ app.post('/api/enquiries', async (req, res) => {
     sendEnquiryEmails(enquiry);
     res.json(enquiry);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error('Create enquiry error:', err);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
@@ -585,16 +625,19 @@ app.put('/api/enquiries/:id', requireAuth, async (req, res) => {
     const [enquiry] = await sql(query, values);
     res.json(enquiry);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error('Update enquiry error:', err);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
 app.delete('/api/enquiries/:id', requireAuth, async (req, res) => {
   try {
-    await sql`DELETE FROM enquiries WHERE id = ${req.params.id}`;
+    const [deleted] = await sql`DELETE FROM enquiries WHERE id = ${req.params.id} RETURNING id`;
+    if (!deleted) return res.status(404).json({ error: 'Enquiry not found' });
     res.json({ ok: true });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error('Delete enquiry error:', err);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
@@ -605,30 +648,30 @@ app.post('/api/enquiries/:id/send-email', requireAuth, async (req, res) => {
     if (!enq) return res.status(404).json({ error: 'Enquiry not found' });
     if (!enq.customer_email) return res.status(400).json({ error: 'No email address on file for this enquiry' });
 
-    const html = '<p>' + String(body || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/\n/g, '<br>') + '</p>';
-    const sent = await sendEmail(enq.customer_email, String(subject || 'Re: Your Dealership Name Enquiry'), html);
+    const html = '<p>' + escHtml(body) + '</p>';
+    const sent = await sendEmail(enq.customer_email, String(subject || 'Re: Your ' + SITE_NAME + ' Enquiry'), html);
     if (!sent) return res.status(400).json({ error: 'Email sending is not configured. Set the SMTP_* env vars to enable it.' });
     res.json({ ok: true, to: enq.customer_email });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error('Send email error:', err);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
 // ── VISIT SCHEDULING ──
-app.post('/api/visits', async (req, res) => {
+app.post('/api/visits', rateLimit(10, 60000), async (req, res) => {
   try {
     const v = req.body;
     if (!v.customer_name || !v.customer_phone || !v.preferred_date) {
       return res.status(400).json({ error: 'Name, phone, and preferred date are required' });
     }
 
-    // Business hours: Mon–Sat 09:00–18:00, Sunday by appointment only.
     const d = new Date(v.preferred_date + 'T12:00:00Z');
     if (isNaN(d.getTime())) {
       return res.status(400).json({ error: 'Invalid preferred date' });
     }
     const today = new Date();
-    today.setHours(0, 0, 0, 0);
+    today.setUTCHours(0, 0, 0, 0);
     if (d < today) {
       return res.status(400).json({ error: 'Preferred date cannot be in the past' });
     }
@@ -656,7 +699,8 @@ app.post('/api/visits', async (req, res) => {
     sendVisitEmails(visit, vehicleLabel);
     res.json(visit);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error('Create visit error:', err);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
@@ -671,106 +715,116 @@ app.get('/api/visits', requireAuth, async (req, res) => {
     }
     res.json(rows);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error('List visits error:', err);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
 app.put('/api/visits/:id', requireAuth, async (req, res) => {
   try {
     const v = req.body;
+    if (v.status && !VALID_VISIT_STATUSES.includes(v.status)) {
+      return res.status(400).json({ error: 'Invalid visit status' });
+    }
     const [visit] = await sql`UPDATE visit_schedules SET status = ${v.status}, updated_at = now() WHERE id = ${req.params.id} RETURNING *`;
     if (!visit) return res.status(404).json({ error: 'Visit not found' });
     res.json(visit);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error('Update visit error:', err);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
 app.delete('/api/visits/:id', requireAuth, async (req, res) => {
   try {
-    await sql`DELETE FROM visit_schedules WHERE id = ${req.params.id}`;
+    const [deleted] = await sql`DELETE FROM visit_schedules WHERE id = ${req.params.id} RETURNING id`;
+    if (!deleted) return res.status(404).json({ error: 'Visit not found' });
     res.json({ ok: true });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error('Delete visit error:', err);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
-// ── STATS ──
+// ── STATS (SQL-aggregated, no full-table scans) ──
 app.get('/api/stats', requireAuth, async (req, res) => {
   try {
-    const cars = await sql`SELECT * FROM vehicles`;
-    const enqs = await sql`SELECT * FROM enquiries`;
+    const [carStats] = await sql`
+      SELECT
+        count(*)::int AS "totalCars",
+        count(*) FILTER (WHERE status = 'in_stock')::int AS "inStock",
+        count(*) FILTER (WHERE status = 'sold')::int AS "sold",
+        coalesce(sum(CASE WHEN status = 'in_stock' THEN price ELSE 0 END), 0)::int AS "totalValue"
+      FROM vehicles`;
+    const [enqStats] = await sql`
+      SELECT
+        count(*)::int AS "totalEnquiries",
+        count(*) FILTER (WHERE status = 'unread')::int AS "unreadEnquiries"
+      FROM enquiries`;
     const [kbRow] = await sql`SELECT count(*)::int as count FROM knowledge_base`;
     const [visitCount] = await sql`SELECT count(*)::int as count FROM visit_schedules WHERE status = 'pending'`;
-    const inStock = cars.filter(c => c.status === 'in_stock');
-    const sold = cars.filter(c => c.status === 'sold');
-    const totalValue = inStock.reduce((s, c) => s + (Number(c.price) || 0), 0);
     res.json({
-      totalCars: cars.length,
-      inStock: inStock.length,
-      sold: sold.length,
-      totalValue,
-      totalEnquiries: enqs.length,
-      unreadEnquiries: enqs.filter(e => e.status === 'unread').length,
+      totalCars: carStats.totalCars,
+      inStock: carStats.inStock,
+      sold: carStats.sold,
+      totalValue: carStats.totalValue,
+      totalEnquiries: enqStats.totalEnquiries,
+      unreadEnquiries: enqStats.unreadEnquiries,
       knowledgeEntries: kbRow?.count || 0,
       pendingVisits: visitCount?.count || 0
     });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error('Stats error:', err);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
-// ── STATS: Body type distribution ──
 app.get('/api/stats/body-distribution', requireAuth, async (req, res) => {
   try {
     const rows = await sql`SELECT body_type, count(*)::int as count FROM vehicles GROUP BY body_type ORDER BY count DESC`;
     res.json(rows);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error('Body distribution error:', err);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
-// ── STATS: Monthly sold trend ──
+async function monthlyTrend(tableName, whereClause) {
+  let rows;
+  if (whereClause) {
+    rows = await sql`SELECT to_char(created_at, 'Mon') as month, count(*)::int as count
+      FROM ${sql(tableName)} WHERE ${sql.unsafe(whereClause)}
+      GROUP BY to_char(created_at, 'Mon'), date_trunc('month', created_at)
+      ORDER BY date_trunc('month', created_at) ASC`;
+  } else {
+    rows = await sql`SELECT to_char(created_at, 'Mon') as month, count(*)::int as count
+      FROM ${sql(tableName)}
+      GROUP BY to_char(created_at, 'Mon'), date_trunc('month', created_at)
+      ORDER BY date_trunc('month', created_at) ASC`;
+  }
+  const monthNames = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  const monthsInData = new Set(rows.map(r => r.month));
+  return monthNames.filter(m => monthsInData.has(m)).map(m => {
+    const found = rows.find(r => r.month === m);
+    return { month: m, count: found ? found.count : 0 };
+  });
+}
+
 app.get('/api/stats/monthly-sold', requireAuth, async (req, res) => {
   try {
-    const rows = await sql`
-      SELECT to_char(created_at, 'Mon') as month, count(*)::int as count
-      FROM vehicles WHERE status = 'sold'
-      GROUP BY to_char(created_at, 'Mon'), date_trunc('month', created_at)
-      ORDER BY date_trunc('month', created_at) ASC
-    `;
-    const now = new Date();
-    const monthNames = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-    const months = monthNames.slice(0, now.getMonth() + 1);
-    const data = months.map(m => {
-      const found = rows.find(r => r.month === m);
-      return { month: m, count: found ? found.count : 0 };
-    });
-    res.json(data);
+    res.json(await monthlyTrend('vehicles', "status = 'sold'"));
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error('Monthly sold error:', err);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
-// ── STATS: Enquiry trend ──
 app.get('/api/stats/enquiry-trend', requireAuth, async (req, res) => {
   try {
-    const rows = await sql`
-      SELECT to_char(created_at, 'Mon') as month, count(*)::int as count
-      FROM enquiries
-      GROUP BY to_char(created_at, 'Mon'), date_trunc('month', created_at)
-      ORDER BY date_trunc('month', created_at) ASC
-    `;
-    const now = new Date();
-    const monthNames = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-    const months = monthNames.slice(0, now.getMonth() + 1);
-    const data = months.map(m => {
-      const found = rows.find(r => r.month === m);
-      return { month: m, count: found ? found.count : 0 };
-    });
-    res.json(data);
+    res.json(await monthlyTrend('enquiries'));
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error('Enquiry trend error:', err);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
@@ -790,7 +844,8 @@ app.post('/api/upload', requireAuth, async (req, res) => {
     const dataUrl = `data:image/${ext};base64,${base64Data}`;
     res.json({ url: dataUrl });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error('Upload error:', err);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
@@ -806,7 +861,8 @@ app.get('/api/knowledge', requireAuth, async (req, res) => {
     }
     res.json(entries);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error('List knowledge error:', err);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
@@ -819,25 +875,32 @@ app.post('/api/knowledge', requireAuth, async (req, res) => {
     if (!entry) return res.status(500).json({ error: 'Failed to generate embedding' });
     res.json(entry);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error('Create knowledge error:', err);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
 app.put('/api/knowledge/:id', requireAuth, async (req, res) => {
   try {
     const { content, content_type, metadata } = req.body;
-    const updates = {};
+    const [existing] = await sql`SELECT content_type, metadata FROM knowledge_base WHERE id = ${req.params.id}`;
+    if (!existing) return res.status(404).json({ error: 'Entry not found' });
+
+    const newType = content_type !== undefined ? content_type : existing.content_type;
+    const newMeta = metadata !== undefined ? metadata : existing.metadata;
+
     if (content !== undefined) {
       const embedding = await generateEmbedding(content);
       if (!embedding) return res.status(500).json({ error: 'Failed to generate embedding' });
       const embeddingStr = '[' + embedding.join(',') + ']';
-      const [entry] = await sql`UPDATE knowledge_base SET content = ${content}, content_type = ${content_type}, metadata = ${JSON.stringify(metadata)}::jsonb, embedding = ${embeddingStr}::vector WHERE id = ${req.params.id} RETURNING id, content, content_type, metadata, created_at, updated_at`;
+      const [entry] = await sql`UPDATE knowledge_base SET content = ${content}, content_type = ${newType}, metadata = ${JSON.stringify(newMeta)}::jsonb, embedding = ${embeddingStr}::vector WHERE id = ${req.params.id} RETURNING id, content, content_type, metadata, created_at, updated_at`;
       return res.json(entry);
     }
-    const [entry] = await sql`UPDATE knowledge_base SET content_type = ${content_type}, metadata = ${JSON.stringify(metadata)}::jsonb WHERE id = ${req.params.id} RETURNING id, content, content_type, metadata, created_at, updated_at`;
+    const [entry] = await sql`UPDATE knowledge_base SET content_type = ${newType}, metadata = ${JSON.stringify(newMeta)}::jsonb WHERE id = ${req.params.id} RETURNING id, content, content_type, metadata, created_at, updated_at`;
     res.json(entry);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error('Update knowledge error:', err);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
@@ -846,35 +909,32 @@ app.delete('/api/knowledge/:id', requireAuth, async (req, res) => {
     await sql`DELETE FROM knowledge_base WHERE id = ${req.params.id}`;
     res.json({ ok: true });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error('Delete knowledge error:', err);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
-// Bulk sync: re-embed all vehicles into knowledge base
+// Bulk sync: re-embed all vehicles into knowledge base (runs in background)
 app.post('/api/knowledge/sync-vehicles', requireAuth, async (req, res) => {
-  try {
-    const vehicles = await sql`SELECT * FROM vehicles`;
-    if (vehicles.length === 0) return res.json({ synced: 0 });
-
-    // Remove old vehicle entries
-    await sql`DELETE FROM knowledge_base WHERE content_type = 'vehicle'`;
-
-    // Embed and store each vehicle
-    let synced = 0;
-    for (const v of vehicles) {
-      const kbText = vehicleToKnowledge(v);
-      const result = await embedAndStore(kbText, 'vehicle', { vehicle_id: v.id, make: v.make, model: v.model, year: v.year, price: v.price, status: v.status });
-      if (result) synced++;
+  res.json({ status: 'sync_started' });
+  (async () => {
+    try {
+      const vehicles = await sql`SELECT * FROM vehicles`;
+      if (vehicles.length === 0) return;
+      await sql`DELETE FROM knowledge_base WHERE content_type = 'vehicle'`;
+      for (const v of vehicles) {
+        const kbText = vehicleToKnowledge(v);
+        await embedAndStore(kbText, 'vehicle', { vehicle_id: v.id, make: v.make, model: v.model, year: v.year, price: v.price, status: v.status });
+      }
+      console.log('KB sync complete: ' + vehicles.length + ' vehicles');
+    } catch (err) {
+      console.error('KB sync error:', err.message);
     }
-
-    res.json({ synced });
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
+  })();
 });
 
-// ── CHATBOT (RAG + Gemini) ──
-const SYSTEM_PROMPT = `You are the AI Car Advisor for Dealership Name, Ghana's premier car dealership based in Accra.
+// ── CHATBOT (RAG + OpenAI) ──
+const SYSTEM_PROMPT = `You are the AI Car Advisor for ${SITE_NAME}, Ghana's premier car dealership based in Accra.
 
 ## Your Role
 You help customers find the right vehicle, estimate running costs, compare cars, and answer questions about buying/owning a car in Ghana. Be warm, knowledgeable, and concise.
@@ -913,19 +973,18 @@ Add maintenance (~GHS 480/mo base, lower for new/electric, higher for SUVs) and 
 
 app.post('/api/chat', rateLimit(15, 60000), async (req, res) => {
   try {
+    if (!openai) return res.status(503).json({ error: 'AI assistant is not configured yet.' });
+
     const { messages } = req.body;
     if (!messages || !Array.isArray(messages)) {
       return res.status(400).json({ error: 'messages array required' });
     }
 
-    // Get the latest user message for RAG search
     const lastUserMsg = [...messages].reverse().find(m => m.role === 'user');
     const query = lastUserMsg ? lastUserMsg.content : '';
 
-    // RAG: Search knowledge base for relevant context
     const ragResults = await ragSearch(query, 6);
 
-    // Build context from RAG results
     let contextStr = '';
     if (ragResults.length > 0) {
       contextStr = '\n\n## RETRIEVED CONTEXT\n' +
@@ -952,7 +1011,7 @@ app.post('/api/chat', rateLimit(15, 60000), async (req, res) => {
     res.json({ reply: response.choices[0]?.message?.content || 'No response generated.' });
   } catch (err) {
     console.error('Chat error:', err.message);
-    res.status(500).json({ error: 'Failed to get AI response: ' + err.message });
+    res.status(500).json({ error: 'Failed to get AI response. Please try again.' });
   }
 });
 
@@ -962,7 +1021,8 @@ app.get('/api/enquiries/unread-count', requireAuth, async (req, res) => {
     const [result] = await sql`SELECT count(*)::int as count FROM enquiries WHERE status = 'unread'`;
     res.json({ count: result.count });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error('Unread count error:', err);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
@@ -972,7 +1032,8 @@ app.get('/api/notifications', requireAuth, async (req, res) => {
     const rows = await sql`SELECT * FROM notification_log ORDER BY created_at DESC LIMIT 20`;
     res.json(rows);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error('Notifications error:', err);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
@@ -981,7 +1042,8 @@ app.post('/api/notifications/seen', requireAuth, async (req, res) => {
     await sql`UPDATE notification_log SET seen = true WHERE seen = false`;
     res.json({ ok: true });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error('Mark seen error:', err);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
@@ -990,7 +1052,8 @@ app.get('/api/notifications/unread-count', requireAuth, async (req, res) => {
     const [row] = await sql`SELECT count(*)::int as count FROM notification_log WHERE seen = false`;
     res.json({ count: row.count });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error('Notification count error:', err);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
@@ -1017,6 +1080,7 @@ app.get('/sitemap.xml', async (req, res) => {
     res.set('Content-Type', 'application/xml');
     res.send(xml);
   } catch (err) {
+    console.error('Sitemap error:', err);
     res.status(500).send('Error generating sitemap');
   }
 });
@@ -1038,7 +1102,8 @@ app.get('*', (req, res) => {
 module.exports = app;
 
 if (require.main === module) {
-  // Create notification log table
+  sql`ALTER TABLE admins ADD COLUMN IF NOT EXISTS token_version int DEFAULT 0`.catch(() => {});
+
   sql`CREATE TABLE IF NOT EXISTS notification_log (
     id text PRIMARY KEY,
     type text NOT NULL DEFAULT 'info',
@@ -1049,7 +1114,6 @@ if (require.main === module) {
     created_at timestamp DEFAULT now()
   )`.catch(e => console.error('Notification table creation warning:', e.message));
 
-  // Create rate limit table
   sql`CREATE TABLE IF NOT EXISTS rate_limits (
     id serial PRIMARY KEY,
     key text NOT NULL,
@@ -1057,7 +1121,6 @@ if (require.main === module) {
   )`.catch(e => console.error('Rate limit table creation warning:', e.message));
   sql`CREATE INDEX IF NOT EXISTS idx_rate_limits_key_ts ON rate_limits (key, ts)`.catch(function() {});
 
-  // Create visit_schedules table
   sql`CREATE TABLE IF NOT EXISTS visit_schedules (
     id text PRIMARY KEY,
     customer_name text NOT NULL,
@@ -1073,6 +1136,6 @@ if (require.main === module) {
   )`.catch(e => console.error('Visit schedules table creation warning:', e.message));
 
   app.listen(PORT, () => {
-    console.log('Dealership Name running at http://localhost:' + PORT);
+    console.log(SITE_NAME + ' running at http://localhost:' + PORT);
   });
 }
