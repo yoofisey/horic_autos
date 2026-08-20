@@ -66,50 +66,55 @@ function escHtml(s) {
     .replace(/"/g, '&quot;').replace(/'/g, '&#39;').replace(/\n/g, '<br>');
 }
 
-function emailShell(inner) {
+async function emailShell(inner) {
+  const cfg = await loadSiteConfig();
   return '<div style="font-family:Arial,sans-serif;max-width:560px;margin:0 auto;color:#1a1a1a;line-height:1.5">'
-    + '<h2 style="font-family:Georgia,serif;color:#FF6A00;margin:0 0 16px;">' + SITE_NAME + '</h2>'
+    + '<h2 style="font-family:Georgia,serif;color:#FF6A00;margin:0 0 16px;">' + escHtml(cfg.site_name) + '</h2>'
     + inner
     + '<hr style="border:none;border-top:1px solid #eee;margin:24px 0 12px;">'
-    + '<p style="color:#888;font-size:12px;">Mon–Sat 9am–6pm · Sundays by appointment<br>Phone/WhatsApp: ' + SITE_PHONE + ' · ' + SITE_EMAIL + '</p>'
+    + '<p style="color:#888;font-size:12px;">Mon–Sat 9am–6pm · Sundays by appointment<br>Phone/WhatsApp: ' + escHtml(cfg.site_phone) + ' · ' + escHtml(cfg.site_email) + '</p>'
     + '</div>';
 }
 
-function buildEnquiryConfirmation(e) {
+async function buildEnquiryConfirmation(e) {
+  const cfg = await loadSiteConfig();
   return emailShell(
     '<p>Hello <strong>' + escHtml(e.customer_name) + '</strong>,</p>'
-    + '<p>Thank you for contacting <strong>' + SITE_NAME + '</strong>. We have received your enquiry and a member of our team will get back to you shortly.</p>'
+    + '<p>Thank you for contacting <strong>' + escHtml(cfg.site_name) + '</strong>. We have received your enquiry and a member of our team will get back to you shortly.</p>'
     + '<p style="border-left:3px solid #FF6A00;padding:10px 14px;background:#f9f9f9;color:#555;">' + escHtml(e.message) + '</p>'
-    + '<p>Want a faster answer? Message us on WhatsApp: <a href="https://wa.me/233000000000" style="color:#FF6A00;">' + SITE_PHONE + '</a></p>'
+    + '<p>Want a faster answer? Message us on WhatsApp: <a href="https://wa.me/233000000000" style="color:#FF6A00;">' + escHtml(cfg.site_phone) + '</a></p>'
     + '<p style="color:#888;font-size:12px;">This is an automated confirmation. Please reply to the team member who contacts you.</p>'
   );
 }
 
-function buildEnquiryAlert(e) {
+async function buildEnquiryAlert(e) {
+  const cfg = await loadSiteConfig();
   return emailShell(
     '<p><strong>New enquiry</strong> received on the website.</p>'
     + '<p style="border-left:3px solid #FF6A00;padding:10px 14px;background:#f9f9f9;color:#555;">' + escHtml(e.message) + '</p>'
     + '<p><strong>Name:</strong> ' + escHtml(e.customer_name) + '<br>'
     + '<strong>Phone:</strong> ' + escHtml(e.customer_phone) + '<br>'
     + '<strong>Email:</strong> ' + escHtml(e.customer_email || '—') + '</p>'
-    + '<p>Reply from the admin panel, or open WhatsApp: <a href="https://wa.me/233000000000" style="color:#FF6A00;">' + SITE_PHONE + '</a></p>'
+    + '<p>Reply from the admin panel, or open WhatsApp: <a href="https://wa.me/233000000000" style="color:#FF6A00;">' + escHtml(cfg.site_phone) + '</a></p>'
   );
 }
 
-function buildVisitConfirmation(v, vehicleLabel) {
+async function buildVisitConfirmation(v, vehicleLabel) {
+  const cfg = await loadSiteConfig();
   return emailShell(
     '<p>Hello <strong>' + escHtml(v.customer_name) + '</strong>,</p>'
-    + '<p>Thanks for booking a visit to <strong>' + SITE_NAME + '</strong>. Here is what we have on file:</p>'
+    + '<p>Thanks for booking a visit to <strong>' + escHtml(cfg.site_name) + '</strong>. Here is what we have on file:</p>'
     + '<p style="border-left:3px solid #FF6A00;padding:10px 14px;background:#f9f9f9;color:#555;">'
     + '<strong>Date:</strong> ' + escHtml(v.preferred_date) + '<br>'
     + '<strong>Time:</strong> ' + escHtml(v.preferred_time || 'during business hours') + '<br>'
     + (vehicleLabel ? '<strong>Vehicle:</strong> ' + escHtml(vehicleLabel) + '<br>' : '')
-    + '</p><p>Our team will confirm your appointment. If you need to change or cancel, WhatsApp us at <a href="https://wa.me/233000000000" style="color:#FF6A00;">' + SITE_PHONE + '</a>.</p>'
+    + '</p><p>Our team will confirm your appointment. If you need to change or cancel, WhatsApp us at <a href="https://wa.me/233000000000" style="color:#FF6A00;">' + escHtml(cfg.site_phone) + '</a>.</p>'
     + '<p style="color:#888;font-size:12px;">Business hours: Mon–Sat 9am–6pm, Sundays by appointment.</p>'
   );
 }
 
-function buildVisitAlert(v, vehicleLabel) {
+async function buildVisitAlert(v, vehicleLabel) {
+  const cfg = await loadSiteConfig();
   return emailShell(
     '<p><strong>New visit request</strong> from the website.</p>'
     + '<p style="border-left:3px solid #FF6A00;padding:10px 14px;background:#f9f9f9;color:#555;">'
@@ -124,14 +129,18 @@ function buildVisitAlert(v, vehicleLabel) {
   );
 }
 
-function sendEnquiryEmails(e) {
-  if (e.customer_email) sendEmail(e.customer_email, 'We received your enquiry — ' + SITE_NAME, buildEnquiryConfirmation(e)).catch(() => {});
-  if (SMTP_NOTIFY_TO) sendEmail(SMTP_NOTIFY_TO, 'New enquiry: ' + (e.customer_name || 'Website visitor'), buildEnquiryAlert(e)).catch(() => {});
+async function sendEnquiryEmails(e) {
+  if (e.customer_email) {
+    const cfg = await loadSiteConfig();
+    sendEmail(e.customer_email, 'We received your enquiry — ' + cfg.site_name, await buildEnquiryConfirmation(e)).catch(() => {});
+  }
+  if (SMTP_NOTIFY_TO) sendEmail(SMTP_NOTIFY_TO, 'New enquiry: ' + (e.customer_name || 'Website visitor'), await buildEnquiryAlert(e)).catch(() => {});
 }
 
-function sendVisitEmails(v, vehicleLabel) {
-  if (v.customer_email) sendEmail(v.customer_email, 'Visit request received — ' + SITE_NAME, buildVisitConfirmation(v, vehicleLabel)).catch(() => {});
-  if (SMTP_NOTIFY_TO) sendEmail(SMTP_NOTIFY_TO, 'Visit request: ' + (v.customer_name || 'Website visitor') + ' on ' + v.preferred_date, buildVisitAlert(v, vehicleLabel)).catch(() => {});
+async function sendVisitEmails(v, vehicleLabel) {
+  const cfg = await loadSiteConfig();
+  if (v.customer_email) sendEmail(v.customer_email, 'Visit request received — ' + cfg.site_name, await buildVisitConfirmation(v, vehicleLabel)).catch(() => {});
+  if (SMTP_NOTIFY_TO) sendEmail(SMTP_NOTIFY_TO, 'Visit request: ' + (v.customer_name || 'Website visitor') + ' on ' + v.preferred_date, await buildVisitAlert(v, vehicleLabel)).catch(() => {});
 }
 
 // ── VALID ENUMS ──
@@ -328,6 +337,50 @@ app.post('/api/admins/:id/reset-password', requireAuth, async (req, res) => {
     res.json({ ok: true, tempPassword });
   } catch (err) {
     console.error('Reset password error:', err);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// ── SITE CONFIG ──
+const SITE_CONFIG_DEFAULTS = { site_name: SITE_NAME, site_phone: SITE_PHONE, site_email: SITE_EMAIL };
+let siteConfigCache = null;
+
+async function loadSiteConfig() {
+  if (siteConfigCache) return siteConfigCache;
+  try {
+    const rows = await sql`SELECT key, value FROM site_config`;
+    siteConfigCache = { ...SITE_CONFIG_DEFAULTS };
+    for (const r of rows) siteConfigCache[r.key] = r.value;
+  } catch (e) {
+    siteConfigCache = { ...SITE_CONFIG_DEFAULTS };
+  }
+  return siteConfigCache;
+}
+
+app.get('/api/site-config', async (req, res) => {
+  try {
+    const config = await loadSiteConfig();
+    res.json(config);
+  } catch (err) {
+    console.error('Site config error:', err);
+    res.json(SITE_CONFIG_DEFAULTS);
+  }
+});
+
+app.put('/api/site-config', requireAuth, async (req, res) => {
+  try {
+    const allowed = ['site_name', 'site_phone', 'site_email'];
+    for (const [k, v] of Object.entries(req.body)) {
+      if (allowed.includes(k) && typeof v === 'string' && v.trim()) {
+        await sql`INSERT INTO site_config (key, value, updated_at) VALUES (${k}, ${v.trim()}, now())
+          ON CONFLICT (key) DO UPDATE SET value = ${v.trim()}, updated_at = now()`;
+      }
+    }
+    siteConfigCache = null;
+    const config = await loadSiteConfig();
+    res.json(config);
+  } catch (err) {
+    console.error('Update site config error:', err);
     res.status(500).json({ error: 'Internal server error' });
   }
 });
@@ -653,7 +706,8 @@ app.post('/api/enquiries/:id/send-email', requireAuth, async (req, res) => {
     if (!enq.customer_email) return res.status(400).json({ error: 'No email address on file for this enquiry' });
 
     const html = '<p>' + escHtml(body) + '</p>';
-    const sent = await sendEmail(enq.customer_email, String(subject || 'Re: Your ' + SITE_NAME + ' Enquiry'), html);
+    const cfg = await loadSiteConfig();
+    const sent = await sendEmail(enq.customer_email, String(subject || 'Re: Your ' + cfg.site_name + ' Enquiry'), html);
     if (!sent) return res.status(400).json({ error: 'Email sending is not configured. Set the SMTP_* env vars to enable it.' });
     res.json({ ok: true, to: enq.customer_email });
   } catch (err) {
@@ -1158,6 +1212,12 @@ if (require.main === module) {
     created_at timestamp DEFAULT now(),
     updated_at timestamp DEFAULT now()
   )`.catch(e => console.error('Visit schedules table creation warning:', e.message));
+
+  sql`CREATE TABLE IF NOT EXISTS site_config (
+    key text PRIMARY KEY,
+    value text NOT NULL DEFAULT '',
+    updated_at timestamp DEFAULT now()
+  )`.catch(e => console.error('Site config table creation warning:', e.message));
 
   app.listen(PORT, () => {
     console.log(SITE_NAME + ' running at http://localhost:' + PORT);

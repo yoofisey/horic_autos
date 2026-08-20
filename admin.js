@@ -1,6 +1,7 @@
 const RhuleAdmin = (() => {
   let session = null;
   let uploadedImages = [];
+  let siteConfig = { site_name: 'Dealership Name', site_phone: '+233 00 000 0000', site_email: 'info@yourdealership.com' };
 
   const CAR_SVG = '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M5 17h14M5 17a2 2 0 01-2-2V9a2 2 0 012-2h1l2-3h8l2 3h1a2 2 0 012 2v6a2 2 0 01-2 2M5 17l-1 2h1m14-2l1 2h-1"/><circle cx="7.5" cy="17" r="1"/><circle cx="16.5" cy="17" r="1"/></svg>';
 
@@ -37,6 +38,33 @@ const RhuleAdmin = (() => {
     setTimeout(function() { t.style.opacity = '0'; setTimeout(function() { t.remove(); }, 300); }, 3000);
   }
 
+  async function loadSiteConfig() {
+    try {
+      siteConfig = await api('/api/site-config');
+    } catch (e) {}
+  }
+
+  const PAGE_SIZE = 10;
+  var inventoryPage = 1, salesPage = 1, enquiriesPage = 1, knowledgePage = 1, visitsPage = 1;
+  function paginate(data, page) {
+    var total = data.length;
+    var totalPages = Math.ceil(total / PAGE_SIZE) || 1;
+    page = Math.max(1, Math.min(page || 1, totalPages));
+    var start = (page - 1) * PAGE_SIZE;
+    return { items: data.slice(start, start + PAGE_SIZE), totalPages: totalPages, page: page, total: total };
+  }
+
+  function renderPagination(containerId, totalPages, currentPage, callback) {
+    var el = document.getElementById(containerId);
+    if (!el || totalPages <= 1) { if (el) el.innerHTML = ''; return; }
+    var html = '<div style="display:flex;align-items:center;justify-content:center;gap:8px;padding:12px 0;">';
+    html += '<button class="btn btn-sm btn-outline" ' + (currentPage <= 1 ? 'disabled' : '') + ' onclick="' + callback + '(' + (currentPage - 1) + ')">&laquo; Prev</button>';
+    html += '<span style="font-size:0.82rem;color:var(--gray-500);">Page ' + currentPage + ' of ' + totalPages + '</span>';
+    html += '<button class="btn btn-sm btn-outline" ' + (currentPage >= totalPages ? 'disabled' : '') + ' onclick="' + callback + '(' + (currentPage + 1) + ')">Next &raquo;</button>';
+    html += '</div>';
+    el.innerHTML = html;
+  }
+
   // ── AUTH ──
   function showLogin() {
     var overlay = document.getElementById('loginOverlay');
@@ -63,6 +91,7 @@ const RhuleAdmin = (() => {
       localStorage.setItem('rhule_admin_session', JSON.stringify(session));
       document.getElementById('loginOverlay').style.display = 'none';
       document.getElementById('adminLayout').style.display = '';
+      loadSiteConfig();
       renderDashboard();
       initImageUpload();
     } catch (err) {
@@ -87,7 +116,7 @@ const RhuleAdmin = (() => {
     if (tab === 'enquiries') renderEnquiries();
     if (tab === 'knowledge') renderKnowledgeBase();
     if (tab === 'visits') renderVisits();
-    if (tab === 'settings') renderAdmins();
+    if (tab === 'settings') { renderAdmins(); renderSiteConfigForm(); }
   }
 
   function switchDashTab(tab, el) {
@@ -210,8 +239,10 @@ const RhuleAdmin = (() => {
   }
 
   // ── INVENTORY ──
-  async function renderInventoryTable(filter) {
+  var inventoryCache = [];
+  async function renderInventoryTable(filter, page) {
     filter = filter || '';
+    if (page !== undefined) inventoryPage = page;
     var tbody = document.getElementById('inventoryTableBody');
     if (!tbody) return;
     try {
@@ -220,7 +251,9 @@ const RhuleAdmin = (() => {
         var q = filter.toLowerCase();
         cars = cars.filter(function(c) { return c.make.toLowerCase().includes(q) || c.model.toLowerCase().includes(q); });
       }
-      tbody.innerHTML = cars.map(function(car) {
+      inventoryCache = cars;
+      var p = paginate(cars, inventoryPage);
+      tbody.innerHTML = p.items.map(function(car) {
         return '<tr>' +
           '<td><div class="table-car-info"><div class="table-car-thumb">' + CAR_SVG + '</div>' +
           '<div><div class="table-car-name">' + car.make + ' ' + car.model + (car.trim ? ' ' + car.trim : '') + '</div><div class="table-car-sub">' + car.year + ' | ' + car.fuel + (car.quantity > 1 ? ' | x' + car.quantity : '') + '</div></div></div></td>' +
@@ -235,8 +268,10 @@ const RhuleAdmin = (() => {
           '<button title="Delete" class="danger" onclick="RhuleAdmin.openDeleteModal(\'' + car.id + '\')">&#10005;</button>' +
           '</div></td></tr>';
       }).join('');
+      renderPagination('inventoryPagination', p.totalPages, p.page, 'RhuleAdmin.goInventoryPage');
     } catch (e) { console.error(e); }
   }
+  function goInventoryPage(p) { renderInventoryTable('', p); }
 
   function searchInventory(q) {
     var active = document.querySelector('.sidebar-nav-item.active');
@@ -244,7 +279,8 @@ const RhuleAdmin = (() => {
   }
 
   // ── SALES ──
-  async function renderSales() {
+  async function renderSales(page) {
+    if (page !== undefined) salesPage = page;
     try {
       var salesStats = await api('/api/stats/sales');
       document.getElementById('salesTotalSold').textContent = salesStats.totalSold;
@@ -258,9 +294,11 @@ const RhuleAdmin = (() => {
       if (!tbody) return;
       if (sold.length === 0) {
         tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--gray-400);padding:40px;">No sales recorded yet.</td></tr>';
+        renderPagination('salesPagination', 1, 1, '');
         return;
       }
-      tbody.innerHTML = sold.map(function(car) {
+      var p = paginate(sold, salesPage);
+      tbody.innerHTML = p.items.map(function(car) {
         return '<tr>' +
           '<td><div class="table-car-info"><div class="table-car-thumb">' + CAR_SVG + '</div>' +
           '<div><div class="table-car-name">' + car.make + ' ' + car.model + '</div><div class="table-car-sub">' + car.year + '</div></div></div></td>' +
@@ -269,13 +307,16 @@ const RhuleAdmin = (() => {
           '<td>' + (car.sold_date || '—') + '</td>' +
           '<td><div class="table-actions"><button title="Relist" onclick="RhuleAdmin.relistVehicle(\'' + car.id + '\')">&#8634;</button></div></td></tr>';
       }).join('');
+      renderPagination('salesPagination', p.totalPages, p.page, 'RhuleAdmin.goSalesPage');
     } catch (e) { console.error(e); }
   }
+  function goSalesPage(p) { renderSales(p); }
 
   // ── ENQUIRIES ──
   let enquiriesCache = [];
 
-  async function renderEnquiries() {
+  async function renderEnquiries(page) {
+    if (page !== undefined) enquiriesPage = page;
     var list = document.getElementById('enquiriesList');
     if (!list) return;
     try {
@@ -283,17 +324,19 @@ const RhuleAdmin = (() => {
       enquiriesCache = enquiries;
       if (enquiries.length === 0) {
         list.innerHTML = '<div style="text-align:center;padding:60px;color:var(--gray-400);font-size:0.9rem;">No enquiries yet.</div>';
+        renderPagination('enquiriesPagination', 1, 1, '');
         return;
       }
-      list.innerHTML = enquiries.map(function(enq) {
+      var p = paginate(enquiries, enquiriesPage);
+      list.innerHTML = p.items.map(function(enq) {
         var statusClass = enq.status === 'unread' ? 'unread' : (enq.status === 'replied' ? 'replied' : '');
         var statusLabel = enq.status === 'unread' ? 'Unread' : (enq.status === 'replied' ? 'Replied' : 'Read');
         var phone = enq.customer_phone || '';
         var email = enq.customer_email || '';
         var waLink = phone ? 'https://wa.me/' + phone.replace(/^0/, '233') : '#';
-        var waMsg = encodeURIComponent('Hello ' + (enq.customer_name || 'there') + ', thank you for your enquiry at Dealership Name. ' + (enq.message ? 'Re: "' + enq.message.substring(0, 60) + '"' : '') + '\n\nHow can we assist you further?');
-        var mailSubject = encodeURIComponent('Re: Your Dealership Name Enquiry');
-        var mailBody = encodeURIComponent('Dear ' + (enq.customer_name || 'Customer') + ',\n\nThank you for reaching out to Dealership Name.\n\n' + (enq.message ? 'Regarding your enquiry: "' + enq.message.substring(0, 100) + '"\n\n' : '') + 'We would be happy to assist you. Please feel free to contact us.\n\nBest regards,\nDealership Name\n+233 00 000 0000');
+        var waMsg = encodeURIComponent('Hello ' + (enq.customer_name || 'there') + ', thank you for your enquiry at ' + siteConfig.site_name + '. ' + (enq.message ? 'Re: "' + enq.message.substring(0, 60) + '"' : '') + '\n\nHow can we assist you further?');
+        var mailSubject = encodeURIComponent('Re: Your ' + siteConfig.site_name + ' Enquiry');
+        var mailBody = encodeURIComponent('Dear ' + (enq.customer_name || 'Customer') + ',\n\nThank you for reaching out to ' + siteConfig.site_name + '.\n\n' + (enq.message ? 'Regarding your enquiry: "' + enq.message.substring(0, 100) + '"\n\n' : '') + 'We would be happy to assist you. Please feel free to contact us.\n\nBest regards,\n' + siteConfig.site_name + '\n' + siteConfig.site_phone);
 
         return '<div class="enquiry-card ' + statusClass + '">' +
           '<div class="enquiry-top">' +
@@ -329,8 +372,10 @@ const RhuleAdmin = (() => {
             '<button class="enquiry-action-delete" title="Delete" onclick="event.stopPropagation(); RhuleAdmin.deleteEnquiry(\'' + enq.id + '\')">&#10005;</button>' +
           '</div></div>';
       }).join('');
+      renderPagination('enquiriesPagination', p.totalPages, p.page, 'RhuleAdmin.goEnquiriesPage');
     } catch (e) { console.error(e); }
   }
+  function goEnquiriesPage(p) { renderEnquiries(p); }
 
   function toggleReply(id) {
     var box = document.getElementById('replyBox-' + id);
@@ -575,8 +620,15 @@ const RhuleAdmin = (() => {
       Array.from(files).forEach(function(file) {
         if (!file.type.startsWith('image/')) return;
         var reader = new FileReader();
-        reader.onload = function(e) {
-          uploadedImages.push(e.target.result);
+        reader.onload = async function(e) {
+          var base64 = e.target.result.split(',')[1];
+          try {
+            var result = await api('/api/upload', { method: 'POST', body: JSON.stringify({ filename: file.name, data: base64 }) });
+            uploadedImages.push(result.url);
+          } catch (err) {
+            uploadedImages.push(e.target.result);
+            toast('Upload failed, stored locally', 'info');
+          }
           renderImagePreviews();
         };
         reader.readAsDataURL(file);
@@ -587,8 +639,9 @@ const RhuleAdmin = (() => {
   // ── KNOWLEDGE BASE ──
   var currentKbFilter = 'all';
 
-  async function renderKnowledgeBase(filter) {
+  async function renderKnowledgeBase(filter, page) {
     filter = filter || currentKbFilter;
+    if (page !== undefined) knowledgePage = page;
     var tbody = document.getElementById('knowledgeTableBody');
     if (!tbody) return;
     try {
@@ -604,10 +657,12 @@ const RhuleAdmin = (() => {
 
       if (entries.length === 0) {
         tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--gray-400);padding:40px;">No knowledge base entries found. Click "Sync Vehicles" to add your inventory, or add FAQs and policies manually.</td></tr>';
+        renderPagination('knowledgePagination', 1, 1, '');
         return;
       }
 
-      tbody.innerHTML = entries.map(function(entry) {
+      var p = paginate(entries, knowledgePage);
+      tbody.innerHTML = p.items.map(function(entry) {
         var content = entry.content.length > 120 ? entry.content.substring(0, 120) + '...' : entry.content;
         var meta = entry.metadata ? Object.entries(entry.metadata).map(function(kv) { return kv[0] + ': ' + kv[1]; }).join(', ') : '—';
         var date = entry.updated_at ? new Date(entry.updated_at).toLocaleDateString() : '—';
@@ -621,8 +676,10 @@ const RhuleAdmin = (() => {
           '<button title="Delete" class="danger" onclick="RhuleAdmin.deleteKnowledgeEntry(\'' + entry.id + '\')">&#10005;</button>' +
           '</div></td></tr>';
       }).join('');
+      renderPagination('knowledgePagination', p.totalPages, p.page, 'RhuleAdmin.goKnowledgePage');
     } catch (e) { console.error(e); }
   }
+  function goKnowledgePage(p) { renderKnowledgeBase(undefined, p); }
 
   function filterKnowledge(filter, btn) {
     currentKbFilter = filter;
@@ -717,8 +774,9 @@ const RhuleAdmin = (() => {
   // ── VISIT SCHEDULING (ADMIN) ──
   let currentVisitFilter = 'all';
 
-  async function renderVisits(filter) {
+  async function renderVisits(filter, page) {
     filter = filter || currentVisitFilter;
+    if (page !== undefined) visitsPage = page;
     var tbody = document.getElementById('visitsTableBody');
     if (!tbody) return;
     try {
@@ -737,12 +795,14 @@ const RhuleAdmin = (() => {
 
       if (visits.length === 0) {
         tbody.innerHTML = '<tr><td colspan="6"><div class="visit-empty"><div class="visit-empty-icon"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></div><h3>No visits found</h3><p>' + (filter !== 'all' ? 'No visits with "' + filter + '" status.' : 'No scheduled visits yet.') + '</p></div></td></tr>';
+        renderPagination('visitsPagination', 1, 1, '');
         return;
       }
 
       var statusLabels = { pending: 'Pending', confirmed: 'Confirmed', completed: 'Completed', cancelled: 'Cancelled' };
 
-      tbody.innerHTML = visits.map(function(v) {
+      var p = paginate(visits, visitsPage);
+      tbody.innerHTML = p.items.map(function(v) {
         var vehicleStr = v.vehicle_id ? (v.year + ' ' + v.make + ' ' + v.model).trim() || 'Vehicle #' + v.vehicle_id.slice(0, 8) : '—';
         var dateStr = v.preferred_date ? new Date(v.preferred_date).toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' }) : '—';
         var timeStr = v.preferred_time || '—';
@@ -767,8 +827,10 @@ const RhuleAdmin = (() => {
           '<td><span class="visit-status ' + v.status + '"><span class="visit-status-dot"></span>' + (statusLabels[v.status] || v.status) + '</span></td>' +
           '<td><div class="visit-actions">' + actionsHtml + '</div></td></tr>';
       }).join('');
+      renderPagination('visitsPagination', p.totalPages, p.page, 'RhuleAdmin.goVisitsPage');
     } catch (e) { console.error(e); }
   }
+  function goVisitsPage(p) { renderVisits(undefined, p); }
 
   function filterVisits(filter, el) {
     currentVisitFilter = filter;
@@ -818,6 +880,7 @@ const RhuleAdmin = (() => {
     // Show admin, hide login
     document.getElementById('loginOverlay').style.display = 'none';
     document.getElementById('adminLayout').style.display = '';
+    loadSiteConfig();
     renderDashboard();
     initImageUpload();
 
@@ -922,6 +985,31 @@ const RhuleAdmin = (() => {
     }
   }
 
+  // ── SITE CONFIG ──
+  function renderSiteConfigForm() {
+    var nameEl = document.getElementById('sc-name');
+    var phoneEl = document.getElementById('sc-phone');
+    var emailEl = document.getElementById('sc-email');
+    if (nameEl) nameEl.value = siteConfig.site_name || '';
+    if (phoneEl) phoneEl.value = siteConfig.site_phone || '';
+    if (emailEl) emailEl.value = siteConfig.site_email || '';
+  }
+
+  async function saveSiteConfig(e) {
+    e.preventDefault();
+    var name = document.getElementById('sc-name').value.trim();
+    var phone = document.getElementById('sc-phone').value.trim();
+    var email = document.getElementById('sc-email').value.trim();
+    try {
+      siteConfig = await api('/api/site-config', {
+        method: 'PUT',
+        body: JSON.stringify({ site_name: name, site_phone: phone, site_email: email })
+      });
+      toast('Site configuration saved', 'success');
+      renderSiteConfigForm();
+    } catch (err) { toast(err.message, 'error'); }
+  }
+
   // ── ADMIN ACCOUNTS ──
   async function renderAdmins() {
     var tbody = document.getElementById('adminsTableBody');
@@ -973,8 +1061,8 @@ const RhuleAdmin = (() => {
   async function sendEmailReply(id) {
     var enq = enquiriesCache.find(function(e) { return e.id === id; });
     if (!enq || !enq.customer_email) { toast('No email address on file for this enquiry', 'error'); return; }
-    var subject = 'Re: Your Dealership Name Enquiry';
-    var body = 'Dear ' + (enq.customer_name || 'Customer') + ',\n\nThank you for reaching out to Dealership Name.\n\n' + (enq.message ? 'Regarding your enquiry: "' + enq.message.substring(0, 100) + '"\n\n' : '') + 'We would be happy to assist you. Please feel free to contact us.\n\nBest regards,\nDealership Name\n+233 00 000 0000';
+    var subject = 'Re: Your ' + siteConfig.site_name + ' Enquiry';
+    var body = 'Dear ' + (enq.customer_name || 'Customer') + ',\n\nThank you for reaching out to ' + siteConfig.site_name + '.\n\n' + (enq.message ? 'Regarding your enquiry: "' + enq.message.substring(0, 100) + '"\n\n' : '') + 'We would be happy to assist you. Please feel free to contact us.\n\nBest regards,\n' + siteConfig.site_name + '\n' + siteConfig.site_phone;
     try {
       await api('/api/enquiries/' + id + '/send-email', { method: 'POST', body: JSON.stringify({ subject: subject, body: body }) });
       toast('Email sent to ' + enq.customer_email, 'success');
@@ -998,6 +1086,8 @@ const RhuleAdmin = (() => {
     editKnowledgeEntry: editKnowledgeEntry, saveKnowledgeEntry: saveKnowledgeEntry, deleteKnowledgeEntry: deleteKnowledgeEntry, syncVehicleKnowledge: syncVehicleKnowledge,
     toggleNotifications: toggleNotifications, markNotifsSeen: markNotifsSeen,
     renderVisits: renderVisits, filterVisits: filterVisits, updateVisitStatus: updateVisitStatus, deleteVisit: deleteVisit,
-    changePassword: changePassword, renderAdmins: renderAdmins, addAdmin: addAdmin, deleteAdmin: deleteAdmin, resetAdminPassword: resetAdminPassword, sendEmailReply: sendEmailReply
+    changePassword: changePassword, renderAdmins: renderAdmins, addAdmin: addAdmin, deleteAdmin: deleteAdmin, resetAdminPassword: resetAdminPassword, sendEmailReply: sendEmailReply,
+    saveSiteConfig: saveSiteConfig, goInventoryPage: goInventoryPage, goSalesPage: goSalesPage, goEnquiriesPage: goEnquiriesPage, goKnowledgePage: goKnowledgePage, goVisitsPage: goVisitsPage,
+    cloneVehicle: cloneVehicle
   };
 })();
