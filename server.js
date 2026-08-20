@@ -580,7 +580,11 @@ app.delete('/api/vehicles/:id', requireAuth, async (req, res) => {
 // ── ENQUIRY ROUTES ──
 app.get('/api/enquiries', requireAuth, async (req, res) => {
   try {
-    const enquiries = await sql`SELECT * FROM enquiries ORDER BY created_at DESC`;
+    const enquiries = await sql`
+      SELECT e.*, v.make, v.model, v.year
+      FROM enquiries e
+      LEFT JOIN vehicles v ON e.vehicle_id = v.id
+      ORDER BY e.created_at DESC`;
     res.json(enquiries);
   } catch (err) {
     console.error('List enquiries error:', err);
@@ -828,6 +832,21 @@ app.get('/api/stats/enquiry-trend', requireAuth, async (req, res) => {
   }
 });
 
+app.get('/api/stats/sales', requireAuth, async (req, res) => {
+  try {
+    const [row] = await sql`
+      SELECT
+        count(*)::int AS "totalSold",
+        coalesce(sum(COALESCE(sold_price, price)), 0)::int AS "totalRevenue",
+        CASE WHEN count(*) > 0 THEN coalesce(sum(COALESCE(sold_price, price)), 0) / count(*) ELSE 0 END::int AS "avgPrice"
+      FROM vehicles WHERE status = 'sold'`;
+    res.json(row);
+  } catch (err) {
+    console.error('Sales stats error:', err);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
 // ── IMAGE UPLOAD ──
 app.post('/api/upload', requireAuth, async (req, res) => {
   try {
@@ -859,7 +878,13 @@ app.get('/api/knowledge', requireAuth, async (req, res) => {
     } else {
       entries = await sql`SELECT id, content, content_type, metadata, created_at, updated_at FROM knowledge_base ORDER BY created_at DESC`;
     }
-    res.json(entries);
+    const [counts] = await sql`
+      SELECT count(*)::int AS total,
+        count(*) FILTER (WHERE content_type = 'vehicle')::int AS vehicle,
+        count(*) FILTER (WHERE content_type = 'faq')::int AS faq,
+        count(*) FILTER (WHERE content_type = 'policy')::int AS policy
+      FROM knowledge_base`;
+    res.json({ entries, counts });
   } catch (err) {
     console.error('List knowledge error:', err);
     res.status(500).json({ error: 'Internal server error' });
@@ -914,23 +939,22 @@ app.delete('/api/knowledge/:id', requireAuth, async (req, res) => {
   }
 });
 
-// Bulk sync: re-embed all vehicles into knowledge base (runs in background)
+// Bulk sync: re-embed all vehicles into knowledge base
 app.post('/api/knowledge/sync-vehicles', requireAuth, async (req, res) => {
-  res.json({ status: 'sync_started' });
-  (async () => {
-    try {
-      const vehicles = await sql`SELECT * FROM vehicles`;
-      if (vehicles.length === 0) return;
-      await sql`DELETE FROM knowledge_base WHERE content_type = 'vehicle'`;
-      for (const v of vehicles) {
-        const kbText = vehicleToKnowledge(v);
-        await embedAndStore(kbText, 'vehicle', { vehicle_id: v.id, make: v.make, model: v.model, year: v.year, price: v.price, status: v.status });
-      }
-      console.log('KB sync complete: ' + vehicles.length + ' vehicles');
-    } catch (err) {
-      console.error('KB sync error:', err.message);
+  try {
+    const vehicles = await sql`SELECT * FROM vehicles`;
+    if (vehicles.length === 0) return res.json({ synced: 0 });
+    await sql`DELETE FROM knowledge_base WHERE content_type = 'vehicle'`;
+    for (const v of vehicles) {
+      const kbText = vehicleToKnowledge(v);
+      await embedAndStore(kbText, 'vehicle', { vehicle_id: v.id, make: v.make, model: v.model, year: v.year, price: v.price, status: v.status });
     }
-  })();
+    console.log('KB sync complete: ' + vehicles.length + ' vehicles');
+    res.json({ synced: vehicles.length });
+  } catch (err) {
+    console.error('KB sync error:', err.message);
+    res.status(500).json({ error: 'Sync failed' });
+  }
 });
 
 // ── CHATBOT (RAG + OpenAI) ──

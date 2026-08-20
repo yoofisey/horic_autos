@@ -72,7 +72,9 @@ const RhuleAdmin = (() => {
   }
 
   // ── TABS ──
+  var currentTab = 'dashboard';
   function switchTab(tab) {
+    currentTab = tab;
     document.querySelectorAll('.admin-panel').forEach(function(p) { p.classList.remove('active'); });
     document.querySelectorAll('.sidebar-nav-item').forEach(function(n) { n.classList.remove('active'); });
     document.getElementById('panel-' + tab)?.classList.add('active');
@@ -106,11 +108,14 @@ const RhuleAdmin = (() => {
       var visitBadge = document.getElementById('visitBadge');
       if (visitBadge) visitBadge.textContent = stats.pendingVisits || 0;
       renderDashboardTable('recent');
-      initCharts();
+      refreshCharts();
     } catch (e) { console.error(e); }
   }
 
   let chartsInitialized = false;
+  let bodyChartInstance, salesChartInstance, enquiryChartInstance;
+  const chartColors = ['#FF6A00','#E65100','#2970ff','#f79009','#039855','#9b8afb','#dd2590','#175cd3'];
+
   async function initCharts() {
     if (chartsInitialized) return;
     chartsInitialized = true;
@@ -120,21 +125,20 @@ const RhuleAdmin = (() => {
         api('/api/stats/monthly-sold'),
         api('/api/stats/enquiry-trend')
       ]);
-      const colors = ['#FF6A00','#E65100','#2970ff','#f79009','#039855','#9b8afb','#dd2590','#175cd3'];
       var bodyCtx = document.getElementById('bodyChart');
       if (bodyCtx) {
-        new Chart(bodyCtx, {
+        bodyChartInstance = new Chart(bodyCtx, {
           type: 'doughnut',
           data: {
             labels: bodyData.map(function(d) { return d.body_type; }),
-            datasets: [{ data: bodyData.map(function(d) { return d.count; }), backgroundColor: colors.slice(0, bodyData.length) }]
+            datasets: [{ data: bodyData.map(function(d) { return d.count; }), backgroundColor: chartColors.slice(0, bodyData.length) }]
           },
           options: { responsive: true, maintainAspectRatio: true, plugins: { legend: { position: 'bottom', labels: { boxWidth: 12, padding: 12, font: { size: 11 } } } } }
         });
       }
       var salesCtx = document.getElementById('salesChart');
       if (salesCtx) {
-        new Chart(salesCtx, {
+        salesChartInstance = new Chart(salesCtx, {
           type: 'bar',
           data: {
             labels: salesData.map(function(d) { return d.month; }),
@@ -145,7 +149,7 @@ const RhuleAdmin = (() => {
       }
       var enqCtx = document.getElementById('enquiryChart');
       if (enqCtx) {
-        new Chart(enqCtx, {
+        enquiryChartInstance = new Chart(enqCtx, {
           type: 'line',
           data: {
             labels: enqData.map(function(d) { return d.month; }),
@@ -155,6 +159,33 @@ const RhuleAdmin = (() => {
         });
       }
     } catch (e) { console.error('Charts init error:', e); }
+  }
+
+  async function refreshCharts() {
+    if (!chartsInitialized) return initCharts();
+    try {
+      const [bodyData, salesData, enqData] = await Promise.all([
+        api('/api/stats/body-distribution'),
+        api('/api/stats/monthly-sold'),
+        api('/api/stats/enquiry-trend')
+      ]);
+      if (bodyChartInstance) {
+        bodyChartInstance.data.labels = bodyData.map(function(d) { return d.body_type; });
+        bodyChartInstance.data.datasets[0].data = bodyData.map(function(d) { return d.count; });
+        bodyChartInstance.data.datasets[0].backgroundColor = chartColors.slice(0, bodyData.length);
+        bodyChartInstance.update();
+      }
+      if (salesChartInstance) {
+        salesChartInstance.data.labels = salesData.map(function(d) { return d.month; });
+        salesChartInstance.data.datasets[0].data = salesData.map(function(d) { return d.count; });
+        salesChartInstance.update();
+      }
+      if (enquiryChartInstance) {
+        enquiryChartInstance.data.labels = enqData.map(function(d) { return d.month; });
+        enquiryChartInstance.data.datasets[0].data = enqData.map(function(d) { return d.count; });
+        enquiryChartInstance.update();
+      }
+    } catch (e) { console.error('Charts refresh error:', e); }
   }
 
   async function renderDashboardTable(mode) {
@@ -215,12 +246,13 @@ const RhuleAdmin = (() => {
   // ── SALES ──
   async function renderSales() {
     try {
+      var salesStats = await api('/api/stats/sales');
+      document.getElementById('salesTotalSold').textContent = salesStats.totalSold;
+      document.getElementById('salesRevenue').textContent = formatPrice(salesStats.totalRevenue);
+      document.getElementById('salesAvgPrice').textContent = salesStats.totalSold ? formatPrice(salesStats.avgPrice) : 'GHS 0';
+
       var cars = await api('/api/vehicles');
       var sold = cars.filter(function(c) { return c.status === 'sold'; });
-      var totalRevenue = sold.reduce(function(s, c) { return s + (c.sold_price || c.price); }, 0);
-      document.getElementById('salesTotalSold').textContent = sold.length;
-      document.getElementById('salesRevenue').textContent = formatPrice(totalRevenue);
-      document.getElementById('salesAvgPrice').textContent = sold.length ? formatPrice(Math.round(totalRevenue / sold.length)) : 'GHS 0';
 
       var tbody = document.getElementById('salesTableBody');
       if (!tbody) return;
@@ -249,15 +281,11 @@ const RhuleAdmin = (() => {
     try {
       var enquiries = await api('/api/enquiries');
       enquiriesCache = enquiries;
-      var vehicles = await api('/api/vehicles');
-      var vMap = {};
-      vehicles.forEach(function(v) { vMap[v.id] = v; });
       if (enquiries.length === 0) {
         list.innerHTML = '<div style="text-align:center;padding:60px;color:var(--gray-400);font-size:0.9rem;">No enquiries yet.</div>';
         return;
       }
       list.innerHTML = enquiries.map(function(enq) {
-        var car = vMap[enq.vehicle_id];
         var statusClass = enq.status === 'unread' ? 'unread' : (enq.status === 'replied' ? 'replied' : '');
         var statusLabel = enq.status === 'unread' ? 'Unread' : (enq.status === 'replied' ? 'Replied' : 'Read');
         var phone = enq.customer_phone || '';
@@ -276,7 +304,7 @@ const RhuleAdmin = (() => {
             (phone ? '<span class="enquiry-contact-item"><svg viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg><a href="https://wa.me/' + phone.replace(/^0/, '233') + '" target="_blank">' + escapeHtml(phone) + '</a></span>' : '') +
             (email ? '<span class="enquiry-contact-item"><svg viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg><a href="mailto:' + escapeHtml(email) + '?subject=' + mailSubject + '&body=' + mailBody + '">' + escapeHtml(email) + '</a></span>' : '') +
           '</div>' +
-          (car ? '<div class="enquiry-vehicle-tag"><svg viewBox="0 0 24 24"><path d="M5 17h14M5 17a2 2 0 0 1-2-2V9a2 2 0 0 1 2-2h1l2-3h8l2 3h1a2 2 0 0 1 2 2v6a2 2 0 0 1-2 2M5 17a2 2 0 1 0 4 0M15 17a2 2 0 1 0 4 0M5 9h14"/></svg>' + escapeHtml(car.year + ' ' + car.make + ' ' + car.model) + '</div>' : '') +
+          (enq.make ? '<div class="enquiry-vehicle-tag"><svg viewBox="0 0 24 24"><path d="M5 17h14M5 17a2 2 0 0 1-2-2V9a2 2 0 0 1 2-2h1l2-3h8l2 3h1a2 2 0 0 1 2 2v6a2 2 0 0 1-2 2M5 17a2 2 0 1 0 4 0M15 17a2 2 0 1 0 4 0M5 9h14"/></svg>' + escapeHtml(enq.year + ' ' + enq.make + ' ' + enq.model) + '</div>' : '') +
           '<div class="enquiry-message">' + escapeHtml(enq.message || '') + '</div>' +
 
           (enq.admin_reply ? '<div style="padding:8px 12px;margin-bottom:10px;background:#ecfdf5;border-radius:8px;border:1px solid #abefc6;font-size:0.82rem;color:var(--gray-700);"><span style="font-weight:600;color:#067647;">Your reply:</span> ' + escapeHtml(enq.admin_reply) + '</div>' : '') +
@@ -565,14 +593,14 @@ const RhuleAdmin = (() => {
     if (!tbody) return;
     try {
       var url = '/api/knowledge' + (filter !== 'all' ? '?type=' + filter : '');
-      var entries = await api(url);
+      var data = await api(url);
+      var entries = data.entries;
+      var counts = data.counts;
 
-      // Update counts
-      var allEntries = await api('/api/knowledge');
-      document.getElementById('kbTotalCount').textContent = allEntries.length;
-      document.getElementById('kbVehicleCount').textContent = allEntries.filter(function(e) { return e.content_type === 'vehicle'; }).length;
-      document.getElementById('kbFaqCount').textContent = allEntries.filter(function(e) { return e.content_type === 'faq'; }).length;
-      document.getElementById('kbPolicyCount').textContent = allEntries.filter(function(e) { return e.content_type === 'policy'; }).length;
+      document.getElementById('kbTotalCount').textContent = counts.total;
+      document.getElementById('kbVehicleCount').textContent = counts.vehicle;
+      document.getElementById('kbFaqCount').textContent = counts.faq;
+      document.getElementById('kbPolicyCount').textContent = counts.policy;
 
       if (entries.length === 0) {
         tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--gray-400);padding:40px;">No knowledge base entries found. Click "Sync Vehicles" to add your inventory, or add FAQs and policies manually.</td></tr>';
@@ -793,17 +821,28 @@ const RhuleAdmin = (() => {
     renderDashboard();
     initImageUpload();
 
-    // Poll unread enquiry count every 30s
+    // Poll badge counts every 30s (only fetch what the active tab needs)
     setInterval(async function() {
       try {
-        var data = await api('/api/enquiries/unread-count');
-        var badge = document.getElementById('enquiryBadge');
-        if (badge) badge.textContent = data.count;
+        if (currentTab === 'dashboard') {
+          var stats = await api('/api/stats');
+          var badge = document.getElementById('enquiryBadge');
+          if (badge) badge.textContent = stats.unreadEnquiries;
+          var vb = document.getElementById('visitBadge');
+          if (vb) vb.textContent = stats.pendingVisits || 0;
+          refreshCharts();
+        } else {
+          var data = await api('/api/enquiries/unread-count');
+          var badge = document.getElementById('enquiryBadge');
+          if (badge) badge.textContent = data.count;
+          var vb = document.getElementById('visitBadge');
+          if (vb) {
+            var stats = await api('/api/stats');
+            vb.textContent = stats.pendingVisits || 0;
+          }
+        }
         var notifData = await api('/api/notifications/unread-count');
         updateNotifBadge(notifData.count);
-        var stats = await api('/api/stats');
-        var vb = document.getElementById('visitBadge');
-        if (vb) vb.textContent = stats.pendingVisits || 0;
       } catch (e) {}
     }, 30000);
 
