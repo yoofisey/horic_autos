@@ -29,7 +29,7 @@ Acceleren Motors GH Ltd is a premium single-dealership website for a Ghanaian ca
 | Dark surfaces | `--dark-900: #121212`, `--dark-800: #1f1f1f` |
 | Fonts | DM Serif Display (headings), system sans (body) |
 | Contact | +233 53 262 7932 (phone / WhatsApp) |
-| Admin login | admin@accelerenmotors.com (password changeable in Settings) |
+| Admin login | admin@acceleren.com (password changeable in Settings) |
 
 ### 1.3 Public Website — Pages & Features
 

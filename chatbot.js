@@ -6,7 +6,7 @@ const RhuleChatbot = (() => {
   const CAR_SVG = '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" style="display:inline;vertical-align:middle;margin-right:4px;"><path d="M5 17h14M5 17a2 2 0 01-2-2V9a2 2 0 012-2h1l2-3h8l2 3h1a2 2 0 012 2v6a2 2 0 01-2 2M5 17l-1 2h1m14-2l1 2h-1"/></svg>';
 
   function escHtml(s) {
-    return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
   }
 
   function appendMessage(role, text) {
@@ -60,16 +60,15 @@ const RhuleChatbot = (() => {
       return reply;
     } catch (err) {
       conversationHistory.pop();
-      console.error('Chat error:', err);
       if (err.message === 'Failed to fetch') {
-        return 'Could not reach the server. Make sure you are running **npm start** and opening **http://localhost:3000** (not the HTML file directly).';
+        return 'Could not reach the server. Please try again later.';
       }
-      return 'Something went wrong: ' + err.message + '. Please try again.';
+      return 'Something went wrong. Please try again.';
     }
   }
 
   async function sendMessage(text) {
-    if (!text.trim()) return;
+    if (!text || !text.trim()) return;
     appendMessage('user', text);
     const input = document.getElementById('chatInput');
     if (input) input.value = '';
@@ -78,9 +77,12 @@ const RhuleChatbot = (() => {
     if (quickReplies) quickReplies.style.display = 'none';
 
     showTyping();
-    const reply = await getReply(text);
-    hideTyping();
-    appendMessage('bot', reply);
+    try {
+      const reply = await getReply(text);
+      appendMessage('bot', reply);
+    } finally {
+      hideTyping();
+    }
   }
 
   function toggleChat() {
@@ -117,7 +119,7 @@ const RhuleChatbot = (() => {
 
     document.getElementById('quickReplies')?.addEventListener('click', (e) => {
       const btn = e.target.closest('.quick-reply');
-      if (btn) sendMessage(btn.dataset.prompt);
+      if (btn && btn.dataset.prompt) sendMessage(btn.dataset.prompt);
     });
   }
 
