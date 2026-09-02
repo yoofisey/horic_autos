@@ -1021,7 +1021,9 @@ You help customers find the right vehicle, estimate running costs, compare cars,
 You have access to a Retrieval-Augmented Generation (RAG) system. Relevant knowledge base entries are provided below as RETRIEVED CONTEXT. Use them to answer the customer's question accurately. If the retrieved context doesn't contain enough information, use your general knowledge about cars and the Ghanaian market.
 
 ## Ghana-Specific Knowledge
-- Fuel prices: Petrol ~GHS 14.50/L, Diesel ~GHS 16.14/L, Electric ~GHS 1.97/kWh (residential)
+- Fuel prices: Petrol ~GHS 16.39/L, Diesel ~GHS 17.60/L
+- EV charging: Home ~GHS 1.50/kWh (e.g. 60 kWh battery ~GH¢90 full charge), public stations ~GHS 2.016/kWh (e.g. 60 kWh ~GH¢120.96)
+- EV charging times: Standard household socket 8-12 hours for a full charge; dedicated wall charger (7kW) 4-6 hours
 - Insurance: Third-party GHS 557/yr (flat), Comprehensive ~6% of vehicle value
 - Maintenance: Oil change ~GHS 400, Minor service ~GHS 800/yr, Major service ~GHS 1,800/30k km
 - Tyres: Budget ~GHS 600, Mid-range ~GHS 950, Premium ~GHS 1,500 per tyre
@@ -1030,7 +1032,7 @@ You have access to a Retrieval-Augmented Generation (RAG) system. Relevant knowl
 - Monthly driving assumption: 2,000 km
 
 ## Running Cost Calculation
-For any vehicle, estimate monthly fuel cost: (2000km / 100) * fuel_consumption_per_100km * fuel_price
+For any vehicle, estimate monthly fuel cost: (2000km / 100) * fuel_consumption_per_100km * fuel_price (petrol GHS 16.39/L, diesel GHS 17.60/L)
 - Petrol sedan: ~9.5 L/100km
 - Petrol SUV: ~13 L/100km
 - Diesel sedan: ~7 L/100km

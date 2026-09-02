@@ -1,7 +1,7 @@
 const RhuleData = (() => {
   const COST_ASSUMPTIONS = Object.freeze({
     monthlyKm: 2000,
-    fuelPrice: { petrol: 14.50, diesel: 16.14, hybrid: 14.50, electric: 1.97 },
+    fuelPrice: { petrol: 16.39, diesel: 17.60, hybrid: 16.39, electric: 1.50 },
     consumption: {
       saloon_petrol: 9.5, saloon_diesel: 7, suv_petrol: 13, suv_diesel: 9.5,
       pickup_diesel: 11, hybrid: 5.5, electric_kwh: 18

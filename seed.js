@@ -35,7 +35,7 @@ const KB_ENTRIES = [
     type: "faq"
   },
   {
-    content: "Ghana Car Running Costs: Monthly fuel for a typical sedan driving 2000km: Petrol ~GHS 2,755/month (9.5L/100km at GHS 14.50/L). SUV ~GHS 3,770/month (13L/100km). Diesel sedan ~GHS 2,260/month (7L/100km at GHS 16.14/L). Hybrid ~GHS 1,595/month (5.5L/100km). Electric ~GHS 709/month (18kWh/100km at GHS 1.97/kWh). Add insurance ~GHS 46/month (third-party GHS 557/yr), maintenance ~GHS 480/month base, and tyres ~GHS 40-63/month amortized.",
+    content: "Ghana Car Running Costs: Monthly fuel for a typical sedan driving 2000km: Petrol ~GHS 3,114/month (9.5L/100km at GHS 16.39/L). SUV ~GHS 4,261/month (13L/100km). Diesel sedan ~GHS 2,464/month (7L/100km at GHS 17.60/L). Diesel SUV ~GHS 3,344/month (9.5L/100km). Hybrid ~GHS 1,803/month (5.5L/100km at GHS 16.39/L). Electric ~GHS 540/month charging at home (18kWh/100km at GHS 1.50/kWh) or ~GHS 726/month at public stations (GHS 2.016/kWh). Add insurance ~GHS 46/month (third-party GHS 557/yr), maintenance ~GHS 480/month base, and tyres ~GHS 40-63/month amortized.",
     type: "faq"
   },
   {
@@ -43,7 +43,7 @@ const KB_ENTRIES = [
     type: "faq"
   },
   {
-    content: "Ghana Fuel Prices (July 2026): Petrol (Gasoline) averages GHS 14.50 per litre (NPA floor GHS 13.28). Diesel averages GHS 16.14 per litre (NPA floor GHS 14.35). LPG approximately GHS 10 per kilogram. Electricity for EVs is approximately GHS 1.97 per kWh (residential rate, 0-300 kWh band). Fuel prices are adjusted every two weeks by the National Petroleum Authority based on international crude prices and the cedi exchange rate.",
+    content: "Ghana Fuel Prices (2026): Petrol (Gasoline) averages GHS 16.39 per litre. Diesel averages GHS 17.60 per litre. LPG approximately GHS 10 per kilogram. EV charging in Ghana: At home ~GHS 1.50/kWh (40 kWh charge ~GH¢60, 50 kWh ~GH¢75, 60 kWh ~GH¢90, 70 kWh ~GH¢105, 80 kWh ~GH¢120). At public charging stations ~GHS 2.016/kWh (30 kWh ~GH¢60.48, 40 kWh ~GH¢80.64, 50 kWh ~GH¢100.80, 60 kWh ~GH¢120.96, 70 kWh ~GH¢141.12, 80 kWh ~GH¢161.28). EV charging times: standard household socket (type F) 8-12 hours for a full charge, dedicated wall charger (7kW) 4-6 hours for a full charge. Fuel prices are adjusted every two weeks by the National Petroleum Authority based on international crude prices and the cedi exchange rate.",
     type: "faq"
   },
   {
@@ -94,7 +94,7 @@ async function main() {
   console.log(`Knowledge base has ${count.count} entries`);
   
   // 2b. Remove stale pre-rebrand knowledge base entries
-  const cleaned = await sql`DELETE FROM knowledge_base WHERE content ILIKE '%rhule%' OR content ILIKE '%adenta%' OR content ILIKE '%nmai%' OR content ILIKE '%showroom%' OR content ILIKE '%acceleren%' RETURNING id`;
+  const cleaned = await sql`DELETE FROM knowledge_base WHERE content ILIKE '%rhule%' OR content ILIKE '%adenta%' OR content ILIKE '%nmai%' OR content ILIKE '%showroom%' OR content ILIKE '%acceleren%' OR content ILIKE '%GHS 14.50%' OR content ILIKE '%GHS 16.14%' OR content ILIKE '%1.97/kWh%' OR content ILIKE '%1.97 per kWh%' OR content ILIKE '%GHS 709/month%' RETURNING id`;
   console.log(`Cleaned ${cleaned.length} stale knowledge base entries`);
   
   // 3. Seed knowledge base
