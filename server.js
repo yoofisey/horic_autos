@@ -1151,6 +1151,16 @@ app.get('/api/notifications/unread-count', requireAuth, async (req, res) => {
   }
 });
 
+// ── HEALTH (uptime monitors) ──
+app.get('/api/health', async (req, res) => {
+  try {
+    await sql`SELECT 1`;
+    res.json({ status: 'ok', db: 'connected', time: new Date().toISOString() });
+  } catch (err) {
+    res.status(503).json({ status: 'degraded', db: 'disconnected', time: new Date().toISOString() });
+  }
+});
+
 // ── SITEMAP ──
 app.get('/sitemap.xml', async (req, res) => {
   try {
