@@ -18,8 +18,22 @@ const JWT_SECRET = process.env.JWT_SECRET;
 const SITE_NAME = process.env.SITE_NAME || 'Dealership Name';
 const SITE_PHONE = process.env.SITE_PHONE || '+233 00 000 0000';
 const SITE_EMAIL = process.env.SITE_EMAIL || 'info@yourdealership.com';
+const SITE_URL = process.env.SITE_URL || 'https://gallant-passion-production-680f.up.railway.app';
+
+const SITE_URL_PATTERN = /\{\{SITE_URL\}\}/g;
 
 app.use(express.json({ limit: '5mb' }));
+app.use((req, res, next) => {
+  if (/\.(html|txt)$/.test(req.path) || req.path === '/') {
+    const filePath = path.join(__dirname, req.path === '/' ? 'index.html' : req.path);
+    return require('fs').readFile(filePath, 'utf8', (err, data) => {
+      if (err) return next();
+      res.set('Content-Type', req.path.endsWith('.txt') ? 'text/plain; charset=utf-8' : 'text/html; charset=utf-8');
+      res.send(data.replace(SITE_URL_PATTERN, SITE_URL));
+    });
+  }
+  next();
+});
 app.use(express.static(__dirname));
 app.use((req, res, next) => {
   if (/\.(sql|bak)$/.test(req.path) || /^\/(seed|migrate-images|package)/.test(req.path) || /^\/supabase\//.test(req.path)) {
@@ -1141,7 +1155,7 @@ app.get('/api/notifications/unread-count', requireAuth, async (req, res) => {
 app.get('/sitemap.xml', async (req, res) => {
   try {
     const vehicles = await sql`SELECT id, updated_at FROM vehicles WHERE status != 'sold'`;
-    const BASE = 'https://gallant-passion-production-680f.up.railway.app';
+    const BASE = SITE_URL;
     let xml = '<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n';
     xml += '  <url><loc>' + BASE + '/</loc><changefreq>weekly</changefreq><priority>1.0</priority></url>\n';
     xml += '  <url><loc>' + BASE + '/inventory.html</loc><changefreq>daily</changefreq><priority>0.9</priority></url>\n';

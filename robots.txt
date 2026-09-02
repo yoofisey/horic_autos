@@ -3,4 +3,4 @@ Allow: /
 Disallow: /admin*
 Disallow: /api/*
 
-Sitemap: https://gallant-passion-production-680f.up.railway.app/sitemap.xml
+Sitemap: {{SITE_URL}}/sitemap.xml
